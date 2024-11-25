@@ -1,0 +1,7 @@
+-r base.txt
+comtypes==1.4.7
+et-xmlfile==1.1.0
+openpyxl==3.1.5
+pyperclip==1.9.0
+pywin32==308
+pywinauto==0.6.8
