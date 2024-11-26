@@ -12,7 +12,7 @@ from app.modules.sga.scripts.sga_operations import (
     abrir_reporte_dinamico,
     seleccionar_275_data_previa,
     seleccionar_fecha_secuencia,
-    seleccionar_clipboard,
+    seleccionar_clipboard,  
     select_column_codiIncidencia,
     seleccionar_276_averias,
     seleccionar_checkbox_nroincidencias,
@@ -55,9 +55,12 @@ class SGAService:
             load_dotenv()
             excel_path = os.getenv('EXCEL_PATH')
             if not excel_path:
-                raise EnvironmentError("Missing EXCEL_PATH in .env")
+                 raise EnvironmentError("Falta la variable de entorno EXCEL_PATH. Verifica el archivo .env.")
 
-            os.makedirs('media', exist_ok=True)
+            if not os.path.exists('app/modules/sga/media'):
+                os.makedirs('app/modules/sga/media')
+
+            # os.makedirs('media', exist_ok=True)
 
             navegacion_window = connect_to_sga()
             navegar_sistema_tecnico(navegacion_window)

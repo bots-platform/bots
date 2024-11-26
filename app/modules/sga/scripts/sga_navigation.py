@@ -3,11 +3,11 @@ import logging
 # from pywinauto import Application
 from time import sleep
 
-if not os.path.exists('logs'):
-    os.makedirs('logs')
+if not os.path.exists('app/modules/sga/logs'):
+    os.makedirs('app/modules/sga/logs')
 
-logging.basicConfig(level=logging.INFO, filename="logs/sga_navigation.log", 
-                    format="%(asctime)s - %(levelname)s - %(message)s")
+    logging.basicConfig(level=logging.INFO, filename="app/modules/sga/logs/sga_navigation.log", 
+                        format="%(asctime)s - %(levelname)s - %(message)s")
 
 
 def navegar_sistema_tecnico(main_window):

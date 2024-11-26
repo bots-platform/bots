@@ -13,10 +13,10 @@ from io import StringIO
 import aiohttp
 
 
-if not os.path.exists('logs'):
-    os.makedirs('logs')
+if not os.path.exists('app/modules/sga/logs'):
+    os.makedirs('app/modules/sga/logs')
 
-logging.basicConfig(level=logging.INFO, filename="logs/sga_operations.log", 
+logging.basicConfig(level=logging.INFO, filename="app/modules/sga/logs/sga_operations.log", 
                     format="%(asctime)s - %(levelname)s - %(message)s")
 
 def seleccionar_control_de_tareas(main_window):
@@ -224,7 +224,7 @@ def guardando_excel():
         sleep(2)      
         df = pd.read_clipboard(sep='\t')
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        output_file = f'media/reporte_{timestamp}.xlsx'
+        output_file = f'app/modules/sga/media/reporte_{timestamp}.xlsx'
         with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
             df.to_excel(writer, index=False, sheet_name='reporte')
         logging.info("Reporte guardado en excel correctamente")
@@ -235,7 +235,6 @@ def guardando_excel():
     except Exception as e:
         logging.info(f"Error al guardar reporte del clipboard al excel: {e}")
         return False
-
 
 async def send_excel_to_api(excel_path):
     try:

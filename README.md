@@ -1,5 +1,6 @@
 ## Estructura del proyecto
 
+```
 fastapi_project/
 ├── app/
 │   ├── modules/
@@ -17,15 +18,18 @@ fastapi_project/
 │   │       └── main.py
 │   │
 │   ├── api/
-│   │   └── v1/
-│   │       └── endpoints/
-│   │           ├── sga.py
-│   │           └── oplogin.py
+│   │   ├── sga.py
+│   │   ├── oplogin.py
+│   │           
 │   │
 │   └── core/
-│       ├── config.py      # Configuración global
-│       └── logging.py     # Logging global
+│       ├── config.py      
+│       └── logging.py    
 │
 └── main.py
-
+├── .env                          
+├── .gitignore                    
+├── requirements.txt            
+└── README.md                     
+```
 
