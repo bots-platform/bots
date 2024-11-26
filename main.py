@@ -1,16 +1,10 @@
 from fastapi import FastAPI
-
-from app.api.v1.endpoints.sga import router
 from fastapi.middleware.cors import CORSMiddleware
+
+from app.api.v1.endpoints import sga
 
 
 app = FastAPI()
-
-app.include_router(router)
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
 
 app.add_middleware(
     CORSMiddleware,
@@ -19,9 +13,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.include_router(sga.router)
 
 
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 
-@app.get("/")
-def read_root():
-    return {"hola"}
+
+# @app.get("/")
+# def read_root():
+#     return {"hola"}

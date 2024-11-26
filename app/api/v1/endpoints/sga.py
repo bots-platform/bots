@@ -13,7 +13,7 @@ async def generate_dynamic_report():
 
 @router.get("/reporte")
 async def generate():
-    return {'hola sga'}
+    return {'hola': 'sga'}
 
 
 

@@ -1,6 +1,7 @@
 import os
 import logging
 import pandas as pd  # type: ignore
+from fastapi import HTTPException
 import requests
 from pathlib import Path
 from datetime import datetime
@@ -9,6 +10,8 @@ from time import sleep
 from pywinauto.keyboard import send_keys
 import pyperclip # type: ignore
 from io import StringIO
+import aiohttp
+
 
 if not os.path.exists('logs'):
     os.makedirs('logs')
@@ -215,7 +218,26 @@ def copiando_reporte_al_clipboard():
         logging.info(f"Error al copiar del 'clipboard': {e}")
         raise
 
-def send_excel_to_api(excel_path):
+def guardando_excel():
+    try:
+        logging.info("Guardando reporte del clipboard al excel")
+        sleep(2)      
+        df = pd.read_clipboard(sep='\t')
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        output_file = f'media/reporte_{timestamp}.xlsx'
+        with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='reporte')
+        logging.info("Reporte guardado en excel correctamente")
+      
+        return output_file
+
+      
+    except Exception as e:
+        logging.info(f"Error al guardar reporte del clipboard al excel: {e}")
+        return False
+
+
+async def send_excel_to_api(excel_path):
     try:
         if not Path(excel_path).exists():
             logging.error(f" Archivo excel no encontrado: {excel_path}")
@@ -228,51 +250,39 @@ def send_excel_to_api(excel_path):
             
         mi_url = "http://10.200.90.248:9000/upload-sga-tickets/"
 
+        form_data = aiohttp.FormData()
+        form_data.add_field( 
+                            'sga_csv',
+                            open(excel_path, 'rb'),  # Abrimos el archivo como un objeto de archivo directamente
+                            filename='sga_report.xlsx',
+                            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                            )
 
-        mi_archivo = {
-            'sga_csv': ('sga_report.xlsx', open(excel_path, 'rb'),'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-            }
-        
-        fecha = {
-            'sga_fecha':datetime.now().strftime('%Y-%m-%d')
-        }
-
-        mi_auth = ('admin', 'admin')
-
-        response = requests.post(
-            url=mi_url,
-            files=mi_archivo,
-            data=fecha,
-            auth=mi_auth
-            )
-        print(response.text)
-        if response.status_code in [200, 202]:
-            logging.info("CSV enviado exitosamente")
-            return True
-        else:
-            logging.error(f"Error al enviar Excel: {response.status_code}")
-            return False
+    
+        form_data.add_field('sga_fecha',
+                           datetime.now().strftime('%Y-%m-%d'))
+            
+        async with aiohttp.ClientSession() as session:
+            auth = aiohttp.BasicAuth('admin', 'admin')
+            async with session.post(
+                url=mi_url,
+                data=form_data,
+                auth=auth
+            ) as response:
+                # print(response.text)
+                if response.status in [200, 202]:
+                    logging.info("Excel enviado exitosamente")
+                    return {
+                        "status":"success",
+                        "message": "Archivo enviado correctamente"
+                    }
+                else:
+                    logging.error(f"Error al enviar Excel: {response.status}")
+                    raise HTTPException(
+                        status_code=response.status,
+                        detail=f"Error al enviar Excel: {await response.text()}"
+                    )
             
     except Exception as e:
-        logging.error(f"Error en envío de Excel: {e}")
-        return False
-
-def guardando_excel():
-    try:
-        logging.info("Guardando reporte del clipboard al excel")
-        sleep(2)      
-        df = pd.read_clipboard(sep='\t')
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        output_file = f'media/reporte_{timestamp}.xlsx'
-        with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
-            df.to_excel(writer, index=False, sheet_name='reporte')
-        logging.info("Reporte guardado en excel correctamente")
-      
-        if send_excel_to_api(output_file):
-            logging.info("Proceso completo: Excel guardado y enviado a la API")
-            return True
-
-        return True
-    except Exception as e:
-        logging.info(f"Error al guardar reporte del clipboard al excel: {e}")
-        return False
+        logging.exception(f"Error en envío de Excel: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

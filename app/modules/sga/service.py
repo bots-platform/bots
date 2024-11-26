@@ -1,4 +1,4 @@
-from http.client import HTTPException
+from fastapi import HTTPException
 from time import sleep
 from pywinauto import Application, Desktop
 import os
@@ -21,6 +21,7 @@ from app.modules.sga.scripts.sga_operations import (
     seleccion_multiple_listado,
     copiando_reporte_al_clipboard,
     guardando_excel,
+    send_excel_to_api,
 )
 
 def connect_to_sga():
@@ -49,7 +50,7 @@ def connect_to_operaciones_Window():
         raise
 
 class SGAService:
-    def generate_dynamic_report(self):
+    async def generate_dynamic_report(self) :
         try:
             load_dotenv()
             excel_path = os.getenv('EXCEL_PATH')
@@ -80,9 +81,24 @@ class SGAService:
             click_button_3puntos(operacion_window)
             seleccion_multiple_listado(numero_tickets)
             copiando_reporte_al_clipboard()
-            guardando_excel()
-
-            return {"status": "success", "file_path": excel_path}
+            path_excel = guardando_excel()
+            if await send_excel_to_api(path_excel):
+                return {
+                    "status": "success",
+                    "message":"Reporte enviado exitosamente"
+                }
+            else:
+                raise HTTPException(
+                    status_code=500,
+                    detail="Error al enviar el archivo Excel al servicio "
+                )
+            
             
         except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+           error_message = f" Error al enviar reporte: {str(e)}"
+           logging.error(error_message)
+
+           raise HTTPException(
+                status_code=500,
+                 detail=error_message
+           )
