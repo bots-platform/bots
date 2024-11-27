@@ -4,7 +4,7 @@ import pandas as pd  # type: ignore
 from fastapi import HTTPException
 import requests
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 from pywinauto import Application, Desktop
 from time import sleep
 from pywinauto.keyboard import send_keys
@@ -13,10 +13,10 @@ from io import StringIO
 import aiohttp
 
 
-if not os.path.exists('app/modules/sga/logs'):
-    os.makedirs('app/modules/sga/logs')
+if not os.path.exists('logs/sga'):
+    os.makedirs('logs/sga')
 
-logging.basicConfig(level=logging.INFO, filename="app/modules/sga/logs/sga_operations.log", 
+logging.basicConfig(level=logging.INFO, filename="logs/sga/sga.log", 
                     format="%(asctime)s - %(levelname)s - %(message)s")
 
 def seleccionar_control_de_tareas(main_window):
@@ -94,6 +94,93 @@ def seleccionar_fecha_secuencia(main_window):
          logging.error(f"Error al establecer rango de fecha de secuencia: {e}")
          raise
      
+def seleccionar_fecha_secuencia_v2(main_window, fecha_inicio=None, fecha_fin=None):
+    try:
+        logging.info("Intentando establecer rango de fecha de secuencia")
+
+        if fecha_fin is None:
+            fecha_fin = datetime.now().strftime("%d/%m/%Y")  
+        if fecha_inicio is None:
+            today = datetime.now()
+            first_day_of_current_month = today.replace(day=1)
+            fecha_inicio_dt = first_day_of_current_month - timedelta(days=1)
+            fecha_inicio_dt = fecha_inicio_dt.replace(day=15)
+            fecha_inicio = fecha_inicio_dt.strftime("%d/%m/%Y")
+
+        logging.info(f"Estableciendo fecha de secuencia inicio: {fecha_inicio}")
+        send_keys('{TAB}') 
+        send_keys(fecha_inicio)
+        sleep(1)
+
+        logging.info(f"Estableciendo fecha de secuencia fin: {fecha_fin}")
+        send_keys('{TAB}') 
+        send_keys(fecha_fin)
+        sleep(1)
+
+    
+        try:
+            logging.info("Intentando seleccionar el checkbox 'fecha_secuencia'")
+            checkbox_fecha_secuencia = (
+                main_window.child_window(title="fecha_secuencia", control_type="CheckBox")
+                .wait('exists ready', timeout=3)
+            )
+            checkbox_fecha_secuencia.click()
+            sleep(1)
+            send_keys('{ENTER}')
+            logging.info("Checkbox seleccionado exitosamente")
+        except TimeoutError:
+            logging.error("El CheckBox no estuvo listo a tiempo.")
+            return
+        
+      
+
+        logging.info("Fechas de secuencia establecidas correctamente.")
+    except Exception as e:
+        logging.error(f"Error al establecer rango de fecha de secuencia: {e}")
+        raise
+   
+def seleccionar_fecha_secuencia_v3(main_window, fecha_inicio=None, fecha_fin=None):
+    try:
+        # logging.info("Intentando establecer rango de fecha de secuencia")
+        # if fecha_fin is None:
+        #     fecha_fin = datetime.now().strftime("%d/%m/%Y")  
+        # if fecha_inicio is None:
+        #     fecha_inicio = datetime.now().strftime("%d/%m/%Y")  
+
+        logging.info(f"Estableciendo fecha de secuencia inicio: {fecha_inicio}")
+        send_keys('{TAB}') 
+        send_keys(fecha_inicio)
+        sleep(2)
+
+        logging.info(f"Estableciendo fecha de secuencia fin: {fecha_fin}")
+        send_keys('{TAB}') 
+        send_keys(fecha_fin)
+        sleep(2)
+        send_keys('{TAB 2}') 
+
+    
+        try:                                                                                                                                                                                                                                                                                                                                                                                
+            logging.info("Intentando seleccionar el checkbox 'fecha_secuencia'")
+            checkbox_fecha_secuencia = (
+                main_window.child_window(title="fecha_secuencia", control_type="CheckBox")
+                .wait('exists ready', timeout=3)
+            )
+            checkbox_fecha_secuencia.click()
+
+            sleep(3)
+            send_keys('{ENTER}')
+            logging.info("Checkbox seleccionado exitosamente")
+        except TimeoutError:
+            logging.error("El CheckBox no estuvo listo a tiempo.")
+            return
+        
+      
+
+        logging.info("Fechas de secuencia establecidas correctamente.")
+    except Exception as e:
+        logging.error(f"Error al establecer rango de fecha de secuencia: {e}")
+        raise
+
 def seleccionar_clipboard():
     try:
         sleep(1)
@@ -220,11 +307,10 @@ def copiando_reporte_al_clipboard():
 
 def guardando_excel():
     try:
-        logging.info("Guardando reporte del clipboard al excel")
-        sleep(2)      
+        logging.info("Guardando reporte del clipboard al excel")   
         df = pd.read_clipboard(sep='\t')
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        output_file = f'app/modules/sga/media/reporte_{timestamp}.xlsx'
+        output_file = f'media/reporte_{timestamp}.xlsx'
         with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
             df.to_excel(writer, index=False, sheet_name='reporte')
         logging.info("Reporte guardado en excel correctamente")
@@ -283,5 +369,9 @@ async def send_excel_to_api(excel_path):
                     )
             
     except Exception as e:
-        logging.exception(f"Error en envío de Excel: {e}")
+        logging.exception(f"Error en envío de Excel a la API Dango: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+
+    

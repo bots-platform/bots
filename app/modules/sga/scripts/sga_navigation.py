@@ -3,10 +3,10 @@ import logging
 # from pywinauto import Application
 from time import sleep
 
-if not os.path.exists('app/modules/sga/logs'):
-    os.makedirs('app/modules/sga/logs')
+if not os.path.exists('logs/sga'):
+    os.makedirs('logs/sga')
 
-    logging.basicConfig(level=logging.INFO, filename="app/modules/sga/logs/sga_navigation.log", 
+    logging.basicConfig(level=logging.INFO, filename="logs/sga/sga.log", 
                         format="%(asctime)s - %(levelname)s - %(message)s")
 
 

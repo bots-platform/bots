@@ -6,8 +6,12 @@ from ..utils.input_utils import random_delay
 import logging
 import time
 from datetime import datetime, timedelta
+import os
 
-logging.basicConfig(level=logging.INFO, filename="app/modules/oplogin/logs/OPLOGIN_scraping.log", 
+if not os.path.exists('logs/oplogin'):
+    os.makedirs('logs/oplogin')
+
+logging.basicConfig(level=logging.INFO, filename="logs/oplogin/OPLOGIN_scraping.log", 
                     format="%(asctime)s - %(levelname)s - %(message)s")
 
 def login_to_oplogin(driver, user, password):
