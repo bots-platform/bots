@@ -142,11 +142,7 @@ def seleccionar_fecha_secuencia_v2(main_window, fecha_inicio=None, fecha_fin=Non
    
 def seleccionar_fecha_secuencia_v3(main_window, fecha_inicio=None, fecha_fin=None):
     try:
-        # logging.info("Intentando establecer rango de fecha de secuencia")
-        # if fecha_fin is None:
-        #     fecha_fin = datetime.now().strftime("%d/%m/%Y")  
-        # if fecha_inicio is None:
-        #     fecha_inicio = datetime.now().strftime("%d/%m/%Y")  
+        logging.info("Intentando establecer rango de fecha de secuencia")
 
         logging.info(f"Estableciendo fecha de secuencia inicio: {fecha_inicio}")
         send_keys('{TAB}') 

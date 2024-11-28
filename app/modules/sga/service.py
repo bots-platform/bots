@@ -99,11 +99,11 @@ class SGAService:
 
             
             fecha_actual = fecha_secuencia_inicio
-
+            resultados = []
             while fecha_actual <= fecha_secuencia_fin:
                 try:
                   
-                    fecha_actual_str = fecha_actual.strftime('%d/%m/%Y')
+                    fecha_actual_str = fecha_actual.datetime.strptime('%d/%m/%Y')
             
                     logging.info(f"Procesando fecha: {fecha_actual_str}")
                    
@@ -128,21 +128,32 @@ class SGAService:
 
                     if await send_excel_to_api(path_excel):
                         logging.info(f"Reporte enviado exitosamente para la fecha: {fecha_actual_str}")
-                        
+                        resultados.append({
+                            "fecha":fecha_actual_str,
+                            "status":"success",
+                            "message":"Reporte enviado exitosamente"
+                        })      
                     else:
                         logging.error(f"Error al enviar el archivo Excel para la fecha: {fecha_actual_str}")
-                        raise HTTPException(
-                            status_code=500,
-                            detail=f"Error al enviar el archivo Excel para la fecha: {fecha_actual_str}"
+                        resultados.append(
+                            {
+                                "fecha":fecha_actual_str,
+                                "status":"error",
+                                "message":"Error al enviar el archivo"
+                            }
                         )
+                        # raise HTTPException(
+                        #     status_code=500,
+                        #     detail=f"Error al enviar el archivo Excel para la fecha: {fecha_actual_str}"
+                        # )
                 except Exception as e:
                     logging.error(f"Error al procesar la fecha {fecha_actual_str}: {e}")
             
                 fecha_actual += timedelta(days=1)
             close_operaciones_window(operacion_window)
             return{
-                "status":"success",
-                "message": "Archivo enviado correctamente"
+                "status":"finished",
+                "results": resultados
             }
 
         except Exception as e:
