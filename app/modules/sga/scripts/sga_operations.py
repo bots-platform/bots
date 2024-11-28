@@ -11,6 +11,7 @@ from pywinauto.keyboard import send_keys
 import pyperclip # type: ignore
 from io import StringIO
 import aiohttp
+from aiohttp import ClientConnectorError
 
 
 if not os.path.exists('logs/sga'):
@@ -292,7 +293,7 @@ def seleccion_multiple_listado(numero_tickets):
 def copiando_reporte_al_clipboard():
     try:
         logging.info("Copiando Reporte  al clipboard")
-        sleep(15)
+        sleep(25)
         send_keys("%A")
         sleep(1)
         send_keys('{DOWN 4}')
@@ -367,6 +368,10 @@ async def send_excel_to_api(excel_path):
                         status_code=response.status,
                         detail=f"Error al enviar Excel: {await response.text()}"
                     )
+                
+    except ClientConnectorError as e:
+        logging.exception("Error de conexión: No se puede conectar con el servidor")
+        raise HTTPException(status_code=503, detail="Servicio no disponible. El servidor está caído o inalcanzable.")
             
     except Exception as e:
         logging.exception(f"Error en envío de Excel a la API Dango: {e}")

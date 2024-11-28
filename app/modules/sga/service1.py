@@ -39,12 +39,9 @@ def connect_to_sga():
             logging.info("Ventana maximizada.")
         else:
             logging.info("La ventana ya está maximizada.")
-            
         sleep(1)
         logging.info("Conexión exitosa con la aplicación SGA.")
-
         return navegacion_window
-    
     except Exception as e:
         logging.error(f"No se pudo conectar a la aplicación SGA: {e}")
         raise Exception("La aplicación SGA no está abierta o no está logueada. Por favor, verifica e inténtalo de nuevo.")
@@ -75,7 +72,7 @@ def close_operaciones_window(operacion_window):
 
 
 class SGAService:
-    async def generate_dynamic_report(self,fecha_secuencia_inicio,fecha_secuencia_fin) :
+    async def generar_reporte_dinamico(self,fecha_secuencia_inicio,fecha_secuencia_fin) :
         try:
             load_dotenv()
             excel_path = os.getenv('EXCEL_PATH')
@@ -125,25 +122,20 @@ class SGAService:
                     cerrar_reporte_Dinamico(operacion_window)
                     path_excel = guardando_excel()
 
-
-                    if await send_excel_to_api(path_excel):
-                        logging.info(f"Reporte enviado exitosamente para la fecha: {fecha_actual_str}")
-                        
-                    else:
-                        logging.error(f"Error al enviar el archivo Excel para la fecha: {fecha_actual_str}")
-                        raise HTTPException(
-                            status_code=500,
-                            detail=f"Error al enviar el archivo Excel para la fecha: {fecha_actual_str}"
-                        )
+                    result = await send_excel_to_api(path_excel)
+                    if result:
+                     return result
+                    
+                  
                 except Exception as e:
-                    logging.error(f"Error al procesar la fecha {fecha_actual_str}: {e}")
-            
+                    logging.error(f"Error al enviar el archivo excel a la api {fecha_actual_str}: {e.detail}")
+                    raise e
+                
                 fecha_actual += timedelta(days=1)
-            close_operaciones_window(operacion_window)
-            return{
-                "status":"success",
-                "message": "Archivo enviado correctamente"
-            }
+                if fecha_actual > fecha_secuencia_fin:
+                    close_operaciones_window(operacion_window)
+
+            
 
         except Exception as e:
            error_message = f" Error al enviar reporte: {str(e)}"

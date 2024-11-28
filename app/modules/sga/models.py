@@ -3,5 +3,8 @@ from datetime import datetime
 
 
 class FechaSecuenciaRequest(BaseModel):
-    fecha_secuencia_inicio: str
-    fecha_secuencia_fin: str
+    fecha_inicio: str
+    fecha_fin: str
+
+
+    
