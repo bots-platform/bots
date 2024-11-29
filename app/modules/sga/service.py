@@ -3,7 +3,6 @@ from time import sleep
 from pywinauto import Application, Desktop
 import os
 import logging
-from dotenv import load_dotenv
 from datetime import datetime, timedelta
 
 from app.modules.sga.scripts.sga_navigation import navegar_sistema_tecnico, seleccionar_opcion_sga
@@ -12,8 +11,6 @@ from app.modules.sga.scripts.sga_operations import (
     seleccionar_atcorp,
     abrir_reporte_dinamico,
     seleccionar_275_data_previa,
-    seleccionar_fecha_secuencia,
-    seleccionar_fecha_secuencia_v2,
     seleccionar_fecha_secuencia_v3,
     seleccionar_clipboard,  
     select_column_codiIncidencia,
@@ -72,15 +69,9 @@ def close_operaciones_window(operacion_window):
         logging.error(f"Error al intentar cerrar la ventana de operaciones: {e}")
         raise
 
-
-
 class SGAService:
     async def generate_dynamic_report(self,fecha_secuencia_inicio,fecha_secuencia_fin) :
         try:
-            load_dotenv()
-            excel_path = os.getenv('EXCEL_PATH')
-            if not excel_path:
-                 raise EnvironmentError("Falta la variable de entorno EXCEL_PATH. Verifica el archivo .env.")
 
             navegacion_window = connect_to_sga()
             navegar_sistema_tecnico(navegacion_window)
@@ -111,7 +102,6 @@ class SGAService:
                     abrir_reporte_dinamico(operacion_window)
                     seleccionar_275_data_previa(operacion_window)
                     seleccionar_fecha_secuencia_v3(operacion_window, fecha_actual_str, fecha_actual_str)
-            
                     seleccionar_clipboard()
                     numero_tickets = select_column_codiIncidencia()
                     cerrar_reporte_Dinamico(operacion_window)
@@ -124,7 +114,6 @@ class SGAService:
                     copiando_reporte_al_clipboard()
                     cerrar_reporte_Dinamico(operacion_window)
                     path_excel = guardando_excel()
-
 
                     if await send_excel_to_api(path_excel):
                         logging.info(f"Reporte enviado exitosamente para la fecha: {fecha_actual_str}")
@@ -142,21 +131,20 @@ class SGAService:
                                 "message":"Error al enviar el archivo"
                             }
                         )
-                        # raise HTTPException(
-                        #     status_code=500,
-                        #     detail=f"Error al enviar el archivo Excel para la fecha: {fecha_actual_str}"
-                        # )
                 except Exception as e:
                     logging.error(f"Error al procesar la fecha {fecha_actual_str}: {e}")
+                    resultados.append(
+                        {"fecha": fecha_actual_str, "status": "error", "message": str(e)}
+                    )
+
                 logging.info(f"fecha antes de sumar: {fecha_actual}")
                 fecha_actual += timedelta(days=1)
                 logging.info(f"fecha despues de sumar: {fecha_actual}")
             close_operaciones_window(operacion_window)
             return{
-                "status":"finished",
-                "results": resultados
+                "status":"finalizado",
+                "Resultados": resultados
             }
-
         except Exception as e:
            error_message = f" Error al enviar reporte: {str(e)}"
            logging.error(error_message)

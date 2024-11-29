@@ -12,6 +12,7 @@ import pyperclip # type: ignore
 from io import StringIO
 import aiohttp
 from aiohttp import ClientConnectorError
+from config import MI_URL, EXCEL_FILENAME, EXCEL_CONTENT_TYPE, AUTH_USERNAME, AUTH_PASSWORD
 
 
 if not os.path.exists('logs/sga'):
@@ -321,16 +322,23 @@ def copiando_reporte_al_clipboard():
 
 def guardando_excel():
     try:
+
+        base_dir = 'media'
+        sga_dir = os.path.join(base_dir, 'sga')
+        if not os.path.exists(sga_dir):
+            os.makedirs(sga_dir)
+            logging.info(f"Directorio '{sga_dir}' creado.")
+
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        output_file = f'{sga_dir}/reporte_{timestamp}.xlsx'
+
         logging.info("Guardando reporte del clipboard al excel")   
         df = pd.read_clipboard(sep='\t')
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        output_file = f'media/reporte_{timestamp}.xlsx'
         with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
             df.to_excel(writer, index=False, sheet_name='reporte')
-        logging.info("Reporte guardado en excel correctamente")
-      
-        return output_file
 
+        logging.info("Reporte guardado en excel correctamente")
+        return output_file
       
     except Exception as e:
         logging.info(f"Error al guardar reporte del clipboard al excel: {e}")
@@ -341,20 +349,19 @@ async def send_excel_to_api(excel_path):
         if not Path(excel_path).exists():
             logging.error(f" Archivo excel no encontrado: {excel_path}")
             return False
-        
-        
+          
         df = pd.read_excel(excel_path)
         csv_path = excel_path.replace('.xlsx', '.csv')
         df.to_csv(csv_path, index=False)
             
-        mi_url = "http://10.200.90.248:9000/upload-sga-tickets/"
+        mi_url = MI_URL
 
         form_data = aiohttp.FormData()
         form_data.add_field( 
                             'sga_csv',
                             open(excel_path, 'rb'),  # Abrimos el archivo como un objeto de archivo directamente
-                            filename='sga_report.xlsx',
-                            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                            filename=EXCEL_FILENAME,
+                            content_type=EXCEL_CONTENT_TYPE
                             )
 
     
@@ -362,7 +369,7 @@ async def send_excel_to_api(excel_path):
                            datetime.now().strftime('%Y-%m-%d'))
             
         async with aiohttp.ClientSession() as session:
-            auth = aiohttp.BasicAuth('admin', 'admin')
+            auth = aiohttp.BasicAuth(AUTH_USERNAME, AUTH_PASSWORD)
             async with session.post(
                 url=mi_url,
                 data=form_data,
