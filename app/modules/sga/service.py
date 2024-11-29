@@ -148,8 +148,9 @@ class SGAService:
                         # )
                 except Exception as e:
                     logging.error(f"Error al procesar la fecha {fecha_actual_str}: {e}")
-            
+                logging.info(f"fecha antes de sumar: {fecha_actual}")
                 fecha_actual += timedelta(days=1)
+                logging.info(f"fecha despues de sumar: {fecha_actual}")
             close_operaciones_window(operacion_window)
             return{
                 "status":"finished",
