@@ -1,6 +1,5 @@
 import os
 import logging
-# from pywinauto import Application
 from time import sleep
 
 if not os.path.exists('logs/sga'):
@@ -8,7 +7,6 @@ if not os.path.exists('logs/sga'):
 
     logging.basicConfig(level=logging.INFO, filename="logs/sga/sga.log", 
                         format="%(asctime)s - %(levelname)s - %(message)s")
-
 
 def navegar_sistema_tecnico(main_window):
     try:

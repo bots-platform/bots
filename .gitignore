@@ -1,21 +1,7 @@
 media/
 logs/
-
-# Entorno virtual
-venv/
-ENV/
-env/
-
-# Archivos de caché de Python
-__pycache__/
-*.py[cod]
-*$py.class
-
-# Archivos de configuración del editor y sistema operativo
-*.vscode/
-.idea/
-.DS_Store
-Thumbs.db
-
-# Archivos de seguridad (credenciales, claves, etc.)
 .env
+venv/
+__pycache__/
+*.vscode/
+

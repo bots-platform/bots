@@ -12,7 +12,7 @@ import pyperclip # type: ignore
 from io import StringIO
 import aiohttp
 from aiohttp import ClientConnectorError
-from config import MI_URL, EXCEL_FILENAME, EXCEL_CONTENT_TYPE, AUTH_USERNAME, AUTH_PASSWORD
+from config import URL_DJANGO, EXCEL_FILENAME, EXCEL_CONTENT_TYPE, AUTH_USERNAME, AUTH_PASSWORD
 
 
 if not os.path.exists('logs/sga'):
@@ -75,105 +75,24 @@ def seleccionar_275_data_previa(main_window):
         logging.error(f"Error al seleccionar '275 TABLERO DATA PREVIA': {e}")
         raise
 
-def seleccionar_fecha_secuencia(main_window):
-     try:
-        logging.info("Intentando establecer rango de fecha de secuencia")  
-        try:
-            logging.info("Intentando seleccion check box")
-            checkbox_fecha_secuencia = (
-                #main_window.child_window(best_match="fecha_secuenciaCheckBox", control_type="CheckBox")
-                main_window.child_window(title="fecha_secuencia", control_type="CheckBox")
-                .wait('exists ready', timeout=3)  
-            )
-            checkbox_fecha_secuencia.click()
-            sleep(1)
-            send_keys('{ENTER}')
-            logging.info("checkBox selected successfully")
-            #main_window.print_control_identifiers()
-        except TimeoutError:
-            logging.error("El CheckBox no estuvo listo a tiempo.")
-     except Exception as e:
-         logging.error(f"Error al establecer rango de fecha de secuencia: {e}")
-         raise
-     
-def seleccionar_fecha_secuencia_v2(main_window, fecha_inicio=None, fecha_fin=None):
+def seleccionar_fecha_secuencia(main_window, fecha_inicio=None, fecha_fin=None):
     try:
         logging.info("Intentando establecer rango de fecha de secuencia")
-
-        if fecha_fin is None:
-            fecha_fin = datetime.now().strftime("%d/%m/%Y")  
-        if fecha_inicio is None:
-            today = datetime.now()
-            first_day_of_current_month = today.replace(day=1)
-            fecha_inicio_dt = first_day_of_current_month - timedelta(days=1)
-            fecha_inicio_dt = fecha_inicio_dt.replace(day=15)
-            fecha_inicio = fecha_inicio_dt.strftime("%d/%m/%Y")
-
-        logging.info(f"Estableciendo fecha de secuencia inicio: {fecha_inicio}")
-        send_keys('{TAB}') 
-        send_keys(fecha_inicio)
-        sleep(1)
-
-        logging.info(f"Estableciendo fecha de secuencia fin: {fecha_fin}")
-        send_keys('{TAB}') 
-        send_keys(fecha_fin)
-        sleep(1)
-
-    
-        try:
-            logging.info("Intentando seleccionar el checkbox 'fecha_secuencia'")
-            checkbox_fecha_secuencia = (
-                main_window.child_window(title="fecha_secuencia", control_type="CheckBox")
-                .wait('exists ready', timeout=3)
-            )
-            checkbox_fecha_secuencia.click()
-            sleep(1)
-            send_keys('{ENTER}')
-            logging.info("Checkbox seleccionado exitosamente")
-        except TimeoutError:
-            logging.error("El CheckBox no estuvo listo a tiempo.")
-            return
-        
-      
-
-        logging.info("Fechas de secuencia establecidas correctamente.")
-    except Exception as e:
-        logging.error(f"Error al establecer rango de fecha de secuencia: {e}")
-        raise
-   
-def seleccionar_fecha_secuencia_v3(main_window, fecha_inicio=None, fecha_fin=None):
-    try:
-        logging.info("Intentando establecer rango de fecha de secuencia")
-
         logging.info(f"Estableciendo fecha de secuencia inicio: {fecha_inicio}")
         send_keys('{TAB}')
-        # sleep(1) 
-        # send_keys("00/00/00")
-        # send_keys('+{TAB}')
-        # send_keys('{TAB}')
-        # sleep(1) 
-        # send_keys(fecha_inicio)
-        # sleep(2)
-        # main_window.type_keys(fecha_inicio, with_spaces=True)
+        sleep(1)
         pyperclip.copy(fecha_inicio)
         sleep(1)
         main_window.type_keys("^v")
+
         logging.info(f"Estableciendo fecha de secuencia fin: {fecha_fin}")
         send_keys('{TAB}')
-        # sleep(1)
-        # send_keys("00/00/00")
-        # send_keys('+{TAB}')
-        # send_keys('{TAB}')
-        # sleep(1)
-        # send_keys(fecha_fin)
-        sleep(2)
-        # main_window.type_keys(fecha_fin, with_spaces=True)
+        sleep(1)
         pyperclip.copy(fecha_fin)
         sleep(1)
         main_window.type_keys("^v")
         send_keys('{TAB 2}') 
 
-    
         try:                                                                                                                                                                                                                                                                                                                                                                                
             logging.info("Intentando seleccionar el checkbox 'fecha_secuencia'")
             checkbox_fecha_secuencia = (
@@ -189,8 +108,6 @@ def seleccionar_fecha_secuencia_v3(main_window, fecha_inicio=None, fecha_fin=Non
             logging.error("El CheckBox no estuvo listo a tiempo.")
             return
         
-      
-
         logging.info("Fechas de secuencia establecidas correctamente.")
     except Exception as e:
         logging.error(f"Error al establecer rango de fecha de secuencia: {e}")
@@ -322,7 +239,6 @@ def copiando_reporte_al_clipboard():
 
 def guardando_excel():
     try:
-
         base_dir = 'media'
         sga_dir = os.path.join(base_dir, 'sga')
         if not os.path.exists(sga_dir):
@@ -349,22 +265,17 @@ async def send_excel_to_api(excel_path):
         if not Path(excel_path).exists():
             logging.error(f" Archivo excel no encontrado: {excel_path}")
             return False
-          
-        df = pd.read_excel(excel_path)
-        csv_path = excel_path.replace('.xlsx', '.csv')
-        df.to_csv(csv_path, index=False)
-            
-        mi_url = MI_URL
+
+        mi_url = URL_DJANGO
 
         form_data = aiohttp.FormData()
         form_data.add_field( 
                             'sga_csv',
-                            open(excel_path, 'rb'),  # Abrimos el archivo como un objeto de archivo directamente
+                            open(excel_path, 'rb'), 
                             filename=EXCEL_FILENAME,
                             content_type=EXCEL_CONTENT_TYPE
                             )
 
-    
         form_data.add_field('sga_fecha',
                            datetime.now().strftime('%Y-%m-%d'))
             
@@ -375,7 +286,6 @@ async def send_excel_to_api(excel_path):
                 data=form_data,
                 auth=auth
             ) as response:
-                # print(response.text)
                 if response.status in [200, 202]:
                     logging.info("Excel enviado exitosamente")
                     return {
@@ -390,13 +300,10 @@ async def send_excel_to_api(excel_path):
                     )
                 
     except ClientConnectorError as e:
-        logging.exception("Error de conexión: No se puede conectar con el servidor")
+        logging.exception("Error de conexión con el servidor")
         raise HTTPException(status_code=503, detail="Servicio no disponible. El servidor está caído o inalcanzable.")
             
     except Exception as e:
-        logging.exception(f"Error en envío de Excel a la API Dango: {e}")
+        logging.exception(f"Error general: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-    
-
-
     

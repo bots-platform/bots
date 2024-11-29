@@ -1,5 +1,4 @@
 from fastapi import APIRouter
-
 from app.modules.oplogin.service import OploginService
 
 router = APIRouter(prefix="/api/oplogin", tags=["oplogin"])

@@ -11,7 +11,7 @@ from app.modules.sga.scripts.sga_operations import (
     seleccionar_atcorp,
     abrir_reporte_dinamico,
     seleccionar_275_data_previa,
-    seleccionar_fecha_secuencia_v3,
+    seleccionar_fecha_secuencia,
     seleccionar_clipboard,  
     select_column_codiIncidencia,
     seleccionar_276_averias,
@@ -82,13 +82,6 @@ class SGAService:
             logging.info("Realizando operaciones en SGA Operaciones...")
             seleccionar_control_de_tareas(operacion_window)
             
-
-            if isinstance(fecha_secuencia_inicio, str):
-                fecha_secuencia_inicio = datetime.strptime(fecha_secuencia_inicio, "%Y-%m-%d")
-            if isinstance(fecha_secuencia_fin, str):
-                fecha_secuencia_fin = datetime.strptime(fecha_secuencia_fin, "%Y-%m-%d")
-
-            
             fecha_actual = fecha_secuencia_inicio
             resultados = []
             while fecha_actual <= fecha_secuencia_fin:
@@ -101,7 +94,7 @@ class SGAService:
                     seleccionar_atcorp(operacion_window)
                     abrir_reporte_dinamico(operacion_window)
                     seleccionar_275_data_previa(operacion_window)
-                    seleccionar_fecha_secuencia_v3(operacion_window, fecha_actual_str, fecha_actual_str)
+                    seleccionar_fecha_secuencia(operacion_window, fecha_actual_str, fecha_actual_str)
                     seleccionar_clipboard()
                     numero_tickets = select_column_codiIncidencia()
                     cerrar_reporte_Dinamico(operacion_window)
@@ -115,12 +108,13 @@ class SGAService:
                     cerrar_reporte_Dinamico(operacion_window)
                     path_excel = guardando_excel()
 
-                    if await send_excel_to_api(path_excel):
+                    resultado_envio = await send_excel_to_api(path_excel)
+                    if resultado_envio["status"] == "success":
                         logging.info(f"Reporte enviado exitosamente para la fecha: {fecha_actual_str}")
                         resultados.append({
                             "fecha":fecha_actual_str,
                             "status":"success",
-                            "message":"Reporte enviado exitosamente"
+                            "message": resultado_envio["message"]
                         })      
                     else:
                         logging.error(f"Error al enviar el archivo Excel para la fecha: {fecha_actual_str}")
@@ -128,27 +122,30 @@ class SGAService:
                             {
                                 "fecha":fecha_actual_str,
                                 "status":"error",
-                                "message":"Error al enviar el archivo"
+                                "message":resultado_envio["message"]
                             }
                         )
                 except Exception as e:
                     logging.error(f"Error al procesar la fecha {fecha_actual_str}: {e}")
                     resultados.append(
-                        {"fecha": fecha_actual_str, "status": "error", "message": str(e)}
+                        {"fecha": fecha_actual_str,  
+                        "status": "error",
+                        "message": str(e)}
                     )
-
-                logging.info(f"fecha antes de sumar: {fecha_actual}")
+ 
                 fecha_actual += timedelta(days=1)
-                logging.info(f"fecha despues de sumar: {fecha_actual}")
+               
             close_operaciones_window(operacion_window)
+
             return{
                 "status":"finalizado",
                 "Resultados": resultados
             }
+        
         except Exception as e:
-           error_message = f" Error al enviar reporte: {str(e)}"
+           error_message = f" Error general al generar el reporte dinamico: {str(e)}"
            logging.error(error_message)
            raise HTTPException(
                 status_code=500,
-                 detail=error_message
+                detail=error_message
            )

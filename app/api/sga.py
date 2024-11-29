@@ -1,6 +1,5 @@
 from app.modules.sga.models import FechaSecuenciaRequest
 from fastapi import APIRouter
-
 from ..modules.sga.service import SGAService
 
 router = APIRouter(prefix="/api/sga", tags=["sga"])

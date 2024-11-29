@@ -7,12 +7,10 @@ from app.modules.oplogin.config.settings  import BROWSER_SETTINGS
 def setup_chrome_driver():
     """Setup Chrome driver with window staying open"""
     options = Options()
-    
-
     options.add_argument("--start-maximized")
     options.add_argument("--disable-notifications")
 
-  
+
     # Mantener la ventana abierta
     options.add_experimental_option("detach", True)
     
@@ -60,5 +58,4 @@ def setup_chrome_driver():
     driver.execute_script(
         "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
     )
-    
     return driver

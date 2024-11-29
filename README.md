@@ -21,9 +21,11 @@ fastapi_project/
 │   
 └── main.py
 ├── config.py 
+├── venv/
 ├── logs/
 ├── media/
-├── .env                           
+├── .env 
+├── .env.example                          
 ├── .gitignore                    
 ├── requirements.txt            
 └── README.md                     
@@ -85,3 +87,6 @@ Para ejecutar el proyecto desde la línea de comandos:
 python main.py
 
 ```
+
+
+
