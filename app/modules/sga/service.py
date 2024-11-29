@@ -103,7 +103,7 @@ class SGAService:
             while fecha_actual <= fecha_secuencia_fin:
                 try:
                   
-                    fecha_actual_str = fecha_actual.datetime.strptime('%d/%m/%Y')
+                    fecha_actual_str = fecha_actual.strftime('%d/%m/%Y')
             
                     logging.info(f"Procesando fecha: {fecha_actual_str}")
                    
