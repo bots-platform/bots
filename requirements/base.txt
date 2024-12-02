@@ -10,3 +10,10 @@ exceptiongroup==1.2.2
 h11==0.14.0
 six==1.16.0
 tzdata==2024.2
+aiohttp==3.11.7
+openpyxl==3.1.5
+pydantic==2.10.1
+pydantic_core==2.27.1
+pyperclip==1.9.0
+uvicorn==0.24.0
+websocket-client==1.8.0
