@@ -72,7 +72,7 @@ def close_operaciones_window(operacion_window):
 class SGAService:
     async def generate_dynamic_report(self,fecha_secuencia_inicio,fecha_secuencia_fin) :
         try:
-
+            
             navegacion_window = connect_to_sga()
             navegar_sistema_tecnico(navegacion_window)
             seleccionar_opcion_sga(navegacion_window, "SGA Operaciones")
@@ -88,8 +88,8 @@ class SGAService:
                 try:
                   
                     fecha_actual_str = fecha_actual.strftime('%d/%m/%Y')
-            
-                    logging.info(f"Procesando fecha: {fecha_actual_str}")
+
+                    logging.info(f"Procesando generar reporte dinamico para la fecha: {fecha_actual_str}")
                    
                     seleccionar_atcorp(operacion_window)
                     abrir_reporte_dinamico(operacion_window)
@@ -106,7 +106,8 @@ class SGAService:
                     seleccion_multiple_listado(numero_tickets)
                     copiando_reporte_al_clipboard()
                     cerrar_reporte_Dinamico(operacion_window)
-                    path_excel = guardando_excel()
+                    fecha_procesada = fecha_actual.strftime('%Y-%m-%d')
+                    path_excel = guardando_excel(fecha_procesada)
 
                     resultado_envio = await send_excel_to_api(path_excel)
                     if resultado_envio["status"] == "success":
@@ -128,9 +129,11 @@ class SGAService:
                 except Exception as e:
                     logging.error(f"Error al procesar la fecha {fecha_actual_str}: {e}")
                     resultados.append(
-                        {"fecha": fecha_actual_str,  
+                        {
+                        "fecha": fecha_actual_str,  
                         "status": "error",
-                        "message": str(e)}
+                        "message": f"Error interno para la fecha: {str(e)}"
+                        }
                     )
  
                 fecha_actual += timedelta(days=1)

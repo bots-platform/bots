@@ -7,7 +7,7 @@ class FechaSecuenciaRequest(BaseModel):
     fecha_fin: date = Field(..., description="La fecha de fin del rango (YYYY-MM-DD).")
 
     class Config:
-        schema_extra = {
+        json_schem_extra = {
             "example": {
                 "fecha_inicio": "2024-12-01",
                 "fecha_fin": "2024-12-31"

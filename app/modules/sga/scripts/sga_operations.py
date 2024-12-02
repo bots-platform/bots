@@ -12,6 +12,7 @@ import pyperclip # type: ignore
 from io import StringIO
 import aiohttp
 from aiohttp import ClientConnectorError
+from urllib.parse import urlparse
 from config import URL_DJANGO, EXCEL_FILENAME, EXCEL_CONTENT_TYPE, AUTH_USERNAME, AUTH_PASSWORD
 
 
@@ -106,7 +107,7 @@ def seleccionar_fecha_secuencia(main_window, fecha_inicio=None, fecha_fin=None):
             logging.info("Checkbox seleccionado exitosamente")
         except TimeoutError:
             logging.error("El CheckBox no estuvo listo a tiempo.")
-            return
+            raise
         
         logging.info("Fechas de secuencia establecidas correctamente.")
     except Exception as e:
@@ -144,7 +145,7 @@ def select_column_codiIncidencia():
         return nro_tickets
     except Exception as e:
         logging.info(f"Error al seleccionar la columna codigo de incidencias: {e}")
-        return False
+        raise
     
 def cerrar_reporte_Dinamico(main_window):
     try:
@@ -188,6 +189,7 @@ def seleccionar_checkbox_nroincidencias(main_window):
         logging.info("checkBox selected successfully")
     except TimeoutError:
          logging.error("El CheckBox no estuvo listo a tiempo.")
+         raise
 
 def click_button_3puntos(main_window):  
       
@@ -202,7 +204,7 @@ def click_button_3puntos(main_window):
         return True
     except Exception as e:
         logging.error(f"Error al seleccionar 'button ...': {e}")
-        return False
+        
 
 def seleccion_multiple_listado(numero_tickets):
     try:
@@ -220,6 +222,7 @@ def seleccion_multiple_listado(numero_tickets):
         send_keys('{ENTER}')  
     except Exception as e:
         logging.error(f"Error al seleccionar multiple listado")
+        raise
 
 def copiando_reporte_al_clipboard():
     try:
@@ -237,8 +240,10 @@ def copiando_reporte_al_clipboard():
         logging.info(f"Error al copiar del 'clipboard': {e}")
         raise
 
-def guardando_excel():
+def guardando_excel(fecha_procesada):
+
     try:
+        logging.info("Guardando reporte del clipboard al excel")   
         base_dir = 'media'
         sga_dir = os.path.join(base_dir, 'sga')
         if not os.path.exists(sga_dir):
@@ -246,9 +251,8 @@ def guardando_excel():
             logging.info(f"Directorio '{sga_dir}' creado.")
 
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        output_file = f'{sga_dir}/reporte_{timestamp}.xlsx'
+        output_file = f'{sga_dir}/reporte_{fecha_procesada}_{timestamp}.xlsx'
 
-        logging.info("Guardando reporte del clipboard al excel")   
         df = pd.read_clipboard(sep='\t')
         with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
             df.to_excel(writer, index=False, sheet_name='reporte')
@@ -258,10 +262,17 @@ def guardando_excel():
       
     except Exception as e:
         logging.info(f"Error al guardar reporte del clipboard al excel: {e}")
-        return False
+        return {"status": "error", "message": str(e)}
 
 async def send_excel_to_api(excel_path):
+
     try:
+        logging.info("Tratando de enviar el excel a la API Django")
+
+        parsed = urlparse(URL_DJANGO)
+        if not parsed.scheme or not parsed.netloc:
+            raise ValueError(f"La URL '{URL_DJANGO} no esta correctamente configurada.")
+    
         if not Path(excel_path).exists():
             logging.error(f" Archivo excel no encontrado: {excel_path}")
             return False
@@ -287,23 +298,33 @@ async def send_excel_to_api(excel_path):
                 auth=auth
             ) as response:
                 if response.status in [200, 202]:
-                    logging.info("Excel enviado exitosamente")
+                    logging.info("Excel enviado exitosamente a la Django")
                     return {
                         "status":"success",
                         "message": "Archivo enviado correctamente"
                     }
                 else:
-                    logging.error(f"Error al enviar Excel: {response.status}")
-                    raise HTTPException(
-                        status_code=response.status,
-                        detail=f"Error al enviar Excel: {await response.text()}"
-                    )
+                    error_message = await response.text()
+                    logging.error(f"Error al enviar Excel a Django: {response.status},{error_message}")
+                    return {
+                        "status":"error",
+                        "message": f"Error al enviar Excel a Django : {error_message}"
+                    }
+                
+    except ValueError as e:
+        raise HTTPException(status_code=500, detail=f"Error en la configuracion del la URL: {str(e)} ")
                 
     except ClientConnectorError as e:
-        logging.exception("Error de conexión con el servidor")
-        raise HTTPException(status_code=503, detail="Servicio no disponible. El servidor está caído o inalcanzable.")
+        logging.exception(f"Error de conexión con el servidor: {str(e)}")
+        return {
+            "status":"error",
+            "message": f"Servicio no disponible. El servidor esta caido o inalcanzable: {str(e)}."
+        }
             
     except Exception as e:
-        logging.exception(f"Error general: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logging.exception(f"Error general al enviar excel a la api Django: {e}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
     

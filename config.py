@@ -4,7 +4,7 @@ import os
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
 load_dotenv(dotenv_path)
 
-URL_DJANGO = os.getenv("MI_URL")
+URL_DJANGO = os.getenv("URL_DJANGO")
 EXCEL_FILENAME = os.getenv("EXCEL_FILENAME")
 EXCEL_CONTENT_TYPE = os.getenv("EXCEL_CONTENT_TYPE")
 AUTH_USERNAME = os.getenv("AUTH_USERNAME")

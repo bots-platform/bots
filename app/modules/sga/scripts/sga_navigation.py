@@ -18,9 +18,9 @@ def navegar_sistema_tecnico(main_window):
         tecnico.click_input()
         sleep(2)
         logging.info("'Sistema Técnico' seleccionado con éxito.")
-        return True
     except Exception as e:
         logging.error(f"Error al seleccionar 'Sistema Técnico': {e}")
+        raise
 
 def seleccionar_opcion_sga(main_window, opcion):
     try:

@@ -1,5 +1,6 @@
+from pydantic import ValidationError
 from app.modules.sga.models import FechaSecuenciaRequest
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from ..modules.sga.service import SGAService
 
 router = APIRouter(prefix="/api/sga", tags=["sga"])
@@ -8,7 +9,8 @@ router = APIRouter(prefix="/api/sga", tags=["sga"])
 async def generate_dynamic_report(request: FechaSecuenciaRequest):
     sga_service = SGAService()
     return await sga_service.generate_dynamic_report(request.fecha_inicio, request.fecha_fin)
-
+      
+        
 @router.get("/reporte")
 async def generate():
     return {'hola': 'sga - tickets'}
