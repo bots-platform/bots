@@ -1,0 +1,50 @@
+from fastapi import HTTPException
+from app.modules.web_bots.browser.setup import setup_chrome_driver
+from app.modules.web_bots.semaforo.scripts.semaforo_scraper import scrape_semaforo_page
+from config import SEMAFORO_USER, SEMAFORO_PASSWORD
+import time
+from utils.logger_config import get_semaforo_logger
+ 
+logger = get_semaforo_logger()
+
+
+class SemaforoService:
+    def descargarReporte(self, fecha_inicio, fecha_fin):
+        try:
+            driver = None
+            if not SEMAFORO_USER or not SEMAFORO_PASSWORD:
+                logger.error("New Call Center credenciales no encontradas .env file")
+                return
+            try:
+                logger.info('Empezando scraping de SEMAFORO')
+                driver = setup_chrome_driver()
+                result = scrape_semaforo_page(driver, SEMAFORO_USER, SEMAFORO_PASSWORD, fecha_inicio, fecha_fin)
+                while True:
+                    try:
+                        driver.current_url
+                        time.sleep(1)
+                    except Exception as e:
+                        logger.info("El navegador ha sido cerrado.")
+                        break
+
+                return {
+                    "status": "success",
+                    "message": "Proceso completado. Verifica las descargas."
+                }
+   
+            except Exception as e:
+                logger.error(f"Error en scraping de SEMAFORO: {str(e)}")
+
+            finally:
+                if driver:
+                    driver.quit()
+                    logger.info("SEMAFORO CERRADO")
+
+        except Exception as e:
+           error_message = f" Error al descargar reporte: {str(e)}"
+           logger.error(error_message)
+
+           raise HTTPException(
+                status_code=500,
+                 detail=error_message
+           )

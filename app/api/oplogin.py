@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.modules.oplogin.service import OploginService
+from app.modules.web_bots.oplogin.service import OploginService
 
 router = APIRouter(prefix="/api/oplogin", tags=["oplogin"])
 

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import sga
-from app.api import oplogin
+from app.api import sga, oplogin, newCallCenter, semaforo, reporteCombinado
+
 
 app = FastAPI()
 
@@ -15,6 +15,9 @@ app.add_middleware(
 
 app.include_router(sga.router)
 app.include_router(oplogin.router)
+app.include_router(newCallCenter.router)
+app.include_router(semaforo.router)
+app.include_router(reporteCombinado.router)
 
 if __name__ == "__main__":
     import uvicorn

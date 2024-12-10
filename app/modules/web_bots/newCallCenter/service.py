@@ -1,26 +1,24 @@
 from fastapi import HTTPException
-from app.modules.oplogin.browser.setup import setup_chrome_driver
-from app.modules.oplogin.scripts.oplogin_scraper import scrape_oplogin_page
-from dotenv import load_dotenv
-import os
+from app.modules.web_bots.browser.setup import setup_chrome_driver
+from app.modules.web_bots.newCallCenter.scripts.newCallCenter_scraper import scrape_newcallcenter_page
+from config import NEW_CALL_CENTER_USER, NEW_CALL_CENTER_PASSWORD
 import time
-import logging  
+from utils.logger_config import get_newcallcenter_logger
+ 
+logger = get_newcallcenter_logger()
 
-class OploginService:
-    def descargarReporte(self):
+
+class NewCallCenterService:
+    def descargarReporte(self,fecha_inicio, fecha_fin):
         try:
-            load_dotenv()
             driver = None
-            user = os.getenv('OPLOGIN_USER')
-            password = os.getenv('OPLOGIN_PASSWORD')
-
-            if not user or not password:
-                logging.error("Oplogin credenciales no encontradas .env file")
+            if not NEW_CALL_CENTER_USER or not NEW_CALL_CENTER_PASSWORD:
+                logger.error("New Call Center credenciales no encontradas .env file")
                 return
             try:
-                logging.info('Empezando scraping de Oplogin')
+                logger.info('Empezando scraping de New Call Center')
                 driver = setup_chrome_driver()
-                result = scrape_oplogin_page(driver, user, password)
+                result = scrape_newcallcenter_page(driver, NEW_CALL_CENTER_USER, NEW_CALL_CENTER_PASSWORD, fecha_inicio, fecha_fin)
                 while True:
                     try:
                         driver.current_url
@@ -35,16 +33,16 @@ class OploginService:
                 }
    
             except Exception as e:
-                logging.error(f"Error en scraping de Oplogin: {str(e)}")
+                logger.error(f"Error en scraping de New Call Center: {str(e)}")
 
             finally:
                 if driver:
                     driver.quit()
-                    logging.info("OPLOGIN CERRADO")
+                    logger.info("NEW CALL CENTER CERRADO")
 
         except Exception as e:
            error_message = f" Error al descargar reporte: {str(e)}"
-           logging.error(error_message)
+           logger.error(error_message)
 
            raise HTTPException(
                 status_code=500,

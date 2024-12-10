@@ -2,9 +2,10 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
-from app.modules.oplogin.config.settings  import BROWSER_SETTINGS
+from app.modules.web_bots.config.settings  import BROWSER_SETTINGS
+import os
 
-def setup_chrome_driver():
+def setup_chrome_driver(download_directory=None):
     """Setup Chrome driver with window staying open"""
     options = Options()
     options.add_argument("--start-maximized")
@@ -32,16 +33,29 @@ def setup_chrome_driver():
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--disable-gpu')
-    options.add_experimental_option("prefs", {
-        # Desactivar diálogos de guardar contraseña
-        "credentials_enable_service": False,
-        "profile.password_manager_enabled": False,
-        # Desactivar otras notificaciones
-        "profile.default_content_setting_values.notifications": 2,
-        "profile.default_content_setting_values.media_stream_mic": 2,
-        "profile.default_content_setting_values.media_stream_camera": 2,
-        "profile.default_content_setting_values.geolocation": 2
-    })
+
+
+
+    prefs = {
+     # Desactivar diálogos de guardar contraseña
+     "credentials_enable_service": False,
+     "profile.password_manager_enabled": False,
+    # Desactivar otras notificaciones
+     "profile.default_content_setting_values.notifications": 2,
+     "profile.default_content_setting_values.media_stream_mic": 2,
+     "profile.default_content_setting_values.media_stream_camera": 2,
+     "profile.default_content_setting_values.geolocation": 2,
+     # Configuraciones por defecto para descargas
+     "download.prompt_for_download": False,
+     "download.directory_upgrade": True,
+     "safebrowsing.enabled": False
+    }
+
+     # Si se especifica un directorio de descarga, agregarlo a las preferencias
+    if download_directory:
+        prefs["download.default_directory"] = os.path.abspath(download_directory)
+
+    options.add_experimental_option("prefs",prefs)
     
     # Crear el driver
     service = Service(ChromeDriverManager().install())
@@ -53,9 +67,19 @@ def setup_chrome_driver():
     # Configurar timeouts
     driver.implicitly_wait(BROWSER_SETTINGS['timeout'])
     driver.set_page_load_timeout(BROWSER_SETTINGS['page_load_timeout'])
+
+
     
     # Ocultar webdriver
     driver.execute_script(
         "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
     )
+
+     # Agregar aquí la configuración para mantener la ventana en primer plano
+    driver.set_window_position(0, 0)
+    driver.maximize_window()
+
+    from selenium.webdriver.common.action_chains import ActionChains
+    ActionChains(driver).move_by_offset(100, 100).click().perform()
+    
     return driver
