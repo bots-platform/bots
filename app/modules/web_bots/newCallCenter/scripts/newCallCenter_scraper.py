@@ -7,8 +7,42 @@ import time
 from datetime import datetime, timedelta
 from config import URL_NEW_CALL_CENTER
 from utils.logger_config import get_newcallcenter_logger
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.action_chains import ActionChains
 
 logger = get_newcallcenter_logger()
+
+def handle_download_dialog(driver):
+    try:
+      
+        download_icon = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "button[title='Downloads']"))
+        )
+        download_icon.click()
+        
+        
+        keep_button = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//button[text()='Keep']"))
+        )
+        keep_button.click()
+        
+        logger.info("Descarga confirmada exitosamente")
+        return True
+        
+    except Exception as e:
+       
+        try:
+          
+            ActionChains(driver)\
+                .key_down(Keys.ALT).send_keys('j').key_up(Keys.ALT)\
+                .pause(1)\
+                .send_keys(Keys.TAB).send_keys(Keys.ENTER)\
+                .perform()
+            logger.info("Descarga confirmada usando atajos de teclado")
+            return True
+        except Exception as sub_e:
+            logger.error(f"Error al manejar diálogo de descarga: {str(e)} - {str(sub_e)}")
+            return False
 
 
 def login_to_newcallcenter(driver, user, password):
@@ -157,6 +191,11 @@ def click_descargar(driver):
         )
         
         download_button.click()
+
+        handle_download_dialog(driver)
+
+        time.sleep(2)
+        
         logger.info('Clic en Descarga Aquí exitoso')
         return True
 
