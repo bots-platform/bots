@@ -1,20 +1,12 @@
 
 from fastapi import APIRouter
-from app.modules.web_bots.semaforo.service import SemaforoService
-from app.modules.web_bots.newCallCenter.service import NewCallCenterService
-from app.modules.web_bots.semaforo.models import FechaReporteAsistenciaRequest
-
-router = APIRouter(prefix="/api/reportes", tags=["reportes_combinados"])
-
-
-from fastapi import APIRouter
 from app.modules.web_bots.reportesCombinados.service import ReporteCombinadoService
-from app.modules.web_bots.semaforo.models import FechaReporteAsistenciaRequest
+from app.modules.web_bots.reportesCombinados.models import FechaReporteCombinadoRequest
 
 router = APIRouter(prefix="/api/reportes", tags=["reportes_combinados"])
 
 @router.post("/combinado")
-async def generar_reporte_combinado_endpoint(request: FechaReporteAsistenciaRequest):
+async def generar_reporte_combinado_endpoint(request: FechaReporteCombinadoRequest):
     return await ReporteCombinadoService.generar_reporte_combinado(
         request.fecha_inicio,
         request.fecha_fin

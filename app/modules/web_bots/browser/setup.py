@@ -34,8 +34,6 @@ def setup_chrome_driver(download_directory=None):
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--disable-gpu')
 
-
-
     prefs = {
      # Desactivar diálogos de guardar contraseña
      "credentials_enable_service": False,
@@ -48,7 +46,10 @@ def setup_chrome_driver(download_directory=None):
      # Configuraciones por defecto para descargas
      "download.prompt_for_download": False,
      "download.directory_upgrade": True,
-     "safebrowsing.enabled": False
+     "download.default_directory": download_directory,
+     "safebrowsing.enabled": True,
+     "safebrowsing.disable_download_protection": True,
+
     }
 
      # Si se especifica un directorio de descarga, agregarlo a las preferencias

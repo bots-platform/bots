@@ -4,7 +4,8 @@ from app.modules.web_bots.semaforo.scripts.semaforo_scraper import scrape_semafo
 from config import SEMAFORO_USER, SEMAFORO_PASSWORD
 import time
 from utils.logger_config import get_semaforo_logger
- 
+import os
+
 logger = get_semaforo_logger()
 
 
@@ -15,9 +16,16 @@ class SemaforoService:
             if not SEMAFORO_USER or not SEMAFORO_PASSWORD:
                 logger.error("New Call Center credenciales no encontradas .env file")
                 return
+            
+            download_path = os.path.abspath("media/semaforo/")
+       
+            if not os.path.exists(download_path):
+                os.makedirs(download_path)
+
+
             try:
                 logger.info('Empezando scraping de SEMAFORO')
-                driver = setup_chrome_driver()
+                driver = setup_chrome_driver(download_directory=download_path)
                 result = scrape_semaforo_page(driver, SEMAFORO_USER, SEMAFORO_PASSWORD, fecha_inicio, fecha_fin)
                 while True:
                     try:

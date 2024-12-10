@@ -10,6 +10,10 @@ from utils.logger_config import get_newcallcenter_logger
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 
+from bs4 import BeautifulSoup
+import pandas as pd
+import os
+
 logger = get_newcallcenter_logger()
 
 def handle_download_dialog(driver):
@@ -43,7 +47,6 @@ def handle_download_dialog(driver):
         except Exception as sub_e:
             logger.error(f"Error al manejar diálogo de descarga: {str(e)} - {str(sub_e)}")
             return False
-
 
 def login_to_newcallcenter(driver, user, password):
 
@@ -166,6 +169,28 @@ def choose_agenteLogin(driver):
         logger.error(error_message)
         raise Exception(error_message)
 
+def click_descargar(driver):
+    
+    try:
+        logger.info('Intentando hacer clic en botón Descarga Aquí')
+
+        
+        download_button = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.CLASS_NAME, "descargarExcel"))
+        )
+        
+        download_button.click()
+        #handle_download_dialog(driver)
+        time.sleep(2)
+        
+        logger.info('Clic en Descarga Aquí exitoso')
+        return True
+
+    except Exception as e:
+        error_message = f'Error al hacer clic en Descarga Aquí: {str(e)}'
+        logger.error(error_message)
+        raise Exception(error_message)
+
 def click_boton_buscar(driver):
     try:
         logger.info("Intentando hacer click en botón buscar Agente")
@@ -181,28 +206,71 @@ def click_boton_buscar(driver):
         logger.error(error_message)
         raise Exception(error_message)    
 
-def click_descargar(driver):
+def extract_and_save_table(driver):
+    logger.info('Intentando extraer y guardar datos de la tabla')
     try:
-        logger.info('Intentando hacer clic en botón Descarga Aquí')
-
-        # Usando la clase btn-primary
-        download_button = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.CLASS_NAME, "descargarExcel"))
-        )
+        all_rows = []
+        current_page = 1
+        total_pages = None
         
-        download_button.click()
+        while True:
+            
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "table.table-bordered"))
+            )
+            time.sleep(2)  
+            
+          
+            if not total_pages:
+                pagination_text = driver.find_element(By.CSS_SELECTOR, ".dataTables_info").text
+                total_records = int(pagination_text.split()[-2].replace(',', ''))
+                total_pages = (total_records + 49) // 50 
+                logger.info(f'Total de registros a procesar: {total_records} en {total_pages} páginas')
 
-        handle_download_dialog(driver)
-
-        time.sleep(2)
+           
+            table = driver.find_element(By.CSS_SELECTOR, "table.table-bordered")
+            html_content = table.get_attribute('outerHTML')
+            soup = BeautifulSoup(html_content, 'html.parser')
+            
+           
+            for tr in soup.find('tbody').find_all('tr'):
+                cells = tr.find_all('td')
+                if cells:
+                    row_data = [cell.text.strip() for cell in cells]
+                    all_rows.append(row_data)
+            
+            logger.info(f'Procesada página {current_page} de {total_pages}')
+            
+           
+            if current_page >= total_pages:
+                break
+                
+          
+            next_button = driver.find_element(By.XPATH, "//a[text()='Siguiente']")
+            if 'disabled' in next_button.get_attribute('class'):
+                break
+            next_button.click()
+            current_page += 1
+            time.sleep(2) 
         
-        logger.info('Clic en Descarga Aquí exitoso')
-        return True
-
+      
+        headers = ['Fecha', 'Anexo', 'Usuario', 'Agente', 'Evento', 'Duracion', 'Motivo']
+        df = pd.DataFrame(all_rows, columns=headers)
+        
+     
+        os.makedirs('media/newcallcenter', exist_ok=True)
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f'media/newcallcenter/reporte_agentes_{timestamp}.xlsx'
+        df.to_excel(filename, index=False)
+        
+        logger.info(f'Datos guardados exitosamente en {filename}. Total de registros: {len(df)}')
+        return filename
+        
     except Exception as e:
-        error_message = f'Error al hacer clic en Descarga Aquí: {str(e)}'
+        error_message = f'Error al extraer/guardar datos de la tabla: {str(e)}'
         logger.error(error_message)
         raise Exception(error_message)
+
 
 def scrape_newcallcenter_page(driver, user, password, fecha_inicio, fecha_fin):
  
@@ -213,7 +281,8 @@ def scrape_newcallcenter_page(driver, user, password, fecha_inicio, fecha_fin):
     click_boton_buscar(driver)
     set_fechas_newcallcenter(driver,fecha_inicio,fecha_fin)
     click_boton_buscar(driver)
-    click_descargar(driver)
+    extract_and_save_table(driver)
+ 
     
 
     

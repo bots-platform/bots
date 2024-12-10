@@ -4,6 +4,7 @@ from app.modules.web_bots.newCallCenter.scripts.newCallCenter_scraper import scr
 from config import NEW_CALL_CENTER_USER, NEW_CALL_CENTER_PASSWORD
 import time
 from utils.logger_config import get_newcallcenter_logger
+import os
  
 logger = get_newcallcenter_logger()
 
@@ -15,9 +16,15 @@ class NewCallCenterService:
             if not NEW_CALL_CENTER_USER or not NEW_CALL_CENTER_PASSWORD:
                 logger.error("New Call Center credenciales no encontradas .env file")
                 return
+
+            download_path = os.path.abspath("media/newcallcenter/")
+       
+            if not os.path.exists(download_path):
+                os.makedirs(download_path)
+
             try:
                 logger.info('Empezando scraping de New Call Center')
-                driver = setup_chrome_driver()
+                driver = setup_chrome_driver(download_directory=download_path)
                 result = scrape_newcallcenter_page(driver, NEW_CALL_CENTER_USER, NEW_CALL_CENTER_PASSWORD, fecha_inicio, fecha_fin)
                 while True:
                     try:

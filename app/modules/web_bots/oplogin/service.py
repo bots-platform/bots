@@ -4,7 +4,8 @@ from app.modules.web_bots.oplogin.scripts.oplogin_scraper import scrape_oplogin_
 from config import OPLOGIN_USER, OPLOGIN_PASSWORD
 import time
 from utils.logger_config import get_oplogin_logger
- 
+import os
+
 logger = get_oplogin_logger()
 
 
@@ -15,9 +16,14 @@ class OploginService:
             if not OPLOGIN_USER or not OPLOGIN_PASSWORD:
                 logger.error("Oplogin credenciales no encontradas .env file")
                 return
+            
+            download_path = os.path.abspath("media/oplogin/")
+       
+            if not os.path.exists(download_path):
+                os.makedirs(download_path)
             try:
                 logger.info('Empezando scraping de Oplogin')
-                driver = setup_chrome_driver()
+                driver = setup_chrome_driver(download_directory=download_path)
                 result = scrape_oplogin_page(driver, OPLOGIN_USER, OPLOGIN_PASSWORD)
                 while True:
                     try:

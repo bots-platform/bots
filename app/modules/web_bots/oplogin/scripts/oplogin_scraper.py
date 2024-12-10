@@ -159,13 +159,7 @@ def click_btn_ExportExcel(driver):
         export_option.click()
         time.sleep(8)
 
-        download_path = "media/oplogin/"
-        if not os.path.exists(download_path):
-            os.makedirs(download_path)
-        driver = setup_chrome_driver(download_directory=download_path)
-        time.sleep(2)
-
-        logger.info(f'Excel descargado exitosamente en {download_path}')
+        logger.info(f'Excel descargado exitosamente')
         return True
 
     except Exception as e:

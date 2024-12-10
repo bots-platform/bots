@@ -5,6 +5,7 @@ import os
 from ..semaforo.service import SemaforoService
 from ..newCallCenter.service import NewCallCenterService
 
+
 class ReporteCombinadoService:
     #@staticmethod
     async def generar_reporte_combinado(fecha_inicio: str, fecha_fin: str):
@@ -20,7 +21,7 @@ class ReporteCombinadoService:
 
             tasks = [
                 semaforo_service.descargarReporte(fecha_inicio, fecha_fin),
-                newcallcenter_service.descargarReporte()
+                newcallcenter_service.descargarReporte(fecha_inicio, fecha_fin)
             ]
             resultados = await asyncio.gather(*tasks)
 
