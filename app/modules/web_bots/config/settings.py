@@ -6,3 +6,10 @@ BROWSER_SETTINGS = {
     'wait_time': 10,
     'retry_attempts': 3
 }
+
+
+
+
+
+
+

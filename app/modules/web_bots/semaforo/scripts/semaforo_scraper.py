@@ -9,6 +9,7 @@ import time
 from datetime import datetime, timedelta
 from config import URL_SEMAFORO
 from utils.logger_config import get_semaforo_logger
+from utils.waiting_download import wait_for_download
 
 from bs4 import BeautifulSoup
 import pandas as pd
@@ -139,7 +140,7 @@ def click_filtrar(driver):
         logger.error(error_message)
         raise Exception(error_message)
 
-def click_descargar_excel(driver):
+def click_descargar_excel(driver,fecha_desde, fecha_hasta):
     try:
         logger.info('Intentando descargar formato excel')
         
@@ -153,12 +154,26 @@ def click_descargar_excel(driver):
         )
         ok_button.click()
 
-        time.sleep(2)
-        handle_download_dialog(driver)
-        time.sleep(2)
+        download_path = os.path.abspath("media/semaforo/")
 
-        logger.info(f'Excel descargado exitosamente en ')
-        return True
+        downloaded_file = wait_for_download(download_path, timeout=60, polling_interval=1)
+
+        if not downloaded_file:
+            raise Exception("El archivo no se descargó dentro del tiempo de espera")
+
+        logger.info(f"Archivo descargado encontrado: {downloaded_file}")
+
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        new_file_name = f"reporte_semaforo_{fecha_desde}_{fecha_hasta}_{timestamp}.xls"
+
+        new_file_path = os.path.join(download_path, new_file_name)
+
+        os.rename(downloaded_file, new_file_path)
+
+        logger.info(f'Excel descargado exitosamente como {new_file_name}')
+                    
+        df = pd.read_excel(new_file_path)
+        return df
         
     except Exception as e:
         error_message = f'Error al intentar descargar excel: {str(e)}'
@@ -277,7 +292,7 @@ def scrape_semaforo_page(driver, user, password, fecha_desde, fecha_hasta):
     set_fechas_filtro(driver, fecha_desde, fecha_hasta)
     click_filtrar(driver)
     #extract_and_save_table_semaforo(driver)
-    click_descargar_excel(driver)
+    click_descargar_excel(driver, fecha_desde, fecha_hasta)
 
 
 

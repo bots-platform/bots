@@ -11,7 +11,7 @@ class ReporteCombinadoService:
     async def generar_reporte_combinado(fecha_inicio: str, fecha_fin: str):
         try:
         
-            for dir_path in ['media/semaforo', 'media/newcallcenter', 'media/reportes_combinados']:
+            for dir_path in ['media/semaforo/', 'media/newcallcenter/', 'media/reportes_combinados/']:
                 os.makedirs(dir_path, exist_ok=True)
 
 
