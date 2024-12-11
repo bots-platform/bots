@@ -144,7 +144,7 @@ def seleccionar_dropdown_agenteLoging(driver):
     logger.info('Tratando de hacer click en desplegable')
     try:
         time.sleep(2) 
-
+    
         dropdown = WebDriverWait(driver, 10).until(
         EC.element_to_be_clickable((By.CSS_SELECTOR, 'span.select2-selection'))
         )
@@ -170,15 +170,12 @@ def choose_agenteLogin(driver):
         raise Exception(error_message)
 
 def click_descargar(driver):
-    
     try:
         logger.info('Intentando hacer clic en botón Descarga Aquí')
 
-        
         download_button = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.CLASS_NAME, "descargarExcel"))
         )
-        
         download_button.click()
         #handle_download_dialog(driver)
         time.sleep(2)
@@ -271,7 +268,6 @@ def extract_and_save_table(driver):
         logger.error(error_message)
         raise Exception(error_message)
 
-
 def scrape_newcallcenter_page(driver, user, password, fecha_inicio, fecha_fin):
  
     login_to_newcallcenter(driver, user, password)
@@ -281,11 +277,14 @@ def scrape_newcallcenter_page(driver, user, password, fecha_inicio, fecha_fin):
     click_boton_buscar(driver)
     set_fechas_newcallcenter(driver,fecha_inicio,fecha_fin)
     click_boton_buscar(driver)
-    extract_and_save_table(driver)
- 
-    
+    click_descargar(driver)
+    #extract_and_save_table(driver)
 
-    
+ 
+
+
+
+
 
     
 

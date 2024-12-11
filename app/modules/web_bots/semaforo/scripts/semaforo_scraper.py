@@ -103,7 +103,7 @@ def set_fechas_filtro(driver, fecha_desde, fecha_hasta):
             EC.element_to_be_clickable((By.XPATH, "//label[text()='Fecha(Desde)']/following-sibling::input"))
         )
         fecha_desde_input.clear()
-        fecha_desde_input.send_keys(fecha_desde.strftime("%m/%d/%Y"))
+        fecha_desde_input.send_keys(fecha_desde.strftime("%d/%m/%Y"))
         
         time.sleep(1)
        
@@ -111,7 +111,7 @@ def set_fechas_filtro(driver, fecha_desde, fecha_hasta):
             EC.element_to_be_clickable((By.XPATH, "//label[text()='Fecha(Hasta)']/following-sibling::input"))
         )
         fecha_hasta_input.clear()
-        fecha_hasta_input.send_keys(fecha_hasta.strftime("%m/%d/%Y"))
+        fecha_hasta_input.send_keys(fecha_hasta.strftime("%d/%m/%Y"))
         time.sleep(1)
         logger.info('Fechas establecidas exitosamente')
         return True
@@ -143,11 +143,9 @@ def click_descargar_excel(driver):
     try:
         logger.info('Intentando descargar formato excel')
         
-    
         download_button = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, "//button[text()='Descargar formato excel']"))
         )
-        
         download_button.click()
 
         ok_button = WebDriverWait(driver, 10).until(
@@ -280,9 +278,6 @@ def scrape_semaforo_page(driver, user, password, fecha_desde, fecha_hasta):
     click_filtrar(driver)
     #extract_and_save_table_semaforo(driver)
     click_descargar_excel(driver)
-
-
-
 
 
 

@@ -11,15 +11,11 @@ def setup_chrome_driver(download_directory=None):
     options.add_argument("--start-maximized")
     options.add_argument("--disable-notifications")
 
-    options.add_argument('--safebrowsing-disable-download-protection')
-    options.add_argument('--safebrowsing-disable-extension-blacklist')
-    options.add_argument('--disable-web-security')
-
-    options.add_argument("--allow-running-insecure-content")
+    # options.add_argument('--safebrowsing-disable-download-protection')
+    # options.add_argument('--safebrowsing-disable-extension-blacklist')
+    # options.add_argument('--disable-web-security')
+    # options.add_argument("--allow-running-insecure-content")
   
-    
-
-
     # Mantener la ventana abierta
     options.add_experimental_option("detach", True)
     

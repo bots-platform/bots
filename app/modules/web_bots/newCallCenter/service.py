@@ -31,7 +31,7 @@ class NewCallCenterService:
                         driver.current_url
                         time.sleep(1)
                     except Exception as e:
-                        self.logger.info("El navegador ha sido cerrado.")
+                        logger.info("El navegador ha sido cerrado.")
                         break
 
                 return {

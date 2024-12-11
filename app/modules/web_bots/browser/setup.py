@@ -11,10 +11,10 @@ def setup_edge_driver(download_directory=None):
     options.add_argument("--start-maximized")
     options.add_argument("--disable-notifications")
 
-    options.add_argument('--safebrowsing-disable-download-protection')
-    options.add_argument('--safebrowsing-disable-extension-blacklist')
-    options.add_argument('--disable-web-security')
-    options.add_argument("--allow-running-insecure-content")
+        # options.add_argument('--safebrowsing-disable-download-protection')
+        # options.add_argument('--safebrowsing-disable-extension-blacklist')
+        # options.add_argument('--disable-web-security')
+        # options.add_argument("--allow-running-insecure-content")
 
     # Mantener la ventana abierta (en Edge se usa diferente)
     options.add_experimental_option("detach", True)
@@ -34,6 +34,7 @@ def setup_edge_driver(download_directory=None):
     options.add_argument('--ignore-certificate-errors-spki-list')
     
     # Opciones adicionales para estabilidad
+    options.add_argument("--disable-extensions")
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--disable-gpu')
