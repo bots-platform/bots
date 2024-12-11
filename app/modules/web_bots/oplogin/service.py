@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from app.modules.web_bots.browser.setup import setup_chrome_driver
+from app.modules.web_bots.browser.setup import setup_edge_driver
 from app.modules.web_bots.oplogin.scripts.oplogin_scraper import scrape_oplogin_page
 from config import OPLOGIN_USER, OPLOGIN_PASSWORD
 import time
@@ -23,7 +23,7 @@ class OploginService:
                 os.makedirs(download_path)
             try:
                 logger.info('Empezando scraping de Oplogin')
-                driver = setup_chrome_driver(download_directory=download_path)
+                driver = setup_edge_driver(download_directory=download_path)
                 result = scrape_oplogin_page(driver, OPLOGIN_USER, OPLOGIN_PASSWORD)
                 while True:
                     try:

@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from app.modules.web_bots.browser.setup import setup_chrome_driver
+from app.modules.web_bots.browser.setup import setup_edge_driver
 from app.modules.web_bots.semaforo.scripts.semaforo_scraper import scrape_semaforo_page
 from config import SEMAFORO_USER, SEMAFORO_PASSWORD
 import time
@@ -25,7 +25,7 @@ class SemaforoService:
 
             try:
                 logger.info('Empezando scraping de SEMAFORO')
-                driver = setup_chrome_driver(download_directory=download_path)
+                driver = setup_edge_driver(download_directory=download_path)
                 result = scrape_semaforo_page(driver, SEMAFORO_USER, SEMAFORO_PASSWORD, fecha_inicio, fecha_fin)
                 while True:
                     try:

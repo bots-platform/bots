@@ -3,7 +3,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 
-from app.modules.web_bots.browser.setup import setup_chrome_driver
+# from app.modules.web_bots.browser.setup import setup_edge_driver
 from  ....web_bots.utils.input_utils  import random_delay
 import time
 from datetime import datetime, timedelta

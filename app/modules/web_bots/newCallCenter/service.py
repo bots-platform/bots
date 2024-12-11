@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from app.modules.web_bots.browser.setup import setup_chrome_driver
+from app.modules.web_bots.browser.setup import setup_edge_driver
 from app.modules.web_bots.newCallCenter.scripts.newCallCenter_scraper import scrape_newcallcenter_page
 from config import NEW_CALL_CENTER_USER, NEW_CALL_CENTER_PASSWORD
 import time
@@ -24,7 +24,7 @@ class NewCallCenterService:
 
             try:
                 logger.info('Empezando scraping de New Call Center')
-                driver = setup_chrome_driver(download_directory=download_path)
+                driver = setup_edge_driver(download_directory=download_path)
                 result = scrape_newcallcenter_page(driver, NEW_CALL_CENTER_USER, NEW_CALL_CENTER_PASSWORD, fecha_inicio, fecha_fin)
                 while True:
                     try:
