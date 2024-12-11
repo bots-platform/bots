@@ -34,7 +34,7 @@ class SemaforoService:
                     except Exception as e:
                         logger.info("El navegador ha sido cerrado.")
                         break
-
+                        
                 return {
                     "status": "success",
                     "message": "Proceso completado. Verifica las descargas."

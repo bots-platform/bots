@@ -2,6 +2,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
+from utils.waiting_download import wait_for_download
 from  ...utils.input_utils  import random_delay
 import time
 from datetime import datetime, timedelta
@@ -169,7 +170,7 @@ def choose_agenteLogin(driver):
         logger.error(error_message)
         raise Exception(error_message)
 
-def click_descargar(driver):
+def click_descargar(driver, fecha_desde, fecha_hasta):
     try:
         logger.info('Intentando hacer clic en botón Descarga Aquí')
 
@@ -177,11 +178,26 @@ def click_descargar(driver):
             EC.element_to_be_clickable((By.CLASS_NAME, "descargarExcel"))
         )
         download_button.click()
-        #handle_download_dialog(driver)
-        time.sleep(2)
-        
-        logger.info('Clic en Descarga Aquí exitoso')
-        return True
+        download_path = os.path.abspath("media/newcallcenter/")
+
+        downloaded_file = wait_for_download(download_path, timeout=60, polling_interval=1)
+
+        if not downloaded_file:
+            raise Exception("El archivo no se descargó dentro del tiempo de espera")
+
+        logger.info(f"Archivo descargado encontrado: {downloaded_file}")
+
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        new_file_name = f"new__call_center{fecha_desde}_{fecha_hasta}_{timestamp}.xls"
+
+        new_file_path = os.path.join(download_path, new_file_name)
+
+        os.rename(downloaded_file, new_file_path)
+
+        logger.info(f'Excel descargado exitosamente como {new_file_name}')
+                    
+        df = pd.read_excel(new_file_path)
+        return df
 
     except Exception as e:
         error_message = f'Error al hacer clic en Descarga Aquí: {str(e)}'
@@ -277,7 +293,7 @@ def scrape_newcallcenter_page(driver, user, password, fecha_inicio, fecha_fin):
     click_boton_buscar(driver)
     set_fechas_newcallcenter(driver,fecha_inicio,fecha_fin)
     click_boton_buscar(driver)
-    click_descargar(driver)
+    click_descargar(driver, fecha_inicio, fecha_fin)
     #extract_and_save_table(driver)
 
  
