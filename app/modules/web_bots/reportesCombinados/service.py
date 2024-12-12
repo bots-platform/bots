@@ -18,8 +18,11 @@ class ReporteCombinadoService:
             semaforo_service = SemaforoService()
             newcallcenter_service= NewCallCenterService() 
 
-            semaforo_df = semaforo_service.descargarReporte(fecha_inicio, fecha_fin)
-            newcallcenter_df = newcallcenter_service.descargarReporte(fecha_inicio, fecha_fin)
+            semaforo_path = semaforo_service.descargarReporte(fecha_inicio, fecha_fin)
+            newcallcenter_path = newcallcenter_service.descargarReporte(fecha_inicio, fecha_fin)
+
+            semaforo_df = pd.read_excel(semaforo_path,  engine='xlrd')
+            newcallcenter_df = pd.read_excel(newcallcenter_path, skiprows=6,  engine='openpyxl')  # Saltar las 6 primeras filas
                
             if semaforo_df is None:
                 raise ValueError("Error al descargar el reporte de Semaforo")
@@ -39,7 +42,7 @@ class ReporteCombinadoService:
             newcallcenter_df['Día'] = newcallcenter_df['Fecha'].dt.date
             newcallcenter_clean_df = newcallcenter_df.loc[newcallcenter_df.groupby(['Usuario', 'Día'])['Fecha'].idxmin()]
             newcallcenter_clean_df = newcallcenter_clean_df.drop(columns=['Día'])
-            newcallcenter_clean_df = newcallcenter_clean_df.iloc[6:]
+            #newcallcenter_clean_df = newcallcenter_clean_df.iloc[6:]
 
             
             semaforo_df['FECHA'] = pd.to_datetime(semaforo_df['FECHA'])
@@ -70,6 +73,18 @@ class ReporteCombinadoService:
 
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             reporte_combinado = f'media/reportes_combinados/reporte_completo_{timestamp}.xlsx'
+
+            print(final_df.head())
+            logger.info(final_df.head())
+
+
+            try:
+                final_df.to_excel(reporte_combinado, index=False, engine='openpyxl')
+                logger.info(f"Reporte combinado guardado en: {reporte_combinado}")
+                print(f"Reporte combinado guardado en: {reporte_combinado}")
+            except Exception as e:
+                logger.error(f"Error al guardar el reporte combinado: {str(e)}")
+                print(f"Error al guardar el reporte combinado: {str(e)}")
 
             return {
                 "status": "success",

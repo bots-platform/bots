@@ -197,7 +197,7 @@ def click_descargar(driver, fecha_desde, fecha_hasta):
         logger.info(f'Excel descargado exitosamente como {new_file_name}')
                     
         df = pd.read_excel(new_file_path)
-        return df
+        return new_file_path
 
     except Exception as e:
         error_message = f'Error al hacer clic en Descarga Aquí: {str(e)}'
