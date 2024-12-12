@@ -171,7 +171,7 @@ def click_descargar_excel(driver,fecha_desde, fecha_hasta):
         os.rename(downloaded_file, new_file_path)
 
         logger.info(f'Excel descargado exitosamente como {new_file_name}')
-                    
+
         df = pd.read_excel(new_file_path)
         return df
         

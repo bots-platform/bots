@@ -188,7 +188,7 @@ def click_descargar(driver, fecha_desde, fecha_hasta):
         logger.info(f"Archivo descargado encontrado: {downloaded_file}")
 
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-        new_file_name = f"new__call_center{fecha_desde}_{fecha_hasta}_{timestamp}.xls"
+        new_file_name = f"new__call_center{fecha_desde}_{fecha_hasta}_{timestamp}.xlsx"
 
         new_file_path = os.path.join(download_path, new_file_name)
 

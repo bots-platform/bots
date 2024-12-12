@@ -23,7 +23,7 @@ class SemaforoService:
                 os.makedirs(download_path)
 
 
-            try:
+            try:        
                 logger.info('Empezando scraping de SEMAFORO')
                 driver = setup_edge_driver(download_directory=download_path)
                 result = scrape_semaforo_page(driver, SEMAFORO_USER, SEMAFORO_PASSWORD, fecha_inicio, fecha_fin)
@@ -35,10 +35,11 @@ class SemaforoService:
                         logger.info("El navegador ha sido cerrado.")
                         break
                         
-                return {
-                    "status": "success",
-                    "message": "Proceso completado. Verifica las descargas."
-                }
+                return result
+                # {
+                #     "status": "success",
+                #     "message": "Proceso completado. Verifica las descargas."
+                # }
    
             except Exception as e:
                 logger.error(f"Error en scraping de SEMAFORO: {str(e)}")

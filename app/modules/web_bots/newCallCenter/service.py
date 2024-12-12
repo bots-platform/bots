@@ -34,10 +34,11 @@ class NewCallCenterService:
                         logger.info("El navegador ha sido cerrado.")
                         break
 
-                return {
-                    "status": "success",
-                    "message": "Proceso completado. Verifica las descargas."
-                }
+                return result
+                # {
+                #     "status": "success",
+                #     "message": "Proceso completado. Verifica las descargas."
+                # }
    
             except Exception as e:
                 logger.error(f"Error en scraping de New Call Center: {str(e)}")

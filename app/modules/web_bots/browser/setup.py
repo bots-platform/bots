@@ -10,6 +10,7 @@ def setup_edge_driver(download_directory=None):
     options = Options()
     options.add_argument("--start-maximized")
     options.add_argument("--disable-notifications")
+    #options.add_argument("user-data-dir=C:/temp/edgeprofile")
 
         # options.add_argument('--safebrowsing-disable-download-protection')
         # options.add_argument('--safebrowsing-disable-extension-blacklist')
@@ -21,7 +22,9 @@ def setup_edge_driver(download_directory=None):
     
     # Modo headless si está configurado
     if BROWSER_SETTINGS['headless']:
-        options.add_argument("--headless=new")
+        options.add_argument("--headless=new") # Ejecutar en modo headless
+
+
     
     # Anti-detección de automatización
     options.add_argument("--disable-blink-features=AutomationControlled")
@@ -35,9 +38,9 @@ def setup_edge_driver(download_directory=None):
     
     # Opciones adicionales para estabilidad
     options.add_argument("--disable-extensions")
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
-    options.add_argument('--disable-gpu')
+    options.add_argument('--no-sandbox')  # Evitar problemas de permisos en entornos Linux
+    options.add_argument('--disable-dev-shm-usage')  # Evitar errores de memoria compartida
+    options.add_argument('--disable-gpu')  # Deshabilitar GPU para evitar problemas en algunas máquinas
 
     prefs = {
         # Desactivar diálogos de guardar contraseña

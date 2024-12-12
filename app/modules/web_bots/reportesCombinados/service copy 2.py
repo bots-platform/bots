@@ -11,16 +11,27 @@ logger = get_reporteCombinado_logger()
 
 class ReporteCombinadoService:
 
-    def generar_reporte_combinado(self, fecha_inicio, fecha_fin):
+    async def generar_reporte_combinado(self, fecha_inicio, fecha_fin):
         try:
             logger.info("generando reportes combinados")
 
             semaforo_service = SemaforoService()
-            newcallcenter_service= NewCallCenterService() 
+            newcallcenter_service= NewCallCenterService()
 
-            semaforo_df = semaforo_service.descargarReporte(fecha_inicio, fecha_fin)
-            newcallcenter_df = newcallcenter_service.descargarReporte(fecha_inicio, fecha_fin)
-               
+            loop = asyncio.get_running_loop()
+
+            with ThreadPoolExecutor(max_workers=2) as executor:
+      
+                tasks = [
+                    loop.run_in_executor(executor, semaforo_service.descargarReporte, fecha_inicio, fecha_fin),
+                    loop.run_in_executor(executor, newcallcenter_service.descargarReporte, fecha_inicio, fecha_fin)
+                ]
+
+                resultados = await asyncio.gather(*tasks)
+
+                semaforo_df, newcallcenter_df = resultados
+
+
             if semaforo_df is None:
                 raise ValueError("Error al descargar el reporte de Semaforo")
             
@@ -37,22 +48,22 @@ class ReporteCombinadoService:
             # Limpiar duplicados del DataFrame de NewCallCenter
             newcallcenter_df['Fecha'] = pd.to_datetime(newcallcenter_df['Fecha'], format='%d/%m/%Y %H:%M:%S')
             newcallcenter_df['Día'] = newcallcenter_df['Fecha'].dt.date
-            newcallcenter_clean_df = newcallcenter_df.loc[newcallcenter_df.groupby(['Usuario', 'Día'])['Fecha'].idxmin()]
-            newcallcenter_clean_df = newcallcenter_clean_df.drop(columns=['Día'])
-            newcallcenter_clean_df = newcallcenter_clean_df.iloc[6:]
+            df_newcallcenter_clean = newcallcenter_df.loc[newcallcenter_df.groupby(['Usuario', 'Día'])['Fecha'].idxmin()]
+            df_newcallcenter_clean = df_newcallcenter_clean.drop(columns=['Día'])
+            df_newcallcenter_clean = df_newcallcenter_clean.iloc[6:]
 
             
             semaforo_df['FECHA'] = pd.to_datetime(semaforo_df['FECHA'])
             semaforo_df['LOGUEO/INGRESO'] = pd.to_datetime(semaforo_df['LOGUEO/INGRESO']).dt.strftime('%H:%M:%S')
 
-            newcallcenter_clean_df['Fecha'] = pd.to_datetime(newcallcenter_clean_df['Fecha'])
-            newcallcenter_clean_df['HoraEntrada'] = newcallcenter_clean_df['Fecha'].dt.strftime('%H:%M:%S')
+            df_newcallcenter_clean['Fecha'] = pd.to_datetime(df_newcallcenter_clean['Fecha'])
+            df_newcallcenter_clean['HoraEntrada'] = df_newcallcenter_clean['Fecha'].dt.strftime('%H:%M:%S')
 
            
             semaforo_df.rename(columns={'ANALISTA': 'Usuario'}, inplace=True)
 
             # Unir los DataFrames por 'Usuario' y 'Fecha'
-            merged_df = pd.merge(semaforo_df, newcallcenter_clean_df, left_on=['Usuario', 'FECHA'], right_on=['Usuario', 'Fecha'], how='inner')
+            merged_df = pd.merge(semaforo_df, df_newcallcenter_clean, left_on=['Usuario', 'FECHA'], right_on=['Usuario', 'Fecha'], how='inner')
 
             # Crear el tercer DataFrame con las columnas deseadas
             final_df = pd.DataFrame({
@@ -68,13 +79,10 @@ class ReporteCombinadoService:
             # Mostrar el DataFrame final
             logger.info(final_df)
 
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            reporte_combinado = f'media/reportes_combinados/reporte_completo_{timestamp}.xlsx'
+            # Guardar el DataFrame en un archivo Excel
+            final_df.to_excel('reporte_combinado.xlsx', index=False)
+            return True
 
-            return {
-                "status": "success",
-                "message": "Reporte combinado generado exitosamente",
-            }
    
         
         except Exception as e:

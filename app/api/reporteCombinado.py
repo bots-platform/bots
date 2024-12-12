@@ -6,17 +6,16 @@ from app.modules.web_bots.reportesCombinados.models import FechaReporteCombinado
 router = APIRouter(prefix="/api/reportes", tags=["reportes_combinados"])
 
 @router.post("/combinado")
-async def generar_reporte_combinado_endpoint(request: FechaReporteCombinadoRequest):
-    return await ReporteCombinadoService.generar_reporte_combinado(
-        request.fecha_inicio,
-        request.fecha_fin
-    )
+def generar_reporte_combinado_endpoint(request: FechaReporteCombinadoRequest):
+    print(request)
+    print(request.fecha_inicio, request.fecha_fin)
+    reporteCombinado_service = ReporteCombinadoService()
+    response = reporteCombinado_service.generar_reporte_combinado(request.fecha_inicio, request.fecha_fin)
+    return response
 
-
-
-
-
-
+@router.get("/combinado")
+def generate():
+    return {'hola': 'reporteCombinado'}
 
 
 
