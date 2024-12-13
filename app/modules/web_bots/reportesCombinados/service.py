@@ -1,6 +1,8 @@
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+import time
 import pandas as pd
+import xlrd
 from datetime import datetime
 import os
 from ..semaforo.service import SemaforoService
@@ -19,9 +21,18 @@ class ReporteCombinadoService:
             newcallcenter_service= NewCallCenterService() 
 
             semaforo_path = semaforo_service.descargarReporte(fecha_inicio, fecha_fin)
-            newcallcenter_path = newcallcenter_service.descargarReporte(fecha_inicio, fecha_fin)
+            logger.info(semaforo_path)
+            print(semaforo_path)
+            if not semaforo_path:
+                raise ValueError("Error: `semaforo_path` es None. No se pudo descargar el reporte de Semaforo.")
 
-            semaforo_df = pd.read_excel(semaforo_path,  engine='xlrd')
+            newcallcenter_path = newcallcenter_service.descargarReporte(fecha_inicio, fecha_fin)
+            if not newcallcenter_path:
+                raise ValueError("Error: `newcallcenter_path` es None. No se pudo descargar el reporte de NewCallCenter.")
+           
+            workbook = xlrd.open_workbook(semaforo_path, ignore_workbook_corruption=True)
+            semaforo_df = pd.read_excel(workbook)
+    
             newcallcenter_df = pd.read_excel(newcallcenter_path, skiprows=6,  engine='openpyxl')  # Saltar las 6 primeras filas
                
             if semaforo_df is None:
@@ -37,51 +48,91 @@ class ReporteCombinadoService:
             logger.info("\nContenido del DataFrame NewCallCenter:")
             logger.info(newcallcenter_df.head())
             
-            # Limpiar duplicados del DataFrame de NewCallCenter
             newcallcenter_df['Fecha'] = pd.to_datetime(newcallcenter_df['Fecha'], format='%d/%m/%Y %H:%M:%S')
             newcallcenter_df['Día'] = newcallcenter_df['Fecha'].dt.date
             newcallcenter_clean_df = newcallcenter_df.loc[newcallcenter_df.groupby(['Usuario', 'Día'])['Fecha'].idxmin()]
             newcallcenter_clean_df = newcallcenter_clean_df.drop(columns=['Día'])
-            #newcallcenter_clean_df = newcallcenter_clean_df.iloc[6:]
 
-            
-            semaforo_df['FECHA'] = pd.to_datetime(semaforo_df['FECHA'])
+            semaforo_df['FECHA'] = pd.to_datetime(semaforo_df['FECHA'], format='%Y-%m-%d')
+            semaforo_df['LOGUEO/INGRESO'] = pd.to_datetime(semaforo_df['LOGUEO/INGRESO'], format='%H:%M:%S', errors='coerce')
+   
             semaforo_df['LOGUEO/INGRESO'] = pd.to_datetime(semaforo_df['LOGUEO/INGRESO']).dt.strftime('%H:%M:%S')
 
-            newcallcenter_clean_df['Fecha'] = pd.to_datetime(newcallcenter_clean_df['Fecha'])
+            newcallcenter_clean_df['Fecha'] = pd.to_datetime(newcallcenter_clean_df['Fecha'], format='%d/%m/%Y')
             newcallcenter_clean_df['HoraEntrada'] = newcallcenter_clean_df['Fecha'].dt.strftime('%H:%M:%S')
+            # Convertir la columna 'Fecha' a solo fecha (sin hora)
+            newcallcenter_clean_df['Fecha'] = pd.to_datetime(newcallcenter_clean_df['Fecha']).dt.date
 
-           
             semaforo_df.rename(columns={'ANALISTA': 'Usuario'}, inplace=True)
 
-            # Unir los DataFrames por 'Usuario' y 'Fecha'
-            merged_df = pd.merge(semaforo_df, newcallcenter_clean_df, left_on=['Usuario', 'FECHA'], right_on=['Usuario', 'Fecha'], how='inner')
+            print("Semaforo DataFrame:")
+            print(semaforo_df[['Usuario', 'FECHA']].head())
 
-            # Crear el tercer DataFrame con las columnas deseadas
+            print("NewCallCenter DataFrame:")
+            print(newcallcenter_clean_df[['Usuario', 'Fecha']].head())
+
+            semaforo_df['Usuario'] = semaforo_df['Usuario'].str.strip().str.lower()
+            newcallcenter_clean_df['Usuario'] = newcallcenter_clean_df['Usuario'].str.strip().str.lower()
+
+            # Convertir ambas columnas a datetime64[ns]
+            semaforo_df['FECHA'] = pd.to_datetime(semaforo_df['FECHA'])
+            newcallcenter_clean_df['Fecha'] = pd.to_datetime(newcallcenter_clean_df['Fecha'])
+
+            print(semaforo_df['FECHA'].dtype)
+            print(newcallcenter_clean_df['Fecha'].dtype)
+
+            merged_df = pd.merge(
+                semaforo_df,
+                newcallcenter_clean_df, 
+                left_on=['Usuario', 'FECHA'],
+                right_on=['Usuario', 'Fecha'],
+                how='inner'
+                )
+
+    
             final_df = pd.DataFrame({
-                'CUENTA': merged_df['#'],                  # O ajusta si necesitas una columna específica
-                'AGENTES': merged_df['Usuario'],
+                'CUENTA': "",                
+                'AGENTES': merged_df['Usuario'].str.upper(),
                 'FECHA': merged_df['FECHA'].dt.strftime('%d/%m/%Y'),
                 'HORARIO LABORAL': merged_df['HORARIO'],
                 'NCC': merged_df['HoraEntrada'],
                 'SEMAFORO': merged_df['LOGUEO/INGRESO'],
-                'RESPONSABLE': merged_df['AGENTE']         # Ajusta si esta columna es diferente en tus datos
+                'RESPONSABLE': "" ,
+                'TARDANZA NCC': "" ,
+                'TARDANZA SEMAFORO': "" ,
+                'CANTIDAD NCC': "" ,
+                'CANTIDAD SEMAFORO': "" 
+                             
             })
 
-            # Mostrar el DataFrame final
             logger.info(final_df)
 
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            reporte_combinado = f'media/reportes_combinados/reporte_completo_{timestamp}.xlsx'
 
             print(final_df.head())
             logger.info(final_df.head())
 
 
             try:
+                
+                output_dir = 'media/reportes_combinados'
+                os.makedirs(output_dir, exist_ok=True)  # Crear el directorio si no existe
+
+                reporte_semaforo = os.path.join(output_dir, f'semaforo_df_{timestamp}.xlsx')
+                semaforo_df.to_excel(reporte_semaforo, index=False, engine='openpyxl')
+                logger.info(f"Reporte Semaforo guardado en: {reporte_semaforo}")
+
+                reporte_newcallcenter = os.path.join(output_dir, f'newcallcenter_df_{timestamp}.xlsx')
+                newcallcenter_clean_df.to_excel(reporte_newcallcenter, index=False, engine='openpyxl')
+                logger.info(f"Reporte NewCallCenter guardado en: {reporte_newcallcenter}")
+
+                reporte_combinado = os.path.join(output_dir, f'final_df_{timestamp}.xlsx')
                 final_df.to_excel(reporte_combinado, index=False, engine='openpyxl')
+                logger.info(f"Reporte Combinado guardado en: {reporte_combinado}")
+
                 logger.info(f"Reporte combinado guardado en: {reporte_combinado}")
                 print(f"Reporte combinado guardado en: {reporte_combinado}")
+
             except Exception as e:
                 logger.error(f"Error al guardar el reporte combinado: {str(e)}")
                 print(f"Error al guardar el reporte combinado: {str(e)}")

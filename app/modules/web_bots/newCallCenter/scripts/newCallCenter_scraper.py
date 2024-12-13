@@ -293,7 +293,8 @@ def scrape_newcallcenter_page(driver, user, password, fecha_inicio, fecha_fin):
     click_boton_buscar(driver)
     set_fechas_newcallcenter(driver,fecha_inicio,fecha_fin)
     click_boton_buscar(driver)
-    click_descargar(driver, fecha_inicio, fecha_fin)
+    path_newcallcenter = click_descargar(driver, fecha_inicio, fecha_fin)
+    return path_newcallcenter
     #extract_and_save_table(driver)
 
  
