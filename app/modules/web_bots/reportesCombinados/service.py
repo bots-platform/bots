@@ -7,6 +7,7 @@ from datetime import datetime
 import os
 from ..semaforo.service import SemaforoService
 from ..newCallCenter.service import NewCallCenterService
+from ..sharepoint.service import SharepointService
 from utils.logger_config import get_reporteCombinado_logger
 
 logger = get_reporteCombinado_logger()
@@ -18,11 +19,10 @@ class ReporteCombinadoService:
             logger.info("generando reportes combinados")
 
             semaforo_service = SemaforoService()
-            newcallcenter_service= NewCallCenterService() 
+            newcallcenter_service = NewCallCenterService() 
+            sharepoint_service = SharepointService()
 
             semaforo_path = semaforo_service.descargarReporte(fecha_inicio, fecha_fin)
-            logger.info(semaforo_path)
-            print(semaforo_path)
             if not semaforo_path:
                 raise ValueError("Error: `semaforo_path` es None. No se pudo descargar el reporte de Semaforo.")
 
@@ -30,23 +30,49 @@ class ReporteCombinadoService:
             if not newcallcenter_path:
                 raise ValueError("Error: `newcallcenter_path` es None. No se pudo descargar el reporte de NewCallCenter.")
            
+            sharepoint_path = sharepoint_service.descargarReporte()
+            if not sharepoint_path:
+                raise ValueError("Error: `sharepoint_path` es None. No se pudo descargar el reporte de sharepoint.")
+
             workbook = xlrd.open_workbook(semaforo_path, ignore_workbook_corruption=True)
             semaforo_df = pd.read_excel(workbook)
-    
-            newcallcenter_df = pd.read_excel(newcallcenter_path, skiprows=6,  engine='openpyxl')  # Saltar las 6 primeras filas
-               
             if semaforo_df is None:
-                raise ValueError("Error al descargar el reporte de Semaforo")
-            
-            if newcallcenter_df is None:
-                raise ValueError("Error al descargar el reporte de NewCallCenter")
-            
-           
+                raise ValueError("Error al leer y pasar a dataframe Semaforo")
             logger.info("Contenido del DataFrame Semaforo:")
             logger.info(semaforo_df.head())
-
+    
+            newcallcenter_df = pd.read_excel(newcallcenter_path, skiprows=6,  engine='openpyxl')  # Saltar las 6 primeras filas
+            if newcallcenter_df is None:
+                raise ValueError("Error al leer y pasar a dataframe de NewCallCenter")
             logger.info("\nContenido del DataFrame NewCallCenter:")
             logger.info(newcallcenter_df.head())
+
+            excel_data = pd.ExcelFile(sharepoint_path)
+            datos_extraidos = []
+
+            for hoja in excel_data.sheet_names:
+                sharepoint_df = pd.read_excel(excel_data, sheet_name=hoja, header=None)
+
+                encabezados_dias = sharepoint_df.iloc[0,2:].dropna().tolist()
+
+                for i, row  in sharepoint_df.iterrows():
+                    if i >=11 and pd.notnull(row[1]):
+                        nombre= row[1]
+
+                        for idx, encabezado in enumerate(encabezados_dias):
+                            turno_col= 2 + idx * 3
+                            turno = row[turno_col]
+
+                            if pd.notnull(turno):
+                                datos_extraidos.append({
+                                    'Fecha': encabezado,
+                                    'Nombre': nombre,
+                                    'Turno': turno,
+
+                                })
+
+                df_resultados = pd.DataFrame(datos_extraidos)
+                df_resultados.head(10)
             
             newcallcenter_df['Fecha'] = pd.to_datetime(newcallcenter_df['Fecha'], format='%d/%m/%Y %H:%M:%S')
             newcallcenter_df['Día'] = newcallcenter_df['Fecha'].dt.date
@@ -130,7 +156,10 @@ class ReporteCombinadoService:
                 final_df.to_excel(reporte_combinado, index=False, engine='openpyxl')
                 logger.info(f"Reporte Combinado guardado en: {reporte_combinado}")
 
-                logger.info(f"Reporte combinado guardado en: {reporte_combinado}")
+                reporte_sharepoint = os.path.join(output_dir, f'sharepoint_df_{timestamp}.xlsx')
+                df_resultados.to_excel(reporte_sharepoint, index=False, engine='openpyxl')
+                logger.info(f"Reporte Sharepoint guardado en: {reporte_sharepoint}")
+                
                 print(f"Reporte combinado guardado en: {reporte_combinado}")
 
             except Exception as e:

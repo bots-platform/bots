@@ -37,3 +37,6 @@ def get_semaforo_logger():
 
 def get_reporteCombinado_logger():
     return setup_logger('reportes_combinados', 'logs/reportes_combinados/reportes_combinados.log')
+
+def get_reporteCombinado_logger():
+    return setup_logger('sharepoint', 'logs/sharepoint/sharepoint.log')
