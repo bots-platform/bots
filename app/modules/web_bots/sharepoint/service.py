@@ -48,26 +48,25 @@ class SharepointService:
            )
 
     def guardar_excel_como(self):
-        # Conectar con la aplicación de Excel
+       
+        logger.info("Tratando de conectar con Excel Aplication")
         excel = win32com.client.Dispatch("Excel.Application")
-        excel.Visible = True  # Mostrar Excel para ver el proceso (puedes poner False para ocultarlo)
-    
-        # Obtener el workbook activo
+        excel.Visible = True 
+
         workbook = excel.ActiveWorkbook
-    
+
         carpeta_destino = os.path.abspath("media/sharepoint")
-    
+
         if not os.path.exists(carpeta_destino):
                 os.makedirs(carpeta_destino)
-    
-        # Ruta completa para guardar el archivo
+
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         nombre_Horario_General =  f'Horario_General_{timestamp}.xlsx'
         
         ruta_guardado = os.path.join(carpeta_destino, nombre_Horario_General)
 
         try:
-            # Guardar una copia en la carpeta especificada
+            logger.info("Tratando de guardar conectar con Excel Aplication")
             workbook.SaveAs(ruta_guardado)
             print(f"Archivo guardado en: {ruta_guardado}")
             
@@ -75,10 +74,13 @@ class SharepointService:
             return ruta_guardado
     
         except Exception as e:
+            logger.error(f"Error tratando de guardar el archivo excel: {e}")
             print(f"Error al guardar el archivo: {e}")
             return None
         finally:
             # Cerrar el workbook sin cerrar Excel
             # workbook.Close(SaveChanges=False)  # Descomenta si deseas cerrar el archivo después de guardar
             pass
+
+
         
