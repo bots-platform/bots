@@ -30,7 +30,7 @@ class ReporteCombinadoService:
             if not newcallcenter_path:
                 raise ValueError("Error: `newcallcenter_path` es None. No se pudo descargar el reporte de NewCallCenter.")
            
-            sharepoint_path = sharepoint_service.descargarReporte()
+            sharepoint_path = sharepoint_service.guardar_excel_como()
             if not sharepoint_path:
                 raise ValueError("Error: `sharepoint_path` es None. No se pudo descargar el reporte de sharepoint.")
 
@@ -48,9 +48,12 @@ class ReporteCombinadoService:
             logger.info(newcallcenter_df.head())
 
             excel_data = pd.ExcelFile(sharepoint_path)
+            hojas_seleccionadas = ['25-11 al 01-12', '02-12 al 08-12', '09-12 al 15-12']
             datos_extraidos = []
 
-            for hoja in excel_data.sheet_names:
+            # for hoja in excel_data.sheet_names:
+            for hoja in hojas_seleccionadas:
+                #if hoja  != 'Plantilla':
                 sharepoint_df = pd.read_excel(excel_data, sheet_name=hoja, header=None)
 
                 encabezados_dias = sharepoint_df.iloc[0,2:].dropna().tolist()
@@ -68,11 +71,11 @@ class ReporteCombinadoService:
                                     'Fecha': encabezado,
                                     'Nombre': nombre,
                                     'Turno': turno,
-
                                 })
 
-                df_resultados = pd.DataFrame(datos_extraidos)
-                df_resultados.head(10)
+            df_sharepoint = pd.DataFrame(datos_extraidos)
+            df_sharepoint['SOLO_FECHA'] = pd.to_datetime(df_sharepoint['Fecha'].str.extract(r'(\d{2}/\d{2}/\d{4})')[0],format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
+            df_sharepoint.head(10)
             
             newcallcenter_df['Fecha'] = pd.to_datetime(newcallcenter_df['Fecha'], format='%d/%m/%Y %H:%M:%S')
             newcallcenter_df['Día'] = newcallcenter_df['Fecha'].dt.date
@@ -116,7 +119,7 @@ class ReporteCombinadoService:
                 )
 
     
-            final_df = pd.DataFrame({
+            df_semaforo_ncc = pd.DataFrame({
                 'CUENTA': "",                
                 'AGENTES': merged_df['Usuario'].str.upper(),
                 'FECHA': merged_df['FECHA'].dt.strftime('%d/%m/%Y'),
@@ -131,14 +134,29 @@ class ReporteCombinadoService:
                              
             })
 
-            logger.info(final_df)
+            df_semaforo_ncc['Nombre Normalizado'] = df_semaforo_ncc['AGENTES'].apply(
+             lambda x: ' '.join([x.split()[0], x.split()[2]]) if len(x.split()) >= 3 else x
+            )
+            logger.info(df_semaforo_ncc)
+            print(df_semaforo_ncc.head())
+            logger.info(df_semaforo_ncc.head())
+
+            df_semaforo_ncc['Nombre Normalizado'] = df_semaforo_ncc['Nombre Normalizado'].str.upper()
+            df_sharepoint['Nombre'] = df_sharepoint['Nombre'].str.upper()
+
+
+            df_sharepoint_ncc_semaforo = pd.merge(
+                df_semaforo_ncc,
+                df_sharepoint,
+                left_on=['Nombre Normalizado', 'FECHA'],
+                right_on=['Nombre', 'SOLO_FECHA'],
+                how='inner'
+            )
+            #df_sharepoint_ncc_semaforo['HORARIO LABORAL'] = df_sharepoint_ncc_semaforo['Turno'],
+            df_sharepoint_ncc_semaforo['Horario Laboral Sharepoint'] = df_sharepoint_ncc_semaforo['Turno']
+            
 
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-
-            print(final_df.head())
-            logger.info(final_df.head())
-
-
             try:
                 
                 output_dir = 'media/reportes_combinados'
@@ -152,16 +170,22 @@ class ReporteCombinadoService:
                 newcallcenter_clean_df.to_excel(reporte_newcallcenter, index=False, engine='openpyxl')
                 logger.info(f"Reporte NewCallCenter guardado en: {reporte_newcallcenter}")
 
-                reporte_combinado = os.path.join(output_dir, f'final_df_{timestamp}.xlsx')
-                final_df.to_excel(reporte_combinado, index=False, engine='openpyxl')
+                reporte_combinado = os.path.join(output_dir, f'df_semaforo_ncc{timestamp}.xlsx')
+                df_semaforo_ncc.to_excel(reporte_combinado, index=False, engine='openpyxl')
                 logger.info(f"Reporte Combinado guardado en: {reporte_combinado}")
 
-                reporte_sharepoint = os.path.join(output_dir, f'sharepoint_df_{timestamp}.xlsx')
-                df_resultados.to_excel(reporte_sharepoint, index=False, engine='openpyxl')
+                reporte_sharepoint = os.path.join(output_dir, f'df_sharepoint{timestamp}.xlsx')
+                df_sharepoint.to_excel(reporte_sharepoint, index=False, engine='openpyxl')
                 logger.info(f"Reporte Sharepoint guardado en: {reporte_sharepoint}")
-                
-                print(f"Reporte combinado guardado en: {reporte_combinado}")
 
+                reporte_sharepoint_ncc_semaforo = os.path.join(output_dir, f'df_sharepoint_ncc_semaforo{timestamp}.xlsx')
+                df_sharepoint_ncc_semaforo.to_excel(reporte_sharepoint_ncc_semaforo, index=False, engine='openpyxl')
+                logger.info(f"Reporte Sharepoint-ncc-semaforo guardado en: {reporte_sharepoint_ncc_semaforo}")
+
+                return reporte_sharepoint_ncc_semaforo
+
+
+            
             except Exception as e:
                 logger.error(f"Error al guardar el reporte combinado: {str(e)}")
                 print(f"Error al guardar el reporte combinado: {str(e)}")

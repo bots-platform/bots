@@ -8,8 +8,20 @@ import os
 def setup_chrome_driver(download_directory=None):
     """Setup Chrome driver with window staying open"""
     options = Options()
+    options.debugger_address = "127.0.0.1:9222"  # Asegúrate de que Chrome esté corriendo con este puerto
     options.add_argument("--start-maximized")
     options.add_argument("--disable-notifications")
+    options.add_argument("user-data-dir=C:/Users/katana/AppData/Local/Google/Chrome/User Data/Profile 2")
+    options.add_argument("--profile-directory=Profile 2")
+    options.add_argument("--remote-debugging-port=9222")
+    options.debugger_address = "127.0.0.1:9222"  # Asegúrate de que Chrome esté corriendo con este puerto
+
+      # Usar un perfil de usuario específico para mantener la sesión iniciada
+    # options.add_argument("user-data-dir=C:\\Users\\katana\\AppData\\Local\\Google\\Chrome\\User Data")
+    # options.add_argument("--profile-directory=Default")
+
+    # profile_path = r"C:\Users\katana\AppData\Local\Google\Chrome\User Data\Profile 2"
+    # options.add_argument(f"user-data-dir={profile_path}")
 
     # options.add_argument('--safebrowsing-disable-download-protection')
     # options.add_argument('--safebrowsing-disable-extension-blacklist')

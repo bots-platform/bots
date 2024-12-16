@@ -7,11 +7,11 @@ from  ...utils.input_utils  import random_delay
 import time
 from datetime import datetime
 from config import URL_SHAREPOINT
-from utils.logger_config import get_newcallcenter_logger
+from utils.logger_config import get_sharepoint_logger
 import pandas as pd
 import os
 
-logger = get_newcallcenter_logger()
+logger = get_sharepoint_logger()
 
 def login_to_sharepoint(driver, user, password):
 
@@ -30,11 +30,11 @@ def login_to_sharepoint(driver, user, password):
             time.sleep(0.1)
 
         boton_siguiente = WebDriverWait(driver, 20).until(
-                EC.element_to_be_clickable((By.ID, 'idSIButton9'))
+                 EC.element_to_be_clickable((By.XPATH, '(//input[@id="idSIButton9"])[1]'))
             )
-        boton_siguiente.clear()
+        boton_siguiente.click()
 
-
+    
         password_input = WebDriverWait(driver, 20).until(
                 EC.element_to_be_clickable((By.ID, 'i0118'))
             )
@@ -44,10 +44,11 @@ def login_to_sharepoint(driver, user, password):
             password_input.send_keys(char)
             time.sleep(0.1) 
 
-        loggin_button = WebDriverWait(driver, 20).until(
-            EC.element_to_be_clickable((By.ID, 'idSIButton9'))
+        loggin_button = WebDriverWait(driver, 30).until(
+        EC.element_to_be_clickable((By.XPATH, '//input[@id="idSIButton9" and @type="submit"]'))
         )
         loggin_button.click()
+
 
         logger.info(f"login exitoso")
         return True
@@ -138,7 +139,7 @@ def seleccionar_descargar_copia(driver):
 
 def scrape_sharepoint_page(driver, user, password):
     
-    #login_to_sharepoint(driver, user, password)
+    login_to_sharepoint(driver, user, password)
     navegar_sharepoint_horarioGeneralATCORP(driver)
     seleccionar_archivo(driver)
     seleccionar_crear_copia(driver)

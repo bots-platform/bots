@@ -11,6 +11,14 @@ def setup_edge_driver(download_directory=None):
     options.add_argument("--start-maximized")
     options.add_argument("--disable-notifications")
     #options.add_argument("user-data-dir=C:/temp/edgeprofile")
+    
+
+    #profile_path = r"C:\Users\Usuario\AppData\Local\Microsoft\Edge\User Data\Default"
+    # profile_path = r"C:\Users\katana\AppData\Local\Microsoft\Edge\User Data\Default"
+    # options.add_argument(f"user-data-dir={profile_path}")
+
+    # options.debugger_address = "127.0.0.1:9222"
+    #options.debugger_address = "127.0.0.1:9222"  # Puerto de depuración
 
         # options.add_argument('--safebrowsing-disable-download-protection')
         # options.add_argument('--safebrowsing-disable-extension-blacklist')
@@ -30,6 +38,8 @@ def setup_edge_driver(download_directory=None):
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option('useAutomationExtension', False)
+    #options.add_argument("--disable-blink-features=AutomationControlled")
+
     
     # Manejo de certificados y SSL
     options.add_argument('--ignore-certificate-errors')
