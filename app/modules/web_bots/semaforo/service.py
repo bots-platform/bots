@@ -8,7 +8,6 @@ import os
 
 logger = get_semaforo_logger()
 
-
 class SemaforoService:
     def descargarReporte(self, fecha_inicio, fecha_fin):
         try:
@@ -21,7 +20,6 @@ class SemaforoService:
        
             if not os.path.exists(download_path):
                 os.makedirs(download_path)
-
 
             try:        
                 logger.info('Empezando scraping de SEMAFORO')

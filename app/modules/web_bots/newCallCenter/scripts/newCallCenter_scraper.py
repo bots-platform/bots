@@ -295,8 +295,7 @@ def scrape_newcallcenter_page(driver, user, password, fecha_inicio, fecha_fin):
     click_boton_buscar(driver)
     path_newcallcenter = click_descargar(driver, fecha_inicio, fecha_fin)
     return path_newcallcenter
-    #extract_and_save_table(driver)
-
+  
  
 
 

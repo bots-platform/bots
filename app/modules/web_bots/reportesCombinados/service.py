@@ -158,7 +158,6 @@ class ReporteCombinadoService:
             #df_sharepoint_ncc_semaforo['HORARIO LABORAL'] = df_sharepoint_ncc_semaforo['Turno'],
             df_sharepoint_ncc_semaforo['Horario Laboral Sharepoint'] = df_sharepoint_ncc_semaforo['Turno']
             
-
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             try:
                 
