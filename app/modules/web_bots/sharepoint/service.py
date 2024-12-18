@@ -13,7 +13,6 @@ logger = get_sharepoint_logger()
 
 class SharepointService:
 
-
     def guardar_excel_como(self):
        
         logger.info("Tratando de conectar con Excel Aplication")
