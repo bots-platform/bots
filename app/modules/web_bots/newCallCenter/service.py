@@ -8,7 +8,6 @@ import os
  
 logger = get_newcallcenter_logger()
 
-
 class NewCallCenterService:
     def descargarReporte(self,fecha_inicio, fecha_fin):
         try:
@@ -27,19 +26,7 @@ class NewCallCenterService:
                 driver = setup_edge_driver(download_directory=download_path)
                 result = scrape_newcallcenter_page(driver, NEW_CALL_CENTER_USER, NEW_CALL_CENTER_PASSWORD, fecha_inicio, fecha_fin)
                 return result
-                # while True:
-                #     try:
-                #         driver.current_url
-                #         time.sleep(1)
-                #     except Exception as e:
-                #         logger.info("El navegador ha sido cerrado.")
-                #         break
 
-                # {
-                #     "status": "success",
-                #     "message": "Proceso completado. Verifica las descargas."
-                # }
-   
             except Exception as e:
                 logger.error(f"Error en scraping de New Call Center: {str(e)}")
                 return None

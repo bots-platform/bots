@@ -40,7 +40,7 @@ class ReporteCombinadoService:
                 raise ValueError("Error al leer y pasar a dataframe Semaforo")
             logger.info("Contenido del DataFrame Semaforo:")
             logger.info(semaforo_df.head())
-    
+
             newcallcenter_df = pd.read_excel(newcallcenter_path, skiprows=6,  engine='openpyxl')  # Saltar las 6 primeras filas
             if newcallcenter_df is None:
                 raise ValueError("Error al leer y pasar a dataframe de NewCallCenter")
@@ -80,7 +80,7 @@ class ReporteCombinadoService:
             df_sharepoint = pd.DataFrame(datos_extraidos)
             df_sharepoint['SOLO_FECHA'] = pd.to_datetime(df_sharepoint['Fecha'].str.extract(r'(\d{2}/\d{2}/\d{4})')[0],format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
             df_sharepoint.head(10)
-            
+
             newcallcenter_df['Fecha'] = pd.to_datetime(newcallcenter_df['Fecha'], format='%d/%m/%Y %H:%M:%S')
             newcallcenter_df['Día'] = newcallcenter_df['Fecha'].dt.date
             newcallcenter_clean_df = newcallcenter_df.loc[newcallcenter_df.groupby(['Usuario', 'Día'])['Fecha'].idxmin()]
@@ -88,7 +88,6 @@ class ReporteCombinadoService:
 
             semaforo_df['FECHA'] = pd.to_datetime(semaforo_df['FECHA'], format='%Y-%m-%d')
             semaforo_df['LOGUEO/INGRESO'] = pd.to_datetime(semaforo_df['LOGUEO/INGRESO'], format='%H:%M:%S', errors='coerce')
-   
             semaforo_df['LOGUEO/INGRESO'] = pd.to_datetime(semaforo_df['LOGUEO/INGRESO']).dt.strftime('%H:%M:%S')
 
             newcallcenter_clean_df['Fecha'] = pd.to_datetime(newcallcenter_clean_df['Fecha'], format='%d/%m/%Y')
@@ -147,7 +146,6 @@ class ReporteCombinadoService:
             df_semaforo_ncc['Nombre Normalizado'] = df_semaforo_ncc['Nombre Normalizado'].str.upper()
             df_sharepoint['Nombre'] = df_sharepoint['Nombre'].str.upper()
 
-
             df_sharepoint_ncc_semaforo = pd.merge(
                 df_semaforo_ncc,
                 df_sharepoint,
@@ -160,7 +158,7 @@ class ReporteCombinadoService:
             
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             try:
-                
+
                 output_dir = 'media/reportes_combinados'
                 os.makedirs(output_dir, exist_ok=True)  # Crear el directorio si no existe
 

@@ -38,6 +38,8 @@ def get_semaforo_logger():
 def get_reporteCombinado_logger():
     return setup_logger('reportes_combinados', 'logs/reportes_combinados/reportes_combinados.log')
 
-def get_sharepoint_logger():
-    return setup_logger('sharepoint', 'logs/sharepoint/sharepoint.log')
+def get_sharepoint_HorarioGeneralATCORP_logger():
+    return setup_logger('sharepointHorarioGeneralATCORP', 'logs/sharepoint/HorarioGeneralATCORP.log')
 
+def get_sharepoint_HorarioMesaATCORP():
+    return setup_logger('sharepointHorarioMesaATCORP', 'logs/sharepoint/HorarioMesaATCORP.log')

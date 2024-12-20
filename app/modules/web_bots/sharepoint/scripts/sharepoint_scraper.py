@@ -7,11 +7,11 @@ from  ...utils.input_utils  import random_delay
 import time
 from datetime import datetime
 from config import URL_SHAREPOINT
-from utils.logger_config import get_sharepoint_logger
+from utils.logger_config import get_sharepoint_HorarioGeneralATCORP_logger
 import pandas as pd
 import os
 
-logger = get_sharepoint_logger()
+logger = get_sharepoint_HorarioGeneralATCORP_logger()
 
 def login_to_sharepoint(driver, user, password):
 

@@ -1,13 +1,15 @@
 from fastapi import APIRouter
 from fastapi.responses import FileResponse
 from app.modules.web_bots.sharepoint.service import SharepointService
+from app.modules.web_bots.sharepoint.scripts.horario_Mesa_ATCORP import (
+    guardar_reporte
+)
 
-router = APIRouter(prefix="/api/Horario-General-ATcorp_2024", tags=["Horario-General-ATcorp_2024"])
+router = APIRouter(prefix="/api/sharepoint", tags=["Horario-Mesa-ATCORP_2024"])
 
-@router.post("/reporte")
+@router.post("/reporteHorarioMesaATCORP")
 def descarga_reporte():
-    sharepoint_service = SharepointService()
-    ruta_archivo =  sharepoint_service.guardar_excel_como()
+    ruta_archivo =  guardar_reporte()
     print(ruta_archivo)
     return FileResponse(
         ruta_archivo,

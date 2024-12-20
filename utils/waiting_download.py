@@ -4,12 +4,10 @@ import time
 def wait_for_download(download_path, timeout=60, polling_interval=1):
     """
     Espera dinámica para verificar que el archivo se haya descargado.
-
     Args:
         download_path (str): La ruta de la carpeta de descargas.
         timeout (int): Tiempo máximo de espera en segundos.
         polling_interval (int): Intervalo de comprobación en segundos.
-
     Returns:
         str: La ruta completa del archivo descargado o None si no se descargó.
     """
@@ -29,5 +27,4 @@ def wait_for_download(download_path, timeout=60, polling_interval=1):
         
         time.sleep(polling_interval)
 
-  
     return None
