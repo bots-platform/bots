@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from fastapi.responses import FileResponse
 from app.modules.web_bots.reportesCombinados.service import ReporteCombinadoService
 from app.modules.web_bots.reportesCombinados.models import FechaReporteCombinadoRequest
+from ..modules.web_bots.reportesCombinados.reporteCombinado_scripts import generar_reporte_combinado
 
 router = APIRouter(prefix="/api/reportes", tags=["reportes_combinados"])
 
@@ -17,15 +18,25 @@ def generar_reporte_combinado_endpoint(request: FechaReporteCombinadoRequest):
     - **fecha_inicio**: La fecha de inicio del rango (formato YYYY-MM-DD).
     - **fecha_fin**: La fecha de fin del rango (formato YYYY-MM-DD).
     """
-
-    reporteCombinado_service = ReporteCombinadoService()
-    ruta_archivo = reporteCombinado_service.generar_reporte_combinado(request.fecha_inicio, request.fecha_fin)
+    
+    ruta_archivo = generar_reporte_combinado(request.fecha_inicio, request.fecha_fin)
     #return ruta_archivo
     return FileResponse(
         ruta_archivo,
         filename=ruta_archivo.split("/")[-1],
         media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
+
+
+
+
+
+
+
+
+
+
+
 
 # @router.get("/combinado")
 # def generate():

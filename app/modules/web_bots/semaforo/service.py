@@ -9,7 +9,7 @@ import os
 logger = get_semaforo_logger()
 
 class SemaforoService:
-    def descargarReporte(self, fecha_inicio, fecha_fin):
+    def descargarReporteWebScraping(self, fecha_inicio, fecha_fin):
         try:
             driver = None
             if not SEMAFORO_USER or not SEMAFORO_PASSWORD:
@@ -24,22 +24,10 @@ class SemaforoService:
             try:        
                 logger.info('Empezando scraping de SEMAFORO')
                 driver = setup_edge_driver(download_directory=download_path)
-                result = scrape_semaforo_page(driver, SEMAFORO_USER, SEMAFORO_PASSWORD, fecha_inicio, fecha_fin)
-                logger.info(f"Resultado del scraping: {result}")
-                return result
-                # while True:
-                #     try:
-                #         driver.current_url
-                #         time.sleep(1)
-                #     except Exception as e:
-                #         logger.info("El navegador ha sido cerrado.")
-                #         break
-                        
-                # {
-                #     "status": "success",
-                #     "message": "Proceso completado. Verifica las descargas."
-                # }
-   
+                path_semaforo_report = scrape_semaforo_page(driver, SEMAFORO_USER, SEMAFORO_PASSWORD, fecha_inicio, fecha_fin)
+                logger.info(f"Resultado del scraping: {path_semaforo_report}")
+                return path_semaforo_report
+
             except Exception as e:
                 logger.error(f"Error en scraping de SEMAFORO: {str(e)}")
                 return None

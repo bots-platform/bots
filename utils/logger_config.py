@@ -43,3 +43,5 @@ def get_sharepoint_HorarioGeneralATCORP_logger():
 
 def get_sharepoint_HorarioMesaATCORP():
     return setup_logger('sharepointHorarioMesaATCORP', 'logs/sharepoint/HorarioMesaATCORP.log')
+
+

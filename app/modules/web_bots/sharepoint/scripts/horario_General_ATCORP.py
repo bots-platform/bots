@@ -15,15 +15,20 @@ def guardar_excel_como():
    
     logger.info("Tratando de conectar con Excel Aplication")
     excel = win32com.client.Dispatch("Excel.Application")
-    excel.Visible = True 
+    excel.Visible = True
+
     workbook = excel.ActiveWorkbook
+
     carpeta_destino = os.path.abspath("media/sharepoint/horarioGeneralATCORP/downloads")
+
     if not os.path.exists(carpeta_destino):
             os.makedirs(carpeta_destino)
+        
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     nombre_Horario_General =  f'Horario_General_{timestamp}.xlsx'
     
     ruta_guardado = os.path.join(carpeta_destino, nombre_Horario_General)
+
     try:
         logger.info("Tratando de guardar conectar con Excel Aplication")
         workbook.SaveAs(ruta_guardado)
@@ -41,7 +46,7 @@ def guardar_excel_como():
         # workbook.Close(SaveChanges=False)  # Descomenta si deseas cerrar el archivo después de guardar
         pass
 
-def get_info_from_Exel_saved():
+def get_info_from_Exel_saved_to_dataframe():
 
     sharepoint_path = guardar_excel_como()
     if not sharepoint_path:
@@ -78,20 +83,24 @@ def get_info_from_Exel_saved():
     df_sharepoint = pd.DataFrame(datos_extraidos)
     df_sharepoint['SOLO_FECHA'] = pd.to_datetime(df_sharepoint['Fecha'].str.extract(r'(\d{2}/\d{2}/\d{4})')[0],format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
     df_sharepoint.head(10)
+    save_info_obtained(df_sharepoint)
     return df_sharepoint
 
-def save_info_obtained():
+def save_info_obtained(df):
 
     output_dir = 'media/sharepoint/horarioGeneralATCORP/reporte'
     os.makedirs(output_dir, exist_ok=True)
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
 
-    df_sharepoint_horarioGeneralATCORP = get_info_from_Exel_saved()
     ruta_reporte_sharepoint = os.path.join(output_dir, f'df_sharepoint_horarioGeneralATCORP{timestamp}.xlsx')
-    df_sharepoint_horarioGeneralATCORP.to_excel(ruta_reporte_sharepoint, index=False, engine='openpyxl')
+    df.to_excel(ruta_reporte_sharepoint, index=False, engine='openpyxl')
     logger.info(f"Reporte Sharepoint guardado en: {ruta_reporte_sharepoint}")
 
-    return ruta_reporte_sharepoint
+
+    
+
+
+
 
 
 
