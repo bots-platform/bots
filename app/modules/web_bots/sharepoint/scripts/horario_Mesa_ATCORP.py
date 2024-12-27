@@ -11,16 +11,29 @@ def save_from_Sync_Desktop_Excel():
        logger.info("Tratando de conectar con Excel Aplication")
        excel = win32com.client.Dispatch("Excel.Application")
        excel.Visible = True 
-       workbook = excel.ActiveWorkbook
+
+       nombre_archivo = "HORARIO MESA ATCORP.xlsx [solo lectura]"
+
+       for wb in excel.Workbooks:
+            if wb.Name == nombre_archivo:
+                 workbook = wb
+                 break 
+
+       #workbook = excel.ActiveWorkbook
+       if not workbook:
+            logger.error(f"No se encontro un archivo Excel abierto con el nombre '{nombre_archivo}")
+            print(f"No se encontro un archivo Excel con el nombre '{nombre_archivo}")
+            return None
+       
        carpeta_destino = os.path.abspath("media/sharepoint/horarioMesaATCORP/downloads")
 
        if not os.path.exists(carpeta_destino):
                os.makedirs(carpeta_destino)
 
        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-       nombre_Horario_General =  f'Horario_MesaATCORP_{timestamp}.xlsx'
+       nombre_Horario_MesaATCORP =  f'Horario_MesaATCORP_{timestamp}.xlsx'
 
-       ruta_guardado = os.path.join(carpeta_destino, nombre_Horario_General)
+       ruta_guardado = os.path.join(carpeta_destino, nombre_Horario_MesaATCORP)
        try:
            logger.info("Tratando de guardar conectar con Excel Aplication")
            workbook.SaveAs(ruta_guardado)
@@ -64,19 +77,23 @@ def get_info_from_Excel_Saved():
                             'Analista': analista,
                             'Turno': turno,
                         })
-    df_resultado = pd.DataFrame(datos_extraidos)
-    print(df_resultado.head())
-    return df_resultado
 
-def save_info_obtained():
+    sharepoint_horario_Mesa_ATCORP_df = pd.DataFrame(datos_extraidos)
+    sharepoint_horario_Mesa_ATCORP_df['SOLO_FECHA'] = pd.to_datetime(sharepoint_horario_Mesa_ATCORP_df['Fecha'].str.extract(r'(\d{2}/\d{2}/\d{4})')[0],format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
+    sharepoint_horario_Mesa_ATCORP_df['Nombre'] = sharepoint_horario_Mesa_ATCORP_df['Nombre'].str.upper()
+
+    save_info_obtained(sharepoint_horario_Mesa_ATCORP_df)
+
+    return sharepoint_horario_Mesa_ATCORP_df        
+
+def save_info_obtained(df):
 
     output_dir = 'media/sharepoint/horarioMesaATCORP/reporte'
     os.makedirs(output_dir, exist_ok=True)
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
 
-    df_sharepoint_horarioMesaATCORP = get_info_from_Excel_Saved()
     ruta_reporte_sharepoint = os.path.join(output_dir, f'df_sharepoint_horarioMesaATCORP{timestamp}.xlsx')
-    df_sharepoint_horarioMesaATCORP.to_excel(ruta_reporte_sharepoint, index=False, engine='openpyxl')
+    df.to_excel(ruta_reporte_sharepoint, index=False, engine='openpyxl')
     logger.info(f"Reporte Sharepoint horarioMesaATCORP  guardado en: {ruta_reporte_sharepoint}")
 
     return ruta_reporte_sharepoint

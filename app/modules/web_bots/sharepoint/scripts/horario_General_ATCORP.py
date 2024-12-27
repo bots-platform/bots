@@ -17,8 +17,19 @@ def guardar_excel_como():
     excel = win32com.client.Dispatch("Excel.Application")
     excel.Visible = True
 
-    workbook = excel.ActiveWorkbook
+    nombre_archivo = "Horario General ATcorp_2024.xlsx [solo lectura]"
 
+    for wb in excel.Workbooks:
+            if wb.Name == nombre_archivo:
+                workbook = wb
+                break 
+
+    #workbook = excel.ActiveWorkbook
+    if not workbook:
+        logger.error(f"No se encontro un archivo Excel abierto con el nombre '{nombre_archivo}")
+        print(f"No se encontro un archivo Excel con el nombre '{nombre_archivo}")
+        return None
+    
     carpeta_destino = os.path.abspath("media/sharepoint/horarioGeneralATCORP/downloads")
 
     if not os.path.exists(carpeta_destino):
@@ -80,11 +91,14 @@ def get_info_from_Exel_saved_to_dataframe():
                                 'Nombre': nombre,
                                 'Turno': turno,
                             })
-    df_sharepoint = pd.DataFrame(datos_extraidos)
-    df_sharepoint['SOLO_FECHA'] = pd.to_datetime(df_sharepoint['Fecha'].str.extract(r'(\d{2}/\d{2}/\d{4})')[0],format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
-    df_sharepoint.head(10)
-    save_info_obtained(df_sharepoint)
-    return df_sharepoint
+    sharepoint_horario_General_ATCORP_df = pd.DataFrame(datos_extraidos)
+    sharepoint_horario_General_ATCORP_df['SOLO_FECHA'] = pd.to_datetime(sharepoint_horario_General_ATCORP_df['Fecha'].str.extract(r'(\d{2}/\d{2}/\d{4})')[0],format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
+    sharepoint_horario_General_ATCORP_df['Nombre'] = sharepoint_horario_General_ATCORP_df['Nombre'].str.upper()
+    
+    save_info_obtained(sharepoint_horario_General_ATCORP_df)
+    
+    return sharepoint_horario_General_ATCORP_df
+
 
 def save_info_obtained(df):
 
@@ -94,10 +108,13 @@ def save_info_obtained(df):
 
     ruta_reporte_sharepoint = os.path.join(output_dir, f'df_sharepoint_horarioGeneralATCORP{timestamp}.xlsx')
     df.to_excel(ruta_reporte_sharepoint, index=False, engine='openpyxl')
-    logger.info(f"Reporte Sharepoint guardado en: {ruta_reporte_sharepoint}")
+    logger.info(f"Reporte Sharepoint General ATCORP guardado en: {ruta_reporte_sharepoint}")
 
 
     
+
+
+
 
 
 

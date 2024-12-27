@@ -28,9 +28,6 @@ def generar_reporte_combinado_endpoint(request: FechaReporteCombinadoRequest):
 
 
 
-
-
-
 # @router.get("/combinado")
 # def generate():
 #     return {'hola': 'reporteCombinado'}
