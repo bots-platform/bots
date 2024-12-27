@@ -1,7 +1,6 @@
 
 from fastapi import APIRouter
 from fastapi.responses import FileResponse
-from app.modules.web_bots.reportesCombinados.service import ReporteCombinadoService
 from app.modules.web_bots.reportesCombinados.models import FechaReporteCombinadoRequest
 from ..modules.web_bots.reportesCombinados.reporteCombinado_scripts import generar_reporte_combinado
 
@@ -26,12 +25,6 @@ def generar_reporte_combinado_endpoint(request: FechaReporteCombinadoRequest):
         filename=ruta_archivo.split("/")[-1],
         media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
-
-
-
-
-
-
 
 
 
