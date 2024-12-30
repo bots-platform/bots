@@ -17,12 +17,18 @@ def guardar_excel_como():
     excel = win32com.client.Dispatch("Excel.Application")
     excel.Visible = True
 
-    nombre_archivo = "Horario General ATcorp_2024.xlsx [solo lectura]"
+    nombre_archivo = "Horario General ATcorp_2024.xlsx"
+
+    for wb in excel.Workbooks:
+        print(wb.Name)
+
+
+    workbook = None
 
     for wb in excel.Workbooks:
             if wb.Name == nombre_archivo:
                 workbook = wb
-                break 
+                break   
 
     #workbook = excel.ActiveWorkbook
     if not workbook:
@@ -59,12 +65,12 @@ def guardar_excel_como():
 
 def get_info_from_Exel_saved_to_dataframe():
 
-    sharepoint_path = guardar_excel_como()
-    if not sharepoint_path:
-        raise ValueError("Error: `sharepoint_path` es None. No se pudo descargar el reporte de sharepoint.")
+    sharepointHorarioGeneral_path = guardar_excel_como()
+    if not sharepointHorarioGeneral_path:
+        raise ValueError("Error: `sharepointHorarioGeneral_path` es None. No se pudo descargar el reporte de sharepoint.")
     
-    excel_data = pd.ExcelFile(sharepoint_path)
-    hojas_seleccionadas = ['28-10 al 03-11', '04-11 al 10-11', '11-11 al 17-11', '18-11 al 24-11', '25-11 al 01-12', '02-12 al 08-12', '09-12 al 15-12', '16-12 al 22-12']
+    excel_data = pd.ExcelFile(sharepointHorarioGeneral_path)
+    hojas_seleccionadas = ['25-11 al 01-12', '02-12 al 08-12', '09-12 al 15-12', '16-12 al 22-12', '23-12 al 29-12', '30-12 al 05-01-25']
     datos_extraidos = []
 
     for hoja in hojas_seleccionadas:
@@ -87,13 +93,14 @@ def get_info_from_Exel_saved_to_dataframe():
                         turno = row[turno_col]
                         if pd.notnull(turno):
                             datos_extraidos.append({
-                                'Fecha': encabezado,
-                                'Nombre': nombre,
-                                'Turno': turno,
+                                'Fecha_General': encabezado,
+                                'Nombre_General': nombre,
+                                'Turno_General': turno,
                             })
+
     sharepoint_horario_General_ATCORP_df = pd.DataFrame(datos_extraidos)
-    sharepoint_horario_General_ATCORP_df['SOLO_FECHA'] = pd.to_datetime(sharepoint_horario_General_ATCORP_df['Fecha'].str.extract(r'(\d{2}/\d{2}/\d{4})')[0],format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
-    sharepoint_horario_General_ATCORP_df['Nombre'] = sharepoint_horario_General_ATCORP_df['Nombre'].str.upper()
+    sharepoint_horario_General_ATCORP_df['Fecha_General'] = pd.to_datetime(sharepoint_horario_General_ATCORP_df['Fecha_General'].str.extract(r'(\d{2}/\d{2}/\d{4})')[0],format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
+    sharepoint_horario_General_ATCORP_df['Nombre_General'] = sharepoint_horario_General_ATCORP_df['Nombre_General'].str.upper()
     
     save_info_obtained(sharepoint_horario_General_ATCORP_df)
     

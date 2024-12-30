@@ -32,7 +32,7 @@ def get_info_from_newcallcenter_download_to_dataframe(fecha_inicio, fecha_fin):
     print("NewCallCenter DataFrame:")
     print(newcallcenter_clean_df[['Usuario', 'Fecha']].head())
     newcallcenter_clean_df['Usuario'] = newcallcenter_clean_df['Usuario'].str.strip().str.lower()
-    newcallcenter_clean_df['Fecha'] = pd.to_datetime(newcallcenter_clean_df['Fecha'])
+    newcallcenter_clean_df['Fecha_NCC'] = pd.to_datetime(newcallcenter_clean_df['Fecha'])
     print(newcallcenter_clean_df['Fecha'].dtype)
     save_info_obtained(newcallcenter_clean_df)
 

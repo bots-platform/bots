@@ -27,41 +27,43 @@ def generar_reporte_combinado(fecha_inicio, fecha_fin):
         merged_df = pd.merge(
             semaforo_df,
             newcallCenter_clean_df, 
-            left_on=['Usuario', 'FECHA'],
-            right_on=['Usuario', 'Fecha'],
+            left_on=['Usuario', 'Fecha_semaforo'],
+            right_on=['Usuario', 'Fecha_NCC'],
             how='outer'
             )
         df_semaforo_ncc = pd.DataFrame({
             #'CUENTA': "",                
             'AGENTES': merged_df['Usuario'].str.upper(),
-            'FECHA': merged_df['FECHA'].dt.strftime('%d/%m/%Y'),
+            'Fecha_NCC': merged_df['Fecha_NCC'].dt.strftime('%d/%m/%Y'),
+            'Fecha_Semaforo': merged_df['Fecha_semaforo'].dt.strftime('%d/%m/%Y'),
             #'HORARIO LABORAL': merged_df['HORARIO'],
-            'NCC': merged_df['HoraEntrada'],
-            'SEMAFORO': merged_df['LOGUEO/INGRESO'],
+            'Hora_NCC': merged_df['HoraEntrada'],
+            'Hora_SEMAFORO': merged_df['LOGUEO/INGRESO'],
             # 'RESPONSABLE': "" ,
             # 'TARDANZA NCC': "" ,
             # 'TARDANZA SEMAFORO': "" ,
             # 'CANTIDAD NCC': "" ,
             # 'CANTIDAD SEMAFORO': ""         
         })
-        df_semaforo_ncc['Nombre Normalizado'] = df_semaforo_ncc['AGENTES'].apply(
+        df_semaforo_ncc['Nombre_ncc_semaforo'] = df_semaforo_ncc['AGENTES'].apply(
          lambda x: ' '.join([x.split()[0], x.split()[2]]) if len(x.split()) >= 3 else x
         )
-        df_semaforo_ncc['Nombre Normalizado'] = df_semaforo_ncc['Nombre Normalizado'].str.upper()
+        df_semaforo_ncc['Nombre_ncc_semaforo'] = df_semaforo_ncc['Nombre_ncc_semaforo'].str.upper()
 
         df_sharepointATCORPGeneral_ncc_semaforo = pd.merge(
             df_semaforo_ncc,
             sharepoint_horario_General_ATCORP_df,
-            left_on=['Nombre Normalizado', 'FECHA'],
-            right_on=['Nombre', 'SOLO_FECHA'],
+            left_on=['Nombre_ncc_semaforo', 'Fecha_NCC'],
+            right_on=['Nombre_General', 'Fecha_General'],
             how='outer'
         )
-        df_sharepointATCORPGeneral_ncc_semaforo['Horario Laboral Sharepoint'] = df_sharepointATCORPGeneral_ncc_semaforo['Turno']
+        #df_sharepointATCORPGeneral_ncc_semaforo['Horario Laboral Sharepoint'] = df_sharepointATCORPGeneral_ncc_semaforo['Turno']
 
         df_sharepointATCORPGeneral_ncc_semaforo_SharepointMesaATCORP = pd.merge(
         df_sharepointATCORPGeneral_ncc_semaforo,
         sharepoint_horario_Mesa_ATCORP_df,
-        on=['Nombre', 'SOLO_FECHA'],
+        left_on=['Nombre_Normalizado', 'FECHA'],
+        right_on=['Nombre_Mesa', 'Fecha_Mesa'],
         how='outer'
         )
 
@@ -87,21 +89,21 @@ def generar_reporte_combinado(fecha_inicio, fecha_fin):
     
 def save_info_obtained(df_sharepointATCORPGeneral_ncc_semaforo_SharepointMesaATCORP, df_semaforo_ncc, df_sharepoint_ncc_semaforo ):
 
-    output_dir = 'media/reportes_combinados'
+    output_dir = 'media/reportes_combinados/'
     os.makedirs(output_dir, exist_ok=True) 
 
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
 
-    reporte_ncc_semaforo_mesa_general_ruta = os.path.join(output_dir, f'def save_info_obtained(df_sharepointATCORPGeneral_ncc_semaforo_SharepointMesaATCORP, df_semaforo_ncc, df_sharepoint_ncc_semaforo{timestamp}.xlsx')
-    df_sharepointATCORPGeneral_ncc_semaforo_SharepointMesaATCORP.to_excel(reporte_ncc_semaforo_mesa_general_ruta, index=False, engine='openpyxl')
-    logger.info(f"Reporte Combinado guardado en: {reporte_ncc_semaforo_mesa_general_ruta}")
+    df_sharepointATCORPGeneral_ncc_semaforo_SharepointMesaATCORP_ruta = os.path.join(output_dir, f'df_sharepointATCORPGeneral_ncc_semaforo_SharepointMesaATCORP{timestamp}.xlsx')
+    df_sharepointATCORPGeneral_ncc_semaforo_SharepointMesaATCORP.to_excel(df_sharepointATCORPGeneral_ncc_semaforo_SharepointMesaATCORP_ruta, index=False, engine='openpyxl')
+    logger.info(f"Reporte Combinado guardado en: {df_sharepointATCORPGeneral_ncc_semaforo_SharepointMesaATCORP_ruta}")
 
-    reporte_semaforo_ruta = os.path.join(output_dir, f'df_semaforo_ncc{timestamp}.xlsx')
-    df_semaforo_ncc.to_excel(reporte_semaforo_ruta, index=False, engine='openpyxl')
-    logger.info(f"Reporte Combinado guardado en: {reporte_semaforo_ruta}")
+    df_semaforo_ncc_ruta = os.path.join(output_dir, f'df_semaforo_ncc{timestamp}.xlsx')
+    df_semaforo_ncc.to_excel(df_semaforo_ncc_ruta, index=False, engine='openpyxl')
+    logger.info(f"Reporte Combinado guardado en: {df_semaforo_ncc_ruta}")
 
-    reporte_sharepoint_ncc_semaforo_ruta = os.path.join(output_dir, f'df_sharepointGeneraATCORP_ncc_semaforo{timestamp}.xlsx')
-    df_sharepoint_ncc_semaforo.to_excel(reporte_sharepoint_ncc_semaforo_ruta, index=False, engine='openpyxl')
-    logger.info(f"Reporte sharepointGeneraATCORP-ncc-semaforo guardado en: {reporte_sharepoint_ncc_semaforo_ruta}")
+    df_sharepoint_ncc_semaforo_ruta = os.path.join(output_dir, f'df_sharepointGeneraATCORP_ncc_semaforo{timestamp}.xlsx')
+    df_sharepoint_ncc_semaforo.to_excel(df_sharepoint_ncc_semaforo_ruta, index=False, engine='openpyxl')
+    logger.info(f"Reporte sharepointGeneraATCORP-ncc-semaforo guardado en: {df_sharepoint_ncc_semaforo_ruta}")
 
-    return reporte_ncc_semaforo_mesa_general_ruta
+    return df_sharepointATCORPGeneral_ncc_semaforo_SharepointMesaATCORP_ruta

@@ -32,8 +32,7 @@ def get_info_from_semaforo_downloaded_to_dataframe(fecha_inicio, fecha_fin):
     print("Semaforo DataFrame:")
     print(semaforo_df[['Usuario', 'FECHA']].head())
     semaforo_df['Usuario'] = semaforo_df['Usuario'].str.strip().str.lower()
-    semaforo_df['FECHA'] = pd.to_datetime(semaforo_df['FECHA'])
-    print(semaforo_df['FECHA'].dtype)
+    semaforo_df['Fecha_semaforo'] = pd.to_datetime(semaforo_df['FECHA'])
     save_info_obtained(semaforo_df)
     return semaforo_df
     
