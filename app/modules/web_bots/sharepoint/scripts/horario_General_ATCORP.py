@@ -94,18 +94,19 @@ def get_info_from_Exel_saved_to_dataframe():
                         if pd.notnull(turno):
                             datos_extraidos.append({
                                 'Fecha_General': encabezado,
-                                'Nombre_General': nombre,
+                                'Usuario_General': nombre,
                                 'Turno_General': turno,
                             })
 
     sharepoint_horario_General_ATCORP_df = pd.DataFrame(datos_extraidos)
     sharepoint_horario_General_ATCORP_df['Fecha_General'] = pd.to_datetime(sharepoint_horario_General_ATCORP_df['Fecha_General'].str.extract(r'(\d{2}/\d{2}/\d{4})')[0],format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
-    sharepoint_horario_General_ATCORP_df['Nombre_General'] = sharepoint_horario_General_ATCORP_df['Nombre_General'].str.upper()
+    sharepoint_horario_General_ATCORP_df['Usuario_General'] = sharepoint_horario_General_ATCORP_df['Usuario_General'].str.upper()
+
+    sharepoint_horario_General_ATCORP_df = sharepoint_horario_General_ATCORP_df.drop_duplicates(subset=['Usuario_General', 'Fecha_General'], keep='first')
     
     save_info_obtained(sharepoint_horario_General_ATCORP_df)
     
     return sharepoint_horario_General_ATCORP_df
-
 
 def save_info_obtained(df):
 

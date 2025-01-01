@@ -82,13 +82,13 @@ def get_info_from_Excel_Saved():
                     if pd.notnull(turno):
                         datos_extraidos.append({
                             'Fecha_Mesa': fecha,
-                            'Nombre_Mesa': analista,
+                            'Usuario_Mesa': analista,
                             'Turno_Mesa': turno,
                         })
 
     sharepoint_horario_Mesa_ATCORP_df = pd.DataFrame(datos_extraidos)
     sharepoint_horario_Mesa_ATCORP_df['Fecha_Mesa'] = pd.to_datetime(sharepoint_horario_Mesa_ATCORP_df['Fecha_Mesa'].str.extract(r'(\d{2}/\d{2}/\d{4})')[0],format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
-    sharepoint_horario_Mesa_ATCORP_df['Nombre_Mesa'] = sharepoint_horario_Mesa_ATCORP_df['Nombre_Mesa'].str.upper()
+    sharepoint_horario_Mesa_ATCORP_df['Usuario_Mesa'] = sharepoint_horario_Mesa_ATCORP_df['Usuario_Mesa'].str.upper()
 
     save_info_obtained(sharepoint_horario_Mesa_ATCORP_df)
 

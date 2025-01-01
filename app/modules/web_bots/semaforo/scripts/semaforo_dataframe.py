@@ -31,8 +31,21 @@ def get_info_from_semaforo_downloaded_to_dataframe(fecha_inicio, fecha_fin):
     semaforo_df.rename(columns={'ANALISTA': 'Usuario'}, inplace=True)
     print("Semaforo DataFrame:")
     print(semaforo_df[['Usuario', 'FECHA']].head())
-    semaforo_df['Usuario'] = semaforo_df['Usuario'].str.strip().str.lower()
-    semaforo_df['Fecha_semaforo'] = pd.to_datetime(semaforo_df['FECHA'])
+    #semaforo_df['Usuario_Semaforo'] = semaforo_df['Usuario'].str.strip().str.lower()
+    semaforo_df['Fecha_Semaforo'] = pd.to_datetime(semaforo_df['FECHA'])
+    semaforo_df['Usuario_Semaforo'] = semaforo_df['Usuario'].str.strip().apply(
+    lambda x: ' '.join([x.split()[0], x.split()[2]]) if isinstance(x, str) and len(x.split()) == 4 else
+              ' '.join([x.split()[0], x.split()[1]]) if isinstance(x, str) and len(x.split()) == 3 else
+              x if isinstance(x, str) else ''
+)
+
+
+    #semaforo_df['Usuario_Semaforo'] = semaforo_df['Usuario_Semaforo'].str.upper()
+
+    # Eliminar duplicados manteniendo solo la primera aparición
+    semaforo_df = semaforo_df.drop_duplicates(subset=['Usuario_Semaforo', 'Fecha_Semaforo'], keep='first')
+
+
     save_info_obtained(semaforo_df)
     return semaforo_df
     

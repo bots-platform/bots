@@ -31,15 +31,21 @@ def get_info_from_newcallcenter_download_to_dataframe(fecha_inicio, fecha_fin):
     newcallcenter_clean_df['Fecha'] = pd.to_datetime(newcallcenter_clean_df['Fecha']).dt.date
     print("NewCallCenter DataFrame:")
     print(newcallcenter_clean_df[['Usuario', 'Fecha']].head())
-    newcallcenter_clean_df['Usuario'] = newcallcenter_clean_df['Usuario'].str.strip().str.lower()
+    #newcallcenter_clean_df['Usuario_NCC'] = newcallcenter_clean_df['Usuario'].str.strip().str.lower()
     newcallcenter_clean_df['Fecha_NCC'] = pd.to_datetime(newcallcenter_clean_df['Fecha'])
     print(newcallcenter_clean_df['Fecha'].dtype)
-    save_info_obtained(newcallcenter_clean_df)
+    newcallcenter_clean_df['Usuario_NCC'] = newcallcenter_clean_df['Usuario'].str.strip().apply(
+    lambda x: ' '.join([x.split()[0], x.split()[2]]) if isinstance(x, str) and len(x.split()) == 4 else
+              ' '.join([x.split()[0], x.split()[1]]) if isinstance(x, str) and len(x.split()) == 3 else
+              x if isinstance(x, str) else ''
+)
 
+
+    #newcallcenter_clean_df['Usuario_NCC'] = newcallcenter_clean_df['Usuario_NCC'].str.upper()
+    save_info_obtained(newcallcenter_clean_df)
     return newcallcenter_clean_df
 
 def save_info_obtained(newcallCenter_clean_df):
-
     output_dir = 'media/reportes_combinados'
     os.makedirs(output_dir, exist_ok=True)  # Crear el directorio si no existe
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
