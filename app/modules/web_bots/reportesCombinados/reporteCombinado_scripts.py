@@ -126,6 +126,19 @@ def generar_reporte_combinado(fecha_inicio, fecha_fin):
         print("Duplicados en sharepoint_horario_Mesa_ATCORP_df_renamed:")
         print(sharepoint_horario_Mesa_ATCORP_df_renamed.duplicated(subset=['UsuarioC', 'FechaC']).sum())
 
+        
+        # Función para reformatear los nombres
+        def reformat_name(nombre):
+            if isinstance(nombre, str):
+                partes = nombre.split()
+                if len(partes) >= 3:
+                    apellidos = " ".join(partes[-2:])  # Últimos dos como apellidos
+                    nombres = " ".join(partes[:-2])  # Restante como nombres
+                    return f"{apellidos} {nombres}"
+                return nombre  # Devolver sin cambios si tiene menos de 3 partes
+            return nombre
+
+
         # Hacer un merge alineando todos los DataFrames con el índice común
         try:
             final_combined_df = all_users_dates \
@@ -133,11 +146,18 @@ def generar_reporte_combinado(fecha_inicio, fecha_fin):
             .merge(newcallCenter_clean_df_renamed, on=['UsuarioC', 'FechaC'], how='left', validate='one_to_many') \
             .merge(sharepoint_horario_General_ATCORP_df_renamed, on=['UsuarioC', 'FechaC'], how='left', validate='one_to_many') \
             .merge(sharepoint_horario_Mesa_ATCORP_df_renamed, on=['UsuarioC', 'FechaC'], how='left', validate='one_to_many')
+
+            # Aplicar la función para reformatear los nombres
+            final_combined_df['UsuarioC_formato'] = final_combined_df['Usuario_x'].apply(reformat_name)
+
+            # Cambiar el formato de FechaC
+            final_combined_df['FechaC_formato'] = pd.to_datetime(final_combined_df['FechaC']).dt.strftime('%d/%m/%Y')
+
         except KeyError as e:
-            print(f"Error: {e}")    
+            print(f"Error: {e}")
 
-        #tool.display_dataframe_to_user(name="Efficiently Combined DataFrame", dataframe=final_combined_df)
-
+     
+    
         try:
             path = save_info_obtained(final_combined_df)
             return  path
@@ -171,3 +191,4 @@ def save_info_obtained(df_sharepointATCORPGeneral_ncc_semaforo_SharepointMesaATC
 
 
     return df_sharepointATCORPGeneral_ncc_semaforo_SharepointMesaATCORP_ruta
+

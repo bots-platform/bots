@@ -98,9 +98,39 @@ def get_info_from_Exel_saved_to_dataframe():
                                 'Turno_General': turno,
                             })
 
+    # Extraer la hora inicial de 'Turno_General'
     sharepoint_horario_General_ATCORP_df = pd.DataFrame(datos_extraidos)
+
+    def extraer_hora_o_palabra(valor):
+        if isinstance(valor, str) and ':' in valor:  
+            return valor.split(' - ')[0].strip() 
+        return valor  
+    sharepoint_horario_General_ATCORP_df['Hora_Inicial_General'] = sharepoint_horario_General_ATCORP_df['Turno_General'].apply(extraer_hora_o_palabra)
+
+
+    #sharepoint_horario_General_ATCORP_df['Hora_Inicial_General'] = sharepoint_horario_General_ATCORP_df['Turno_General'].str.extract(r'(\d{2}:\d{2})')
     sharepoint_horario_General_ATCORP_df['Fecha_General'] = pd.to_datetime(sharepoint_horario_General_ATCORP_df['Fecha_General'].str.extract(r'(\d{2}/\d{2}/\d{4})')[0],format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
     sharepoint_horario_General_ATCORP_df['Usuario_General'] = sharepoint_horario_General_ATCORP_df['Usuario_General'].str.upper()
+
+#     sharepoint_horario_General_ATCORP_df['Fecha_General'] = pd.to_datetime(
+#     sharepoint_horario_General_ATCORP_df['Fecha_General'], format='%d/%m/%Y'
+# ).dt.date
+
+    duplicados_df = sharepoint_horario_General_ATCORP_df[
+        sharepoint_horario_General_ATCORP_df.duplicated(subset=['Usuario_General', 'Fecha_General'], keep=False)
+    ]
+    
+       # Imprimir los duplicados en consola
+    print("Duplicados encontrados:")
+    print(duplicados_df)
+    print(f"Total de duplicados: {len(duplicados_df)}")
+  
+    duplicados_dir = 'media/horarioGeneralATCORP/duplicados'
+    os.makedirs(duplicados_dir, exist_ok=True)  
+    duplicados_path = os.path.join(
+        duplicados_dir, f'duplicados_general_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+    )
+    duplicados_df.to_excel(duplicados_path, index=False)
 
     sharepoint_horario_General_ATCORP_df = sharepoint_horario_General_ATCORP_df.drop_duplicates(subset=['Usuario_General', 'Fecha_General'], keep='first')
     

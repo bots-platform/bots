@@ -23,6 +23,24 @@ def get_info_from_newcallcenter_download_to_dataframe(fecha_inicio, fecha_fin):
 
     newcallcenter_df['Fecha'] = pd.to_datetime(newcallcenter_df['Fecha'], format='%d/%m/%Y %H:%M:%S')
     newcallcenter_df['Día'] = newcallcenter_df['Fecha'].dt.date
+
+    # Identificar duplicados (filas con más de una entrada para el mismo 'Usuario' y 'Día')
+    duplicados_df = newcallcenter_df[newcallcenter_df.duplicated(subset=['Usuario', 'Día'], keep=False)]
+
+    # Imprimir los duplicados en consola
+    print("Duplicados encontrados:")
+    print(duplicados_df)
+    print(f"Total de duplicados: {len(duplicados_df)}")
+
+   
+    duplicados_dir = 'media/newcallcenter/duplicados'
+    os.makedirs(duplicados_dir, exist_ok=True)  
+    duplicados_path = os.path.join(
+        duplicados_dir, f'duplicados_newcallcenter_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+    )
+    duplicados_df.to_excel(duplicados_path, index=False)
+
+
     newcallcenter_clean_df = newcallcenter_df.loc[newcallcenter_df.groupby(['Usuario', 'Día'])['Fecha'].idxmin()]
     newcallcenter_clean_df = newcallcenter_clean_df.drop(columns=['Día'])
     newcallcenter_clean_df['Fecha'] = pd.to_datetime(newcallcenter_clean_df['Fecha'], format='%d/%m/%Y')
@@ -40,6 +58,9 @@ def get_info_from_newcallcenter_download_to_dataframe(fecha_inicio, fecha_fin):
               x if isinstance(x, str) else ''
 )
 
+#     newcallcenter_clean_df['Fecha_NCC'] = pd.to_datetime(
+#     newcallcenter_clean_df['Fecha'], format='%d-%m-%Y'
+# ).dt.date
 
     #newcallcenter_clean_df['Usuario_NCC'] = newcallcenter_clean_df['Usuario_NCC'].str.upper()
     save_info_obtained(newcallcenter_clean_df)

@@ -38,12 +38,28 @@ def get_info_from_semaforo_downloaded_to_dataframe(fecha_inicio, fecha_fin):
               ' '.join([x.split()[0], x.split()[1]]) if isinstance(x, str) and len(x.split()) == 3 else
               x if isinstance(x, str) else ''
 )
+    
+#     semaforo_df['Fecha_Semaforo'] = pd.to_datetime(
+#     semaforo_df['FECHA'], format='%d-%m-%Y'
+# ).dt.date
+
+    # Seleccionar todas las filas duplicadas (incluyendo la primera aparición)
+    duplicados_df = semaforo_df[semaforo_df.duplicated(subset=['Usuario_Semaforo', 'Fecha_Semaforo'], keep=False)]
+
+    # Imprimir los duplicados en consola
+    print("Duplicados encontrados:")
+    print(duplicados_df)
+    print(f"Total de duplicados: {len(duplicados_df)}")
+
+    # Guardar los duplicados en un archivo Excel
+    duplicados_dir = 'media/semaforo/duplicados'
+    os.makedirs(duplicados_dir, exist_ok=True) 
+    duplicados_path = os.path.join(duplicados_dir, f'duplicados_semaforo_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx')
+    duplicados_df.to_excel(duplicados_path, index=False)
 
 
-    #semaforo_df['Usuario_Semaforo'] = semaforo_df['Usuario_Semaforo'].str.upper()
-
-    # Eliminar duplicados manteniendo solo la primera aparición
     semaforo_df = semaforo_df.drop_duplicates(subset=['Usuario_Semaforo', 'Fecha_Semaforo'], keep='first')
+
 
 
     save_info_obtained(semaforo_df)
