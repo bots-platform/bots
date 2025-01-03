@@ -6,6 +6,7 @@ import win32com.client
 import os
 from datetime import datetime
 import pandas as pd
+import unicodedata
 
 logger = get_sharepoint_HorarioMesaATCORP()
 
@@ -99,6 +100,14 @@ def get_info_from_Excel_Saved():
     #sharepoint_horario_Mesa_ATCORP_df['Hora_Inicial_Mesa'] = sharepoint_horario_Mesa_ATCORP_df['Turno_Mesa'].str.extract(r'(\d{2}:\d{2})')
     sharepoint_horario_Mesa_ATCORP_df['Fecha_Mesa'] = pd.to_datetime(sharepoint_horario_Mesa_ATCORP_df['Fecha_Mesa'].str.extract(r'(\d{2}/\d{2}/\d{4})')[0],format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
     sharepoint_horario_Mesa_ATCORP_df['Usuario_Mesa'] = sharepoint_horario_Mesa_ATCORP_df['Usuario_Mesa'].str.upper()
+    
+    # Función para eliminar tildes
+    def quitar_tildes(texto):
+        if isinstance(texto, str):
+            # Normaliza el texto y elimina caracteres combinados
+            return ''.join(c for c in unicodedata.normalize('NFD', texto) if unicodedata.category(c) != 'Mn')
+        return texto
+    sharepoint_horario_Mesa_ATCORP_df['Usuario_Mesa'] = sharepoint_horario_Mesa_ATCORP_df['Usuario_Mesa'].apply(quitar_tildes)
 
     # sharepoint_horario_Mesa_ATCORP_df['Fecha_Mesa'] = pd.to_datetime(
     # sharepoint_horario_Mesa_ATCORP_df['Fecha_Mesa'], format='%d/%m/%Y'

@@ -4,6 +4,7 @@ from app.modules.web_bots.sharepoint.scripts.sharepoint_scraper import scrape_sh
 from utils.logger_config import get_sharepoint_HorarioGeneralATCORP_logger
 import win32com.client
 import pandas as pd
+import unicodedata
 
 logger = get_sharepoint_HorarioGeneralATCORP_logger()
 
@@ -111,6 +112,15 @@ def get_info_from_Exel_saved_to_dataframe():
     #sharepoint_horario_General_ATCORP_df['Hora_Inicial_General'] = sharepoint_horario_General_ATCORP_df['Turno_General'].str.extract(r'(\d{2}:\d{2})')
     sharepoint_horario_General_ATCORP_df['Fecha_General'] = pd.to_datetime(sharepoint_horario_General_ATCORP_df['Fecha_General'].str.extract(r'(\d{2}/\d{2}/\d{4})')[0],format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
     sharepoint_horario_General_ATCORP_df['Usuario_General'] = sharepoint_horario_General_ATCORP_df['Usuario_General'].str.upper()
+
+
+
+    def quitar_tildes(texto):
+        if isinstance(texto, str):
+            # Normaliza el texto y elimina caracteres combinados
+            return ''.join(c for c in unicodedata.normalize('NFD', texto) if unicodedata.category(c) != 'Mn')
+        return texto
+    sharepoint_horario_General_ATCORP_df['Usuario_General'] = sharepoint_horario_General_ATCORP_df['Usuario_General'].apply(quitar_tildes)
 
 #     sharepoint_horario_General_ATCORP_df['Fecha_General'] = pd.to_datetime(
 #     sharepoint_horario_General_ATCORP_df['Fecha_General'], format='%d/%m/%Y'
