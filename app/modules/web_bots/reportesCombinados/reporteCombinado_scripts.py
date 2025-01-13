@@ -23,6 +23,23 @@ def generar_reporte_combinado(fecha_inicio, fecha_fin):
         print(sharepoint_horario_Mesa_ATCORP_df.head())
         print("Columnas originales:", sharepoint_horario_Mesa_ATCORP_df.columns)
 
+        # Justo antes de los renames, agregar:
+        for df, name in zip(
+            [semaforo_df, newcallCenter_clean_df, sharepoint_horario_General_ATCORP_df, sharepoint_horario_Mesa_ATCORP_df],
+            ['semaforo', 'newCallCenter', 'General', 'Mesa']
+        ):
+            # Verificar el formato de la fecha
+            print(f"Formato de fecha en {name} antes de procesar:")
+            if 'Fecha_General' in df.columns:
+                print(df['Fecha_General'].head())
+            elif 'Fecha_Mesa' in df.columns:
+                print(df['Fecha_Mesa'].head())
+            elif 'Fecha_Semaforo' in df.columns:
+                print(df['Fecha_Semaforo'].head())
+            elif 'Fecha_NCC' in df.columns:
+                print(df['Fecha_NCC'].head())
+
+
 
         semaforo_df_renamed = semaforo_df.rename(columns={
             'Usuario_Semaforo': 'UsuarioC',
@@ -115,6 +132,9 @@ def generar_reporte_combinado(fecha_inicio, fecha_fin):
             sharepoint_horario_Mesa_ATCORP_df_renamed[['UsuarioC', 'FechaC']]
         ]).drop_duplicates().reset_index(drop=True)
 
+        # Después de crear all_users_dates:
+        all_users_dates['FechaC'] = pd.to_datetime(all_users_dates['FechaC'], format='%d/%m/%Y', dayfirst=True)
+
         # Verificar contenido de all_users_dates
         print("Contenido de all_users_dates:")
         print(all_users_dates.head())  # Muestra las primeras filas
@@ -137,6 +157,10 @@ def generar_reporte_combinado(fecha_inicio, fecha_fin):
                     return f"{apellidos} {nombres}"
                 return nombre  # Devolver sin cambios si tiene menos de 3 partes
             return nombre
+        
+        # Antes del merge, asegúrate de que todas las fechas estén en el formato correcto
+        for df in dataframes:
+            df['FechaC'] = pd.to_datetime(df['FechaC'], format='%d/%m/%Y', dayfirst=True)
 
 
         # Hacer un merge alineando todos los DataFrames con el índice común
@@ -151,7 +175,7 @@ def generar_reporte_combinado(fecha_inicio, fecha_fin):
             final_combined_df['UsuarioC_formato'] = final_combined_df['Usuario_x'].apply(reformat_name)
 
             # Cambiar el formato de FechaC
-            final_combined_df['FechaC_formato'] = pd.to_datetime(final_combined_df['FechaC']).dt.strftime('%d/%m/%Y')
+            final_combined_df['FechaC_formato'] = pd.to_datetime(final_combined_df['FechaC'], dayfirst=True).dt.strftime('%d/%m/%Y')
 
         except KeyError as e:
             print(f"Error: {e}")

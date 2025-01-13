@@ -18,7 +18,7 @@ def guardar_excel_como():
     excel = win32com.client.Dispatch("Excel.Application")
     excel.Visible = True
 
-    nombre_archivo = "Horario General ATcorp_2024.xlsx"
+    nombre_archivo = "Horario General ATcorp_2025.xlsx"
 
     for wb in excel.Workbooks:
         print(wb.Name)
@@ -71,7 +71,8 @@ def get_info_from_Exel_saved_to_dataframe():
         raise ValueError("Error: `sharepointHorarioGeneral_path` es None. No se pudo descargar el reporte de sharepoint.")
     
     excel_data = pd.ExcelFile(sharepointHorarioGeneral_path)
-    hojas_seleccionadas = ['25-11 al 01-12', '02-12 al 08-12', '09-12 al 15-12', '16-12 al 22-12', '23-12 al 29-12', '30-12 al 05-01-25']
+    #hojas_seleccionadas = ['25-11 al 01-12', '02-12 al 08-12', '09-12 al 15-12', '16-12 al 22-12', '23-12 al 29-12', '30-12 al 05-01-25']
+    hojas_seleccionadas = ['06-01 al 12-01']
     datos_extraidos = []
 
     for hoja in hojas_seleccionadas:
@@ -110,7 +111,11 @@ def get_info_from_Exel_saved_to_dataframe():
 
 
     #sharepoint_horario_General_ATCORP_df['Hora_Inicial_General'] = sharepoint_horario_General_ATCORP_df['Turno_General'].str.extract(r'(\d{2}:\d{2})')
-    sharepoint_horario_General_ATCORP_df['Fecha_General'] = pd.to_datetime(sharepoint_horario_General_ATCORP_df['Fecha_General'].str.extract(r'(\d{2}/\d{2}/\d{4})')[0],format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
+    sharepoint_horario_General_ATCORP_df['Fecha_General'] = pd.to_datetime(
+        sharepoint_horario_General_ATCORP_df['Fecha_General'].str.extract(r'(\d{2}/\d{2}/\d{4})')[0],
+        format='%d/%m/%Y',
+        dayfirst=True,
+        ).dt.strftime('%d/%m/%Y')
     sharepoint_horario_General_ATCORP_df['Usuario_General'] = sharepoint_horario_General_ATCORP_df['Usuario_General'].str.upper()
 
 
