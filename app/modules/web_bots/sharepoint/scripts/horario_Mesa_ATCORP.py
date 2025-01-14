@@ -99,7 +99,10 @@ def get_info_from_Excel_Saved():
 
 
     #sharepoint_horario_Mesa_ATCORP_df['Hora_Inicial_Mesa'] = sharepoint_horario_Mesa_ATCORP_df['Turno_Mesa'].str.extract(r'(\d{2}:\d{2})')
-    sharepoint_horario_Mesa_ATCORP_df['Fecha_Mesa'] = pd.to_datetime(sharepoint_horario_Mesa_ATCORP_df['Fecha_Mesa'].str.extract(r'(\d{2}/\d{2}/\d{4})')[0],format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
+    sharepoint_horario_Mesa_ATCORP_df['Fecha_Mesa'] = pd.to_datetime(
+    sharepoint_horario_Mesa_ATCORP_df['Fecha_Mesa'].str.extract(r'(\d{1,2}/\d{1,2}/\d{4})')[0],
+    format='%d/%m/%Y'
+)
     sharepoint_horario_Mesa_ATCORP_df['Usuario_Mesa'] = sharepoint_horario_Mesa_ATCORP_df['Usuario_Mesa'].str.upper()
     
     # Función para eliminar tildes

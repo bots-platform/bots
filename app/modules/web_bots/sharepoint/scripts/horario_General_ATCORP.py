@@ -109,16 +109,13 @@ def get_info_from_Exel_saved_to_dataframe():
         return valor  
     sharepoint_horario_General_ATCORP_df['Hora_Inicial_General'] = sharepoint_horario_General_ATCORP_df['Turno_General'].apply(extraer_hora_o_palabra)
 
-
     #sharepoint_horario_General_ATCORP_df['Hora_Inicial_General'] = sharepoint_horario_General_ATCORP_df['Turno_General'].str.extract(r'(\d{2}:\d{2})')
     sharepoint_horario_General_ATCORP_df['Fecha_General'] = pd.to_datetime(
-        sharepoint_horario_General_ATCORP_df['Fecha_General'].str.extract(r'(\d{2}/\d{2}/\d{4})')[0],
-        format='%d/%m/%Y',
-        dayfirst=True,
-        ).dt.strftime('%d/%m/%Y')
+    sharepoint_horario_General_ATCORP_df['Fecha_General'].str.extract(r'(\d{1,2}/\d{1,2}/\d{4})')[0],
+    format='%d/%m/%Y',
+    dayfirst=True
+)
     sharepoint_horario_General_ATCORP_df['Usuario_General'] = sharepoint_horario_General_ATCORP_df['Usuario_General'].str.upper()
-
-
 
     def quitar_tildes(texto):
         if isinstance(texto, str):
