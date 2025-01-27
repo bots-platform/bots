@@ -153,3 +153,10 @@ class SGAService:
                 status_code=500,
                 detail=error_message
            )
+
+
+
+
+
+
+
