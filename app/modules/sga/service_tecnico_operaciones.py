@@ -48,10 +48,11 @@ def connect_to_sga():
 
 def connect_to_operaciones_Window():
     try:
-        logging.info("Conectando a la ventana operaciones")
+        logging.info("Intentando identificar la ventana operaciones")
         operaciones_window = Desktop(backend="uia").window(title_re="SGA Operaciones.*")
         logging.info("Ventana principal de SGA Operaciones identificada.")
         return operaciones_window
+    
     except Exception as e:
         logging.error(f"Error al identificar la ventana principal de SGA Operaciones: {e}")
         raise

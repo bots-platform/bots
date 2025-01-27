@@ -5,7 +5,6 @@ from utils.logger_config import get_sga_logger
 logger = get_sga_logger()
 
 
-
 def navegar_sistema_tecnico(main_window):
     try:
         logger.info("Intentando selecionar 'Sistema Técnico'.")
@@ -18,6 +17,20 @@ def navegar_sistema_tecnico(main_window):
         logger.info("'Sistema Técnico' seleccionado con éxito.")
     except Exception as e:
         logger.error(f"Error al seleccionar 'Sistema Técnico': {e}")
+        raise
+
+def navegar_sistema_CMR(main_window):
+    try:
+        logger.info("Intentando selecionar 'Sistema CMR'.")
+        tecnico = main_window.child_window(
+            title="Sistema CRM",
+            control_type="TreeItem"
+            )
+        tecnico.click_input()
+        sleep(2)
+        logger.info("'Sistema CRM' seleccionado con éxito.")
+    except Exception as e:
+        logger.error(f"Error al seleccionar 'Sistema CRM': {e}")
         raise
 
 def seleccionar_opcion_sga(main_window, opcion):
