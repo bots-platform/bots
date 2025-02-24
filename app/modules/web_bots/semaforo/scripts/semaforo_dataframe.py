@@ -38,10 +38,7 @@ def get_info_from_semaforo_downloaded_to_dataframe(fecha_inicio, fecha_fin):
               ' '.join([x.split()[0], x.split()[1]]) if isinstance(x, str) and len(x.split()) == 3 else
               x if isinstance(x, str) else ''
 )
-    
-#     semaforo_df['Fecha_Semaforo'] = pd.to_datetime(
-#     semaforo_df['FECHA'], format='%d-%m-%Y'
-# ).dt.date
+
 
     # Seleccionar todas las filas duplicadas (incluyendo la primera aparición)
     duplicados_df = semaforo_df[semaforo_df.duplicated(subset=['Usuario_Semaforo', 'Fecha_Semaforo'], keep=False)]

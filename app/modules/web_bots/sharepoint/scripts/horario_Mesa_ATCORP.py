@@ -113,10 +113,6 @@ def get_info_from_Excel_Saved():
         return texto
     sharepoint_horario_Mesa_ATCORP_df['Usuario_Mesa'] = sharepoint_horario_Mesa_ATCORP_df['Usuario_Mesa'].apply(quitar_tildes)
 
-    # sharepoint_horario_Mesa_ATCORP_df['Fecha_Mesa'] = pd.to_datetime(
-    # sharepoint_horario_Mesa_ATCORP_df['Fecha_Mesa'], format='%d/%m/%Y'
-    # ).dt.date
-
 
     duplicados_df = sharepoint_horario_Mesa_ATCORP_df[
         sharepoint_horario_Mesa_ATCORP_df.duplicated(subset=['Usuario_Mesa', 'Fecha_Mesa'], keep=False)

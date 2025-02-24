@@ -124,9 +124,7 @@ def get_info_from_Exel_saved_to_dataframe():
         return texto
     sharepoint_horario_General_ATCORP_df['Usuario_General'] = sharepoint_horario_General_ATCORP_df['Usuario_General'].apply(quitar_tildes)
 
-#     sharepoint_horario_General_ATCORP_df['Fecha_General'] = pd.to_datetime(
-#     sharepoint_horario_General_ATCORP_df['Fecha_General'], format='%d/%m/%Y'
-# ).dt.date
+
 
     duplicados_df = sharepoint_horario_General_ATCORP_df[
         sharepoint_horario_General_ATCORP_df.duplicated(subset=['Usuario_General', 'Fecha_General'], keep=False)
