@@ -58,11 +58,6 @@ def get_info_from_newcallcenter_download_to_dataframe(fecha_inicio, fecha_fin):
               x if isinstance(x, str) else ''
 )
 
-#     newcallcenter_clean_df['Fecha_NCC'] = pd.to_datetime(
-#     newcallcenter_clean_df['Fecha'], format='%d-%m-%Y'
-# ).dt.date
-
-    #newcallcenter_clean_df['Usuario_NCC'] = newcallcenter_clean_df['Usuario_NCC'].str.upper()
     save_info_obtained(newcallcenter_clean_df)
     return newcallcenter_clean_df
 
