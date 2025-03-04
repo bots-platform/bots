@@ -6,6 +6,7 @@ import logging
 from datetime import datetime, timedelta
 
 from app.modules.sga.scripts.sga_navigation import navegar_sistema_tecnico, seleccionar_opcion_sga
+from app.modules.sga.scripts.cumplimiento_sla.cumplimiento_sla_fill_columns import completar_columnas_faltantes_con_python
 from app.modules.sga.scripts.sga_operations import (
     seleccionar_control_de_tareas,
     seleccionar_atcorp,
@@ -13,15 +14,8 @@ from app.modules.sga.scripts.sga_operations import (
     seleccionar_275_data_previa,
     seleccionar_fecha_secuencia,
     seleccionar_clipboard,  
-    select_column_codiIncidencia,
-    seleccionar_276_averias,
-    seleccionar_checkbox_nroincidencias,
     cerrar_reporte_Dinamico,
-    click_button_3puntos,
-    seleccion_multiple_listado,
-    copiando_reporte_al_clipboard,
-    guardando_excel,
-    send_excel_to_api,
+    generando_reporte_sga,
 )
 
 def connect_to_sga():
@@ -71,7 +65,8 @@ def close_operaciones_window(operacion_window):
         raise
 
 class SGAService:
-    async def generate_dynamic_report(self,fecha_secuencia_inicio,fecha_secuencia_fin) :
+    def generate_dynamic_report(self,fecha_secuencia_inicio,fecha_secuencia_fin) :
+        path_excel_sga_sla_report = None
         try:
             
             navegacion_window = connect_to_sga()
@@ -82,70 +77,42 @@ class SGAService:
             operacion_window = connect_to_operaciones_Window()
             logging.info("Realizando operaciones en SGA Operaciones...")
             seleccionar_control_de_tareas(operacion_window)
-            
-            fecha_actual = fecha_secuencia_inicio
+             
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             resultados = []
-            while fecha_actual <= fecha_secuencia_fin:
-                try:
-                  
-                    fecha_actual_str = fecha_actual.strftime('%d/%m/%Y')
+           
+            try:
+                
+                fecha_inicio_str = fecha_secuencia_inicio.strftime('%d/%m/%Y')
+                fecha_fin_str = fecha_secuencia_fin.strftime('%d/%m/%Y')
 
-                    logging.info(f"Procesando generar reporte dinamico para la fecha: {fecha_actual_str}")
-                   
-                    seleccionar_atcorp(operacion_window)
-                    abrir_reporte_dinamico(operacion_window)
-                    seleccionar_275_data_previa(operacion_window)
-                    seleccionar_fecha_secuencia(operacion_window, fecha_actual_str, fecha_actual_str)
-                    seleccionar_clipboard()
-                    numero_tickets = select_column_codiIncidencia()
-                    cerrar_reporte_Dinamico(operacion_window)
-                    seleccionar_atcorp(operacion_window)
-                    abrir_reporte_dinamico(operacion_window)
-                    seleccionar_276_averias(operacion_window)
-                    seleccionar_checkbox_nroincidencias(operacion_window)
-                    click_button_3puntos(operacion_window)
-                    seleccion_multiple_listado(numero_tickets)
-                    copiando_reporte_al_clipboard()
-                    cerrar_reporte_Dinamico(operacion_window)
-                    fecha_procesada = fecha_actual.strftime('%Y-%m-%d')
-                    path_excel = guardando_excel(fecha_procesada)
+                logging.info(f"Procesando generar reporte dinamico para la fecha: {fecha_inicio_str} - {fecha_fin_str} -{timestamp}")
+                
+                seleccionar_atcorp(operacion_window)
+                abrir_reporte_dinamico(operacion_window)
+                seleccionar_275_data_previa(operacion_window)
+                seleccionar_fecha_secuencia(operacion_window,fecha_inicio_str, fecha_fin_str)
+                seleccionar_clipboard()
+                cerrar_reporte_Dinamico(operacion_window)
 
-                    resultado_envio = await send_excel_to_api(path_excel)
-                    if resultado_envio["status"] == "success":
-                        logging.info(f"Reporte enviado exitosamente para la fecha: {fecha_actual_str}")
-                        resultados.append({
-                            "fecha":fecha_actual_str,
-                            "status":"success",
-                            "message": resultado_envio["message"]
-                        })      
-                    else:
-                        logging.error(f"Error al enviar el archivo Excel para la fecha: {fecha_actual_str}")
-                        resultados.append(
-                            {
-                                "fecha":fecha_actual_str,
-                                "status":"error",
-                                "message":resultado_envio["message"]
-                            }
-                        )
-                except Exception as e:
-                    logging.error(f"Error al procesar la fecha {fecha_actual_str}: {e}")
-                    resultados.append(
-                        {
-                        "fecha": fecha_actual_str,  
-                        "status": "error",
-                        "message": f"Error interno para la fecha: {str(e)}"
-                        }
-                    )
+                path_excel_sga_report = generando_reporte_sga(operacion_window, fecha_inicio_str, fecha_fin_str)
+
+                path_excel_sga_sla_report = completar_columnas_faltantes_con_python(path_excel_sga_report, fecha_inicio_str, fecha_fin_str)
+
+            except Exception as e:
+                logging.error(f"Error al procesar la fecha  {fecha_inicio_str} - {fecha_fin_str} -{timestamp}: {e}")
+                resultados.append(
+                    {
+                    "fecha":  {fecha_inicio_str} - {fecha_fin_str} -{timestamp},  
+                    "status": "error",
+                    "message": f"Error interno para la fecha: {str(e)}"
+                    }
+                )
  
-                fecha_actual += timedelta(days=1)
-               
             close_operaciones_window(operacion_window)
 
-            return{
-                "status":"finalizado",
-                "Resultados": resultados
-            }
-        
+            return path_excel_sga_sla_report
+          
         except Exception as e:
            error_message = f" Error general al generar el reporte dinamico: {str(e)}"
            logging.error(error_message)
@@ -153,6 +120,7 @@ class SGAService:
                 status_code=500,
                 detail=error_message
            )
+
 
 
 

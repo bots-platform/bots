@@ -1,7 +1,7 @@
 from pywinauto import Application, Desktop
 import logging
 from time import sleep
-from app.modules.sga.scripts.sga_navigation import navegar_sistema_CMR, seleccionar_opcion_sga
+from app.modules.sga.scripts.sga_navigation import navegar_sistema_cmr, seleccionar_opcion_sga
 
 def connect_to_sga():
     try:
@@ -54,7 +54,7 @@ def close_atencionCliente_window(atencion_window):
 def send_alert():
     try:
         navegation_window = connect_to_sga()
-        navegar_sistema_CMR(navegation_window)
+        navegar_sistema_cmr(navegation_window)
         seleccionar_opcion_sga(navegation_window, "SGA Atención al Cliente")
         sleep(10)
 

@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime
 import os
 from utils.logger_config import get_reporteCombinado_logger
-from ..sharepoint.scripts import horario_General_ATCORP, horario_Mesa_ATCORP
+from ..sharepoint.scripts import horario_general_atcorp, horario_mesa_atcorp
 from ..semaforo.scripts import semaforo_dataframe
 from ..newCallCenter.scripts import newCallCenter_dataframe
 
@@ -15,8 +15,8 @@ def generar_reporte_combinado(fecha_inicio, fecha_fin):
 
         semaforo_df = semaforo_dataframe.get_info_from_semaforo_downloaded_to_dataframe(fecha_inicio, fecha_fin)
         newcallCenter_clean_df = newCallCenter_dataframe.get_info_from_newcallcenter_download_to_dataframe(fecha_inicio, fecha_fin)
-        sharepoint_horario_General_ATCORP_df = horario_General_ATCORP.get_info_from_Exel_saved_to_dataframe()
-        sharepoint_horario_Mesa_ATCORP_df = horario_Mesa_ATCORP.get_info_from_Excel_Saved()
+        sharepoint_horario_general_atcorp_df = horario_general_atcorp.get_info_from_Exel_saved_to_dataframe()
+        sharepoint_horario_mesa_atcorp_df = horario_mesa_atcorp.get_info_from_Excel_Saved()
 
         semaforo_df_renamed = semaforo_df.rename(columns={
             'Usuario_Semaforo': 'UsuarioC',
@@ -28,31 +28,31 @@ def generar_reporte_combinado(fecha_inicio, fecha_fin):
             'Fecha_NCC': 'FechaC',
             'HoraEntrada': 'Hora_NCC',
         })
-        sharepoint_horario_General_ATCORP_df_renamed = sharepoint_horario_General_ATCORP_df.rename(columns={
+        sharepoint_horario_general_atcorp_df_renamed = sharepoint_horario_general_atcorp_df.rename(columns={
             'Usuario_General': 'UsuarioC',
             'Fecha_General': 'FechaC',
             'Turno_General': 'Turno_General',
 
         })
-        sharepoint_horario_Mesa_ATCORP_df_renamed = sharepoint_horario_Mesa_ATCORP_df.rename(columns={
+        sharepoint_horario_mesa_atcorp_df_renamed = sharepoint_horario_mesa_atcorp_df.rename(columns={
             'Usuario_Mesa': 'UsuarioC',
             'Fecha_Mesa': 'FechaC',
             'Turno_Mesa': 'Turno_Mesa',
         })
     
-        # Convertir 'UsuarioC' a string y 'FechaC' a datetime en todos los DataFrames
-        dataframes = [semaforo_df_renamed, newcallCenter_clean_df_renamed, sharepoint_horario_General_ATCORP_df_renamed, sharepoint_horario_Mesa_ATCORP_df_renamed]
+    
+        dataframes = [semaforo_df_renamed, newcallCenter_clean_df_renamed, sharepoint_horario_general_atcorp_df_renamed, sharepoint_horario_mesa_atcorp_df_renamed]
         for df in dataframes:
-            df['UsuarioC'] = df['UsuarioC'].astype(str).str.strip()  # Convertir a string
-            df['FechaC'] = pd.to_datetime(df['FechaC'], errors='coerce')  # Convertir a datetime
+            df['UsuarioC'] = df['UsuarioC'].astype(str).str.strip()  
+            df['FechaC'] = pd.to_datetime(df['FechaC'], errors='coerce')  
 
       
         # Crear un índice común para las combinaciones únicas de Usuario y Fecha
         all_users_dates = pd.concat([
             semaforo_df_renamed[['UsuarioC', 'FechaC']],
             newcallCenter_clean_df_renamed[['UsuarioC', 'FechaC']],
-            sharepoint_horario_General_ATCORP_df_renamed[['UsuarioC', 'FechaC']],
-            sharepoint_horario_Mesa_ATCORP_df_renamed[['UsuarioC', 'FechaC']]
+            sharepoint_horario_general_atcorp_df_renamed[['UsuarioC', 'FechaC']],
+            sharepoint_horario_mesa_atcorp_df_renamed[['UsuarioC', 'FechaC']]
         ]).drop_duplicates().reset_index(drop=True)
 
         all_users_dates = all_users_dates.drop_duplicates().reset_index(drop=True)
@@ -67,25 +67,19 @@ def generar_reporte_combinado(fecha_inicio, fecha_fin):
                 return nombre  # Devolver sin cambios si tiene menos de 3 partes
             return nombre
 
-
-        # Hacer un merge alineando todos los DataFrames con el índice común
         try:
             final_combined_df = all_users_dates \
             .merge(semaforo_df_renamed, on=['UsuarioC', 'FechaC'], how='left', validate='one_to_many') \
             .merge(newcallCenter_clean_df_renamed, on=['UsuarioC', 'FechaC'], how='left', validate='one_to_many') \
-            .merge(sharepoint_horario_General_ATCORP_df_renamed, on=['UsuarioC', 'FechaC'], how='left', validate='one_to_many') \
-            .merge(sharepoint_horario_Mesa_ATCORP_df_renamed, on=['UsuarioC', 'FechaC'], how='left', validate='one_to_many')
+            .merge(sharepoint_horario_general_atcorp_df_renamed, on=['UsuarioC', 'FechaC'], how='left', validate='one_to_many') \
+            .merge(sharepoint_horario_mesa_atcorp_df_renamed, on=['UsuarioC', 'FechaC'], how='left', validate='one_to_many')
 
-            # Aplicar la función para reformatear los nombres
             final_combined_df['UsuarioC_formato'] = final_combined_df['Usuario_x'].apply(reformat_name)
-
-            # Cambiar el formato de FechaC
             final_combined_df['FechaC_formato'] = pd.to_datetime(final_combined_df['FechaC']).dt.strftime('%d/%m/%Y')
 
         except KeyError as e:
             print(f"Error: {e}")
 
-     
         try:
             path = save_info_obtained(final_combined_df)
             return  path

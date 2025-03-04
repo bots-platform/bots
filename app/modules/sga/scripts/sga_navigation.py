@@ -19,7 +19,7 @@ def navegar_sistema_tecnico(main_window):
         logger.error(f"Error al seleccionar 'Sistema Técnico': {e}")
         raise
 
-def navegar_sistema_CMR(main_window):
+def navegar_sistema_cmr(main_window):
     try:
         logger.info("Intentando selecionar 'Sistema CMR'.")
         tecnico = main_window.child_window(

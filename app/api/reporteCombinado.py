@@ -1,16 +1,15 @@
 
-from fastapi import APIRouter
+import os
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 from app.modules.web_bots.reportesCombinados.models import FechaReporteCombinadoRequest
-from ..modules.web_bots.reportesCombinados.reporteCombinado_scripts import generar_reporte_combinado
+from ..modules.web_bots.reportesCombinados.reporte_combinado_scripts import generar_reporte_combinado
 
-router = APIRouter(prefix="/api/reportes", tags=["reportes_combinados"])
+router = APIRouter(prefix="/api/reportes", tags=["Reportes Combinados"])
 
-@router.post("/combinado")
+@router.post("/combinado", include_in_schema=False)
 def generar_reporte_combinado_endpoint(request: FechaReporteCombinadoRequest):
 
-    print(request)
-    print(request.fecha_inicio, request.fecha_fin)
     """
     Genera un reporte combinado en Excel basado en un rango de fechas proporcionado y permite su descarga.
 
@@ -19,52 +18,18 @@ def generar_reporte_combinado_endpoint(request: FechaReporteCombinadoRequest):
     """
     
     ruta_archivo = generar_reporte_combinado(request.fecha_inicio, request.fecha_fin)
-    #return ruta_archivo
+
+    if not os.path.exists(ruta_archivo):
+        raise HTTPException(status_code=404, detail="El archivo no fue encontrado")
+
     return FileResponse(
         ruta_archivo,
         filename=ruta_archivo.split("/")[-1],
         media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
 
+@router.get("/combinado", include_in_schema=False)
+def generate():
+    return {'message': 'reporteCombinado'}
 
 
-# @router.get("/combinado")
-# def generate():
-#     return {'hola': 'reporteCombinado'}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# @router.post("/combinado")
-# async def descarga_reporte_combinado(request: FechaReporteAsistenciaRequest):
-#     # Inicializar servicios
-#     semaforo_service = SemaforoService()
-#     newcallcenter_service = NewCallCenterService()
-    
-#     # Ejecutar ambos servicios
-#     respuesta_semaforo = semaforo_service.descargarReporte(
-#         request.fecha_inicio, 
-#         request.fecha_fin
-#     )
-#     respuesta_newcallcenter = newcallcenter_service.descargarReporte(
-#         request.fecha_inicio,
-#         request.fecha_fin
-#     )
-    
-#     # Combinar respuestas
-#     return {
-#         "semaforo": respuesta_semaforo,
-#         "newcallcenter": respuesta_newcallcenter,
-#         "status": "success",
-#         "message": "Proceso combinado completado"
-#     }
