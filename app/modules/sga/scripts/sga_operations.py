@@ -1,22 +1,12 @@
 import os
 import pandas as pd  # type: ignore
-from fastapi import HTTPException
-from pathlib import Path
-from datetime import datetime, timedelta
-from pywinauto import Application, Desktop
+from datetime import datetime
 from time import sleep
 from pywinauto.keyboard import send_keys
-import pyperclip # type: ignore
-from io import StringIO
-import aiohttp
-from aiohttp import ClientConnectorError
-from urllib.parse import urlparse
-from config import URL_DJANGO, EXCEL_FILENAME, EXCEL_CONTENT_TYPE, AUTH_USERNAME, AUTH_PASSWORD
+import pyperclip 
 from utils.logger_config import get_sga_logger
  
 logger = get_sga_logger()
-
-
 
 def seleccionar_control_de_tareas(main_window):
     try:
@@ -81,7 +71,6 @@ def seleccionar_fecha_secuencia(main_window, fecha_inicio=None, fecha_fin=None):
         pyperclip.copy(fecha_inicio)
         sleep(1)
         main_window.type_keys("^v")
-
         logger.info(f"Estableciendo fecha de secuencia fin: {fecha_fin}")
         send_keys('{TAB}')
         sleep(1)
@@ -126,13 +115,27 @@ def seleccionar_clipboard():
         logger.info(f"Error al copiar del 'clipboard': {e}")
         raise
 
+def cerrar_reporteDinamico_276():
+    try:
+        sleep(1)
+        logger.info("Cerrando reporte dinamico 276")
+        send_keys("%A")
+        sleep(1)
+        send_keys('{DOWN 5}')
+        sleep(1)
+        send_keys('{ENTER}')
+        logger.info("cerrado correctamente")
+    except Exception as e:
+        logger.info(f"Error al cerrar repor dinamico 276: {e}")
+        raise
+
 def select_column_codiIncidencia():
     try:
         logger.info("Seleccionando la columna codigo de incidencias")
         sleep(2)      
-        df = pd.read_clipboard(sep='\t')  
+        df = pd.read_clipboard(sep='\t', header=0)  
         sleep(1)
-        codticket_data = df['codincidence'].iloc[0:].drop_duplicates()
+        codticket_data = df['codincidence'].astype(str).str.strip().drop_duplicates().reset_index(drop=True)
         nro_tickets = len(codticket_data)
         sleep(1)
         result = '\n'.join(codticket_data.astype(str))
@@ -200,8 +203,7 @@ def click_button_3puntos(main_window):
         return True
     except Exception as e:
         logger.error(f"Error al seleccionar 'button ...': {e}")
-        
-
+    
 def seleccion_multiple_listado(numero_tickets):
     try:
         logger.info("Seleccionando multiple listado")
@@ -223,7 +225,7 @@ def seleccion_multiple_listado(numero_tickets):
 def copiando_reporte_al_clipboard():
     try:
         logger.info("Copiando Reporte  al clipboard")
-        sleep(25)
+        sleep(70)
         send_keys("%A")
         sleep(1)
         send_keys('{DOWN 4}')
@@ -236,91 +238,72 @@ def copiando_reporte_al_clipboard():
         logger.info(f"Error al copiar del 'clipboard': {e}")
         raise
 
-def guardando_excel(fecha_procesada):
-
+def generando_reporte_sga(main_window, fecha_inicio, fecha_fin):
+    chunk_size = 990
     try:
-        logger.info("Guardando reporte del clipboard al excel")   
-        base_dir = 'media'
-        sga_dir = os.path.join(base_dir, 'sga')
-        if not os.path.exists(sga_dir):
-            os.makedirs(sga_dir)
-            logger.info(f"Directorio '{sga_dir}' creado.")
+        logger.info("Seleccionando la columna codigo de incidencias, partiendo en lotes de  990 tickets (limit sga consulta detalle) and generate final reporte")
+        sleep(2)      
+        df = pd.read_clipboard(sep='\t', header=0)  
+        sleep(1)
+        codticket_data_antes = df['codincidence']
+        logger.info(f"total tickets antes de eliminar duplicates {len(codticket_data_antes)}")
+        
+        codticket_data = df['codincidence'].astype(str).str.strip().drop_duplicates().reset_index(drop=True)
+        sleep(1)
+        total_tickets = len(codticket_data)
+        logger.info(f"Total unique tickets founded {total_tickets}")
 
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        output_file = f'{sga_dir}/reporte_{fecha_procesada}_{timestamp}.xlsx'
+        list_of_dfs = []
 
-        df = pd.read_clipboard(sep='\t')
-        with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
-            df.to_excel(writer, index=False, sheet_name='reporte')
+        for start in range(0, total_tickets, chunk_size):
+            end = start + chunk_size
+            chunk_tickets = codticket_data.iloc[start:end]
+            chunk_tickets_lenght = len(chunk_tickets)
 
-        logger.info("Reporte guardado en excel correctamente")
-        return output_file
-      
-    except Exception as e:
-        logger.info(f"Error al guardar reporte del clipboard al excel: {e}")
-        return {"status": "error", "message": str(e)}
+            tickets_str = '\n'.join(chunk_tickets.astype(str))
+            pyperclip.copy(tickets_str)
+            logger.info(f"Tickets del indice {start} hasta {end -1} copiados al portapapeles")
+        
+            seleccionar_atcorp(main_window)
+            abrir_reporte_dinamico(main_window)
+            seleccionar_276_averias(main_window)
+            seleccionar_checkbox_nroincidencias(main_window)
+            click_button_3puntos(main_window)
+            seleccion_multiple_listado(chunk_tickets_lenght)
+            copiando_reporte_al_clipboard()
+            sleep(1)
+            partial_df = pd.read_clipboard(sep='\t')
+            sleep(1)
+            list_of_dfs.append(partial_df)
+            sleep(1)
+            cerrar_reporteDinamico_276()
+          
+        final_df = pd.concat(list_of_dfs, ignore_index=True)
+        logger.info("Seleccionando la columna codigo de incidencias, partiendo en lotes de  990 tickets (limit sga consulta detalle) and generate final reporte procesada y consolidada correctamente.")
+          
+        path_excel_sga = guardando_a_excel(fecha_inicio, fecha_fin, final_df)
 
-async def send_excel_to_api(excel_path):
-
-    try:
-        logger.info("Tratando de enviar el excel a la API Django")
-
-        parsed = urlparse(URL_DJANGO)
-        if not parsed.scheme or not parsed.netloc:
-            raise ValueError(f"La URL '{URL_DJANGO} no esta correctamente configurada.")
+        logger.info(f"Reporte SGA guardado correctamente en {path_excel_sga}")
+        return path_excel_sga
     
-        if not Path(excel_path).exists():
-            logger.error(f" Archivo excel no encontrado: {excel_path}")
-            return False
-
-        mi_url = URL_DJANGO
-
-        form_data = aiohttp.FormData()
-        form_data.add_field( 
-                            'sga_csv',
-                            open(excel_path, 'rb'), 
-                            filename=EXCEL_FILENAME,
-                            content_type=EXCEL_CONTENT_TYPE
-                            )
-
-        form_data.add_field('sga_fecha',
-                           datetime.now().strftime('%Y-%m-%d'))
-            
-        async with aiohttp.ClientSession() as session:
-            auth = aiohttp.BasicAuth(AUTH_USERNAME, AUTH_PASSWORD)
-            async with session.post(
-                url=mi_url,
-                data=form_data,
-                auth=auth
-            ) as response:
-                if response.status in [200, 202]:
-                    logger.info("Excel enviado exitosamente a la Django")
-                    return {
-                        "status":"success",
-                        "message": "Archivo enviado correctamente"
-                    }
-                else:
-                    error_message = await response.text()
-                    logger.error(f"Error al enviar Excel a Django: {response.status},{error_message}")
-                    return {
-                        "status":"error",
-                        "message": f"Error al enviar Excel a Django : {error_message}"
-                    }
-                
-    except ValueError as e:
-        raise HTTPException(status_code=500, detail=f"Error en la configuracion del la URL: {str(e)} ")
-                
-    except ClientConnectorError as e:
-        logger.exception(f"Error de conexión con el servidor: {str(e)}")
-        return {
-            "status":"error",
-            "message": f"Servicio no disponible. El servidor esta caido o inalcanzable: {str(e)}."
-        }
-            
     except Exception as e:
-        logger.exception(f"Error general al enviar excel a la api Django: {e}")
-        return {
-            "status": "error",
-            "message": str(e)
-        }
-    
+        logger.info(f"Error Seleccionando la columna codigo de incidencias, partiendo en lotes de  990 tickets (limit sga consulta detalle) and generate  reporte: {e}")
+        raise
+
+def guardando_a_excel(fecha_inicio, fecha_fin, final_df_sga):
+
+    output_dir = 'media/sga/reporte_SGA/'
+    os.makedirs(output_dir, exist_ok=True)
+
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    fecha_inicio_format = fecha_inicio.replace("/", "-")
+    fecha_fin_format = fecha_fin.replace("/", "-")
+
+    path_reporte_sga = os.path.join(output_dir, f'sga_reporte_{fecha_inicio_format}_{fecha_fin_format}_{timestamp}.xlsx')
+    final_df_sga.to_excel(path_reporte_sga, index=False, engine='openpyxl')
+    logger.info(f"Reporte sga guardado en: {path_reporte_sga}")
+
+    return path_reporte_sga
+
+
+

@@ -1,6 +1,6 @@
 from datetime import datetime
 from app.modules.web_bots.browser.setup_chrome import setup_chrome_driver
-from app.modules.web_bots.sharepoint.scripts.sharepoint_scraper import scrape_sharepoint_page
+# from app.modules.web_bots.sharepoint.scripts.sharepoint_scraper import scrape_sharepoint_page
 from utils.logger_config import get_sharepoint_HorarioGeneralATCORP_logger
 import win32com.client
 import pandas as pd

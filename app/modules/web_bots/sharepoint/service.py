@@ -1,7 +1,6 @@
 from datetime import datetime
 from fastapi import HTTPException
 import win32com.client
-from app.modules.web_bots.sharepoint.scripts.sharepoint_scraper import scrape_sharepoint_page 
 from app.modules.web_bots.browser.setup_chrome import setup_chrome_driver
 from config import SHAREPOINT_USER, SHAREPOINT_PASSWORD
 import time
