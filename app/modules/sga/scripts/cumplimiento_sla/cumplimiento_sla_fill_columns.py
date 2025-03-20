@@ -129,7 +129,7 @@ def fill_tip_interr_filtrado_column(df_reporte):
         "SUPERINT. NAC. DE LOS REGISTROS PUBLICOS",
         "CAJA MUNICIPAL DE CREDITO POPULAR DE LIM A"
         }
-
+        df_reporte["tiempo_interrupcion"] = pd.to_numeric(df_reporte["tiempo_interrupcion"], errors="coerce").fillna(0)
         condition = (~df_reporte["nombre_cliente"].isin(excluded_customers)) & (df_reporte["nombre_cliente"]!="") & (df_reporte["tiempo_interrupcion"] < 1)
         df_reporte["tip_interr_filtrado"] = np.where(condition, 1, df_reporte["tiempo_interrupcion"])
         df_reporte["tip_interr_filtrado"] = pd.to_numeric(df_reporte["tip_interr_filtrado"], errors="coerce").fillna(0)
@@ -188,12 +188,13 @@ def fill_slacomp_column(df_reporte):
             1,
             df_reporte["slacomp"]
         )
+        df_reporte["tipificacion_tipo"] = df_reporte["tipificacion_tipo"].fillna("")
 
-        df_reporte["slacomp"] = np.where(
-            df_reporte["tipificacion_tipo"].isna() ,
-            "SinTip",
-            df_reporte["slacomp"]
-        )
+        # df_reporte["slacomp"] = np.where(
+        #     df_reporte["slacomp"].isna() & df_reporte["tipificacion_tipo"] == "",
+        #     "SinTip",
+        #     df_reporte["slacomp"]
+        # )
 
         df_reporte["slacomp"] = df_reporte["slacomp"].fillna(0)
 
@@ -209,6 +210,25 @@ def fill_slacomp_column(df_reporte):
 
     return df_reporte
 
+def  calculate_slacomp_column(df_reporte):
+    if df_reporte["caso"] in ["SOLICITUD", "FT"]:
+        return df_reporte["caso"]
+    if df_reporte["mediotx"] in ["Fibra", "Microondas", "Cobre"]:
+        if df_reporte["caso"] in ["SIN SERVICIO", "Sin Servicio-Monitoreo"]:
+            if (df_reporte["mediotx"] in ["Fibra", "Cobre"]) and (df_reporte["tip_interr_filtrado"] <= df_reporte["fo"]):
+                return 1
+            if (df_reporte["mediotx"] in ["Microondas"]) and (df_reporte["tip_interr_filtrado"] <= df_reporte["tip_interr_filtrado"]):
+                return 1
+            return 0
+        if df_reporte["caso"] in ["DEGRADACION", "Degradacion-Monitoreo"]:
+            if (df_reporte["mediotx"] in ["Fibra", "Cobre"]) and (df_reporte["tip_interr_filtrado"] <= df_reporte["fo"]):
+                return 1
+            if (df_reporte["mediotx"] in ["Microondas"]) and (df_reporte["tip_interr_filtrado"] <= df_reporte["tip_interr_filtrado"]):
+                return 1
+            return 0
+    if pd.isna(df_reporte["slacomp"]) and (pd.isna(df_reporte["tipificacion_tipo"]) or df_reporte["tipificacion_tipo"] == ""):
+        return "SinTip"
+    
 def fill_tipo_usuario_cierra_column(df_reporte):
     try:
         logger.info("Trying to fill tipo_usuario_cierra column ")
@@ -308,7 +328,6 @@ def fill_desplazamiento_column(df_reporte):
     return df_reporte
     
 
-
 def completar_columnas_faltantes_con_python(file_path_reporte, fecha_inicio, fecha_fin):
     try:
         logger.info("Trying to fill columns SLA")
@@ -316,6 +335,7 @@ def completar_columnas_faltantes_con_python(file_path_reporte, fecha_inicio, fec
         df = fill_fo_column(df)
         df = fill_mo_column(df)
         df = fill_tip_interr_filtrado_column(df)
+        #df["slacomp"] = df.apply(calculate_slacomp_column, axis=1)
         df = fill_slacomp_column(df)
         df = fill_tipo_usuario_cierra_column(df)
         df = fill_desp_column(df)
