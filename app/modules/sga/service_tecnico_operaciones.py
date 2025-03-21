@@ -11,7 +11,7 @@ from app.modules.sga.scripts.sga_operations import (
     seleccionar_control_de_tareas,
     seleccionar_atcorp,
     abrir_reporte_dinamico,
-    seleccionar_275_data_previa,
+    seleccionar_data_previa,
     seleccionar_fecha_secuencia,
     seleccionar_clipboard,  
     cerrar_reporte_Dinamico,
@@ -65,8 +65,9 @@ def close_operaciones_window(operacion_window):
         raise
 
 class SGAService:
-    def generate_dynamic_report(self,fecha_secuencia_inicio,fecha_secuencia_fin) :
+    def generate_dynamic_report(self,fecha_secuencia_inicio,fecha_secuencia_fin, indice_tabla_reporte_data_previa, indice_tabla_reporte_detalle) :
         path_excel_sga_sla_report = None
+        path_excel_sga_report = None
         try:
             
             navegacion_window = connect_to_sga()
@@ -90,14 +91,14 @@ class SGAService:
                 
                 seleccionar_atcorp(operacion_window)
                 abrir_reporte_dinamico(operacion_window)
-                seleccionar_275_data_previa(operacion_window)
+                seleccionar_data_previa(operacion_window, indice_tabla_reporte_data_previa)
                 seleccionar_fecha_secuencia(operacion_window,fecha_inicio_str, fecha_fin_str)
                 seleccionar_clipboard()
                 cerrar_reporte_Dinamico(operacion_window)
+                
+                path_excel_sga_report = generando_reporte_sga(operacion_window, fecha_inicio_str, fecha_fin_str, indice_tabla_reporte_detalle)
 
-                path_excel_sga_report = generando_reporte_sga(operacion_window, fecha_inicio_str, fecha_fin_str)
-
-                path_excel_sga_sla_report = completar_columnas_faltantes_con_python(path_excel_sga_report, fecha_inicio_str, fecha_fin_str)
+                #path_excel_sga_sla_report = completar_columnas_faltantes_con_python(path_excel_sga_report, fecha_inicio_str, fecha_fin_str)
 
             except Exception as e:
                 logging.error(f"Error al procesar la fecha  {fecha_inicio_str} - {fecha_fin_str} -{timestamp}: {e}")
@@ -111,7 +112,11 @@ class SGAService:
  
             close_operaciones_window(operacion_window)
 
-            return path_excel_sga_sla_report
+            if indice_tabla_reporte_detalle == 4: 
+                return path_excel_sga_sla_report
+            
+            if indice_tabla_reporte_detalle == 15:
+                return path_excel_sga_report
           
         except Exception as e:
            error_message = f" Error general al generar el reporte dinamico: {str(e)}"
