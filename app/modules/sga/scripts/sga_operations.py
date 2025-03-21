@@ -48,13 +48,19 @@ def abrir_reporte_dinamico(main_window):
         logger.error(f"Error al abrir 'Reporte Dinámico': {e}")
         raise
 
-def seleccionar_275_data_previa(main_window):
+def seleccionar_data_previa(main_window, indice_reporte_tickets):
     try:
         logger.info("Intentando seleccionar '275 TABLERO DATA PREVIA'.")
         lista_reportes = main_window.child_window(title="Lista de Reportes por Area", control_type="Window")
         sleep(1)
         opciones_venta_panel = lista_reportes.child_window(title="Opciones de Venta", auto_id="1000", control_type="Pane")
-        data_previa = opciones_venta_panel.child_window(title="compute_1", control_type="Text", found_index=18)
+        if indice_reporte_tickets == 13 :
+            vertical_scrollbar = opciones_venta_panel.child_window(title="Vertical", auto_id="NonClientVerticalScrollBar", control_type="ScrollBar")
+            scroll_bar = vertical_scrollbar.child_window(title="Av Pág", auto_id="DownPageButton", control_type="Button")
+            for _ in range(1):  
+               scroll_bar.click_input()
+               sleep(0.5)  
+        data_previa = opciones_venta_panel.child_window(title="compute_1", control_type="Text", found_index=indice_reporte_tickets)
         data_previa.double_click_input()
         sleep(2)
         logger.info("'275 TTABLERO DATA PREVIA' seleccionado correctamente.")
@@ -157,7 +163,7 @@ def cerrar_reporte_Dinamico(main_window):
         logger.info(f"Error al cerrar 'Reporte dinamico': {e} ")
         raise
 
-def seleccionar_276_averias(main_window):
+def seleccionar_averias_detalle(main_window, indice_reporte_detalle):
    try:
        logger.info("Intentando seleccionar '276 AVERIAS'.")
        lista_reportes=main_window.child_window(title="Lista de Reportes por Area", control_type="Window")
@@ -168,10 +174,10 @@ def seleccionar_276_averias(main_window):
        for _ in range(1):  
            scroll_bar.click_input()
            sleep(0.5)  
-       data_previa = opciones_venta_panel.child_window(title="compute_1", control_type="Text", found_index=6)
+       data_previa = opciones_venta_panel.child_window(title="compute_1", control_type="Text", found_index=indice_reporte_detalle)
        data_previa.double_click_input()
        sleep(2)
-       logger.info(" '276 AVERIAS' seleccionado correctamente ")
+       logger.info(" ' Detalle AVERIAS' seleccionado correctamente ")
    except Exception as e:
        logger.error(f"Error al seleccionar '276 AVERIAS' : {e}")
        raise
@@ -187,8 +193,8 @@ def seleccionar_checkbox_nroincidencias(main_window):
         sleep(1)
         logger.info("checkBox selected successfully")
     except TimeoutError:
-         logger.error("El CheckBox no estuvo listo a tiempo.")
-         raise
+       logger.error("El CheckBox no estuvo listo a tiempo.")
+       raise
 
 def click_button_3puntos(main_window):  
       
@@ -238,7 +244,7 @@ def copiando_reporte_al_clipboard():
         logger.info(f"Error al copiar del 'clipboard': {e}")
         raise
 
-def generando_reporte_sga(main_window, fecha_inicio, fecha_fin):
+def generando_reporte_sga(main_window, fecha_inicio, fecha_fin, indice_reporte_detalle):
     chunk_size = 990
     try:
         logger.info("Seleccionando la columna codigo de incidencias, partiendo en lotes de  990 tickets (limit sga consulta detalle) and generate final reporte")
@@ -266,7 +272,7 @@ def generando_reporte_sga(main_window, fecha_inicio, fecha_fin):
         
             seleccionar_atcorp(main_window)
             abrir_reporte_dinamico(main_window)
-            seleccionar_276_averias(main_window)
+            seleccionar_averias_detalle(main_window, indice_reporte_detalle)
             seleccionar_checkbox_nroincidencias(main_window)
             click_button_3puntos(main_window)
             seleccion_multiple_listado(chunk_tickets_lenght)
