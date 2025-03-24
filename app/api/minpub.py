@@ -1,45 +1,40 @@
 from fastapi import APIRouter, UploadFile, File, Form, BackgroundTasks
+from datetime import datetime
+from pathlib import Path
 import os
 
-from ..modules.sga.minpub.report_validator.service.extract import extract_data
-from ..modules.sga.minpub.report_validator.service.transform import transform_data
-from ..modules.sga.minpub.report_validator.service.compare import compare_data
 
-router = APIRouter(prefix="/api/validator", tags=["Validador de Reportes MINPUB"])
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+SAVE_DIR_EXTRACT_WORD_DATOS = BASE_DIR / "media" / "minpub" / "validator_report" / "extract" / "word_datos"
+SAVE_DIR_EXTRACT_WORD_TELEFONIA = BASE_DIR / "media" / "minpub" / "validator_report" / "extract" / "word_telefonia"
+SAVE_DIR_EXTRACT_EXCEL = BASE_DIR / "media" / "minpub" / "validator_report" / "extract" / "excel"
 
-BASE_DIR = os.path.join(os.path.abspath(__file__))
 
-SAVE_DIR_EXTRACT = os.path.join(BASE_DIR, "..", "..", "media", "minpub", "validator_report", "extract")    
-SAVE_DIR_TRANSFORMED = os.path.join(BASE_DIR, "..", "..", "media", "minpub", "validator_report", "transformed")
+router = APIRouter(prefix="/api/minpub", tags=["minpub"])
+ 
 
-os.makedirs(SAVE_DIR_EXTRACT, exist_ok=True)
-os.makedirs(SAVE_DIR_TRANSFORMED, exist_ok=True)
-
-@router.post("/process")
-async def process_files(
-        file1 : UploadFile = File(...),
-        file2 : UploadFile = File(...),
-        word_file: UploadFile = File(...),
-        fecha_inicio: str = Form(...),
-        fecha_fin: str = Form(...),
-        background_tasks: BackgroundTasks = BackgroundTasks(),
-):
-    file_paths = {
-        "file1": os.path.join(SAVE_DIR_EXTRACT, file1.filename),
-        "file2": os.path.join(SAVE_DIR_EXTRACT, file2.filename),
-        "word_file": os.path.join(SAVE_DIR_EXTRACT, word_file.filename)
-    }
-
-    for file_key, file_path in file_paths.items():
-        with open(file_path, "wb") as buffer:
-            buffer.write(await eval(file_key).read())
+async def save_file(uploaded_file: UploadFile, save_dir: str) -> str:
     
-    extracted_data = extract_data(file_paths)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = uploaded_file.filename.split(".")[0]
+    extension = uploaded_file.filename.split(".")[1]
 
-    background_tasks.add_task(transform_data, extracted_data, fecha_inicio, fecha_fin)
+    filename_timestamp = f"{filename}_{timestamp}.{extension}"
+    file_path = os.path.join(save_dir, filename_timestamp)
+    with open(file_path, "wb") as buffer:
+        buffer.write(await uploaded_file.read())
+    return file_path
 
-    return {"message": "Processing started", "files": file_paths}
 
+@router.post("/process/")
+async def process_files(
+    word_file_datos: UploadFile = File(...),
+    word_file_telefonia: UploadFile = File(...),
+    excel_file: UploadFile = File(...),
+    fecha_inicio: str = Form(...),
+    fecha_fin: str = Form(...),
+):
 
-
-
+    word_datos_file_path = await save_file(word_file_datos, SAVE_DIR_EXTRACT_WORD_DATOS)
+    word_telefonia_file_path = await save_file(word_file_telefonia, SAVE_DIR_EXTRACT_WORD_TELEFONIA)
+    excel_file_path = await save_file(excel_file, SAVE_DIR_EXTRACT_EXCEL)
