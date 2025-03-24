@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import (sga, oplogin, newCallCenter, semaforo, reporteCombinado, sharepoint_Horario_mesa_atcorp, sharepoint_horario_general_atcorp
+from app.api import (sga, oplogin, newCallCenter, semaforo, reporteCombinado, sharepoint_Horario_mesa_atcorp, sharepoint_horario_general_atcorp, minpub
 )
 
 
@@ -21,6 +21,7 @@ app.include_router(semaforo.router)
 app.include_router(reporteCombinado.router)
 app.include_router(sharepoint_horario_general_atcorp.router)
 app.include_router(sharepoint_Horario_mesa_atcorp.router)
+app.include_router(minpub.router)
 
 if __name__ == "__main__":
     import uvicorn
