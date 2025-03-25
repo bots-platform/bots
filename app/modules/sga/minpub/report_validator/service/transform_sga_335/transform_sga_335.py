@@ -23,3 +23,22 @@ def determine_tipo_reporte(row):
 
 df.fillna({"nro_incidencia": "", "tipo_caso": "", "tipo_servicio": "", "Conteo para proactivo": 0}, inplace= True)
 df["tipo_reporte"] = df.apply(determine_tipo_reporte, axis=1)
+
+
+def determine_component(row):
+
+    if row["tipo_reporte"] == "PROACTIVO":
+        return "COMPONENTE II"
+
+    causa = str(row["it_determinacion_de_la_causa"]) if pd.notna(row["it_determinacion_de_la_causa"]) else ""
+    
+    roman_numerals = {1: "I", 2: "II", 3: "III", 4: "IV", 5: "V"}
+
+    for i in range(5, 0, -1):
+        if f"COMPONENTE {roman_numerals[i]}" in causa:
+            return f"COMPONENTE {roman_numerals[i]}"
+    if "SOLICITUD - Cliente" in row["tipo_incidencia"]:
+        return "SOLICITUD"
+    return "SIN COMPONENTE/MAL ESCRITO"
+
+df["componente"] = df.apply(determine_component, axis=1)
