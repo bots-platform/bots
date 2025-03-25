@@ -42,3 +42,26 @@ def determine_component(row):
     return "SIN COMPONENTE/MAL ESCRITO"
 
 df["componente"] = df.apply(determine_component, axis=1)
+
+
+def determine_cuismp(df):
+
+    BASE_DIR = Path.cwd().parent.parent.parent.parent.parent.parent.parent
+    file_path_cuismp_cid = BASE_DIR /  "media" / "minpub" / "validator_report" / "extract" / "sharepoint_cid_cuismp"/ "MINPU - CID-CUISMP - AB.xlsx"  
+    file_path_disponibilidad_servicio_c2 = BASE_DIR /  "media" / "minpub" / "validator_report" / "extract" / "disponibilidad_servicio_c2"/ "DISPONIBILIDAD DEL SERVICIO C2.xlsx"  
+
+    if not file_path_cuismp_cid.exists():
+        raise FileNotFoundError(f" File not found {file_path_cuismp_cid}")
+
+    if not file_path_disponibilidad_servicio_c2.exists():
+        raise FileNotFoundError(f"File not found {file_path_disponibilidad_servicio_c2}")
+
+    df_cuismp_by_cid = pd.read_excel(file_path_cuismp_cid)
+
+    df_cuismp_by_cid = df_cuismp_by_cid.rename(columns={"CID":"cid"})
+
+    df["cid"] = df["cid"].astype(str).fillna("")
+    df_cuismp_by_cid["cid"] = df_cuismp_by_cid["cid"].astype(str).fillna("")
+
+    df = df.merge(df_cuismp_by_cid, on="cid", how="left")
+    return df
