@@ -65,3 +65,6 @@ def determine_cuismp(df):
 
     df = df.merge(df_cuismp_by_cid, on="cid", how="left")
     return df
+
+
+
