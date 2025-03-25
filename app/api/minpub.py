@@ -6,7 +6,7 @@ from fastapi import HTTPException
 
 
 from app.modules.sga.service_tecnico_operaciones import SGAService
-from app.modules.sga.minpub.report_validator.service.transfor_sga_335 import transform_sga_335
+from app.modules.sga.minpub.report_validator.service.transform_sga_335 import transform_sga_335
 from app.modules.sga.minpub.report_validator.service.transform_excel_corte import transform_excel_corte
 from app.modules.sga.minpub.report_validator.service.transform_word import transform_word
 
@@ -15,7 +15,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 SAVE_DIR_EXTRACT_WORD_DATOS = BASE_DIR / "media" / "minpub" / "validator_report" / "extract" / "word_datos"
 SAVE_DIR_EXTRACT_WORD_TELEFONIA = BASE_DIR / "media" / "minpub" / "validator_report" / "extract" / "word_telefonia"
 SAVE_DIR_EXTRACT_EXCEL = BASE_DIR / "media" / "minpub" / "validator_report" / "extract" / "excel"
-SAVE_DIR_EXTRACT_SGA = BASE_DIR / "media" / "minpub" / "validator_report" / "extract" / "sga"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+SAVE_DIR_EXTRACT_SGA_335 = BASE_DIR / "media" / "minpub" / "validator_report" / "extract" / "sga_335"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
 
 
 router = APIRouter(prefix="/api/minpub", tags=["minpub"])
