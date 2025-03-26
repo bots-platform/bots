@@ -3,8 +3,8 @@ from pathlib import Path
 pd.set_option('display.max_rows', None)
 import re
 
-BASE_DIR = Path.cwd().parent.parent.parent.parent.parent.parent.parent
-SAVE_DIR_EXTRACT_SGA_335 = BASE_DIR / "media" / "minpub" / "validator_report" / "extract" / "sga_335"/"minpuSGA.xlsx"  
+BASE_DIR = Path.cwd()
+SAVE_DIR_EXTRACT_SGA_335 = BASE_DIR / "media" / "minpub" / "validator_report" / "extract" / "sga_335"/ "minpuSGA.xlsx"  
 
 df = pd.read_excel(SAVE_DIR_EXTRACT_SGA_335)
 df.head(3)
