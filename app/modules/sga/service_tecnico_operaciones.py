@@ -98,8 +98,16 @@ class SGAService:
                 
                 path_excel_sga_report = generando_reporte_sga(operacion_window, fecha_inicio_str, fecha_fin_str, indice_tabla_reporte_detalle)
 
+                if path_excel_sga_report is None:
+                    raise ValueError("No hay ningun archivo seleccionado")
+                else: 
+                    print(f"El archivo seleccionado es : {path_excel_sga_report}")
+
                 if indice_tabla_reporte_detalle == 4: # reporte general
                     path_excel_sga_sla_report = completar_columnas_faltantes_con_python(path_excel_sga_report, fecha_inicio_str, fecha_fin_str)
+
+                    if path_excel_sga_sla_report is None:
+                        raise ValueError("No se pudo generar path_exel_sga_sla_report")
 
             except Exception as e:
                 logging.error(f"Error al procesar la fecha  {fecha_inicio_str} - {fecha_fin_str} -{timestamp}: {e}")
@@ -115,9 +123,11 @@ class SGAService:
 
             if indice_tabla_reporte_detalle == 4: # reporte general
                 return path_excel_sga_sla_report
-            
-            if indice_tabla_reporte_detalle == 15: # reporte minpub
+            elif indice_tabla_reporte_detalle == 15:
                 return path_excel_sga_report
+            else:
+                raise ValueError(f"Indice de reporte desconocido : {indice_tabla_reporte_detalle}")
+        
           
         except Exception as e:
            error_message = f" Error general al generar el reporte dinamico: {str(e)}"
