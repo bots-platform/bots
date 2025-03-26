@@ -1,6 +1,7 @@
 import os
 import pandas as pd  # type: ignore
 from datetime import datetime
+import time
 from time import sleep
 from pywinauto.keyboard import send_keys
 import pyperclip 
@@ -262,10 +263,14 @@ def generando_reporte_sga(main_window, fecha_inicio, fecha_fin, indice_reporte_d
         list_of_dfs = []
 
         for start in range(0, total_tickets, chunk_size):
-            end = start + chunk_size
+            end = min(start + chunk_size, total_tickets)
             chunk_tickets = codticket_data.iloc[start:end]
-            chunk_tickets_lenght = len(chunk_tickets)
 
+            if chunk_tickets.empty:
+                logger.warning(f"Skipping empty chunk from {start} to {end}")
+
+    
+            chunk_tickets_lenght = len(chunk_tickets)
             tickets_str = '\n'.join(chunk_tickets.astype(str))
             pyperclip.copy(tickets_str)
             logger.info(f"Tickets del indice {start} hasta {end -1} copiados al portapapeles")
@@ -286,30 +291,48 @@ def generando_reporte_sga(main_window, fecha_inicio, fecha_fin, indice_reporte_d
           
         final_df = pd.concat(list_of_dfs, ignore_index=True)
         logger.info("Seleccionando la columna codigo de incidencias, partiendo en lotes de  990 tickets (limit sga consulta detalle) and generate final reporte procesada y consolidada correctamente.")
-          
+        
         path_excel_sga = guardando_a_excel(fecha_inicio, fecha_fin, final_df)
+        
+        max_wait_time = 20
+        check_interval = 2
 
-        logger.info(f"Reporte SGA guardado correctamente en {path_excel_sga}")
+        elapsed_time = 0
+        while not os.path.exists(path_excel_sga) and elapsed_time < max_wait_time:
+            time.sleep(check_interval)
+            elapsed_time += check_interval
+
+        if os.path.exists(path_excel_sga):
+            logger.info(f"Reporte SGA guardado correnctmente en {path_excel_sga} tardo {elapsed_time}")
+        else:
+            logger.error(f"El archivo no se genero en el tiempo maximo tiempo de {max_wait_time}")
+            raise Exception("El archivo no se genero correctamente")
+        
         return path_excel_sga
     
     except Exception as e:
         logger.info(f"Error Seleccionando la columna codigo de incidencias, partiendo en lotes de  990 tickets (limit sga consulta detalle) and generate  reporte: {e}")
-        raise
+        
 
 def guardando_a_excel(fecha_inicio, fecha_fin, final_df_sga):
 
-    output_dir = 'media/sga/reporte_SGA/'
-    os.makedirs(output_dir, exist_ok=True)
+    try:
+        logger.info("tratando de guardar")
+        output_dir = 'media/sga/reporte_SGA/'
+        os.makedirs(output_dir, exist_ok=True)
 
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    fecha_inicio_format = fecha_inicio.replace("/", "-")
-    fecha_fin_format = fecha_fin.replace("/", "-")
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        fecha_inicio_format = fecha_inicio.replace("/", "-")
+        fecha_fin_format = fecha_fin.replace("/", "-")
 
-    path_reporte_sga = os.path.join(output_dir, f'sga_reporte_{fecha_inicio_format}_{fecha_fin_format}_{timestamp}.xlsx')
-    final_df_sga.to_excel(path_reporte_sga, index=False, engine='openpyxl')
-    logger.info(f"Reporte sga guardado en: {path_reporte_sga}")
+        path_reporte_sga = os.path.join(output_dir, f'sga_reporte_{fecha_inicio_format}_{fecha_fin_format}_{timestamp}.xlsx')
+        final_df_sga.to_excel(path_reporte_sga, index=False, engine='openpyxl')
+        logger.info(f"Reporte sga guardado en: {path_reporte_sga}")
 
-    return path_reporte_sga
+        return path_reporte_sga
+    except Exception as e :
+        logger.error(f"error al generar el archivo : {e}")
+        raise
 
 
 
