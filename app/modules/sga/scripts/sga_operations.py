@@ -19,6 +19,7 @@ def seleccionar_control_de_tareas(main_window):
         sleep(1)
         send_keys("{RIGHT}")
         send_keys("{ENTER}")
+        sleep(1)
         logger.info("'Control de Tareas' seleccionado correctamente.")
     except Exception as e:
         logger.error(f"Error al seleccionar 'Control de Tareas': {e}")
@@ -28,6 +29,7 @@ def seleccionar_atcorp(main_window):
     try:
         logger.info("Intentando seleccionar 'ATCORP'.")
         atcorp = main_window.child_window(title="ATCORP", control_type="TreeItem")
+        sleep(1)
         atcorp.click_input()
         logger.info("'ATCORP' seleccionado correctamente.")       
     except Exception as e:
