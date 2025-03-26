@@ -82,11 +82,14 @@ class SGAService:
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             resultados = []
            
+            fecha_inicio_dt = datetime.strptime(fecha_secuencia_inicio, "%Y-%m-%d")
+            fecha_fin_dt = datetime.strptime(fecha_secuencia_fin, "%Y-%m-%d")
+
+            fecha_inicio_str = fecha_inicio_dt.strftime('%d/%m/%Y')
+            fecha_fin_str = fecha_fin_dt.strftime('%d/%m/%Y')
+
             try:
                 
-                fecha_inicio_str = fecha_secuencia_inicio.strftime('%d/%m/%Y')
-                fecha_fin_str = fecha_secuencia_fin.strftime('%d/%m/%Y')
-
                 logging.info(f"Procesando generar reporte dinamico para la fecha: {fecha_inicio_str} - {fecha_fin_str} -{timestamp}")
                 
                 seleccionar_atcorp(operacion_window)
@@ -123,7 +126,7 @@ class SGAService:
 
             if indice_tabla_reporte_detalle == 4: # reporte general
                 return path_excel_sga_sla_report
-            elif indice_tabla_reporte_detalle == 15:
+            elif indice_tabla_reporte_detalle == 15: #  # INC_SLA_MINPUB
                 return path_excel_sga_report
             else:
                 raise ValueError(f"Indice de reporte desconocido : {indice_tabla_reporte_detalle}")
