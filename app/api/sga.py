@@ -26,7 +26,7 @@ def descarga_reporte(request: FechaSecuenciaRequest):
         media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
 
-@router.post("/reporte-descarga-minpub")
+@router.post("/reporte-descarga-minpub", include_in_schema=False)
 def descarga_reporte(request: FechaSecuenciaRequest):
 
     indice_tabla_reporte_data_previa = 13  # INCIPENDIENTE_MINPUB
