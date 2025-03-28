@@ -3,7 +3,7 @@ from time import sleep
 from pywinauto import Application, Desktop
 import os
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, date
 
 from app.modules.sga.scripts.sga_navigation import navegar_sistema_tecnico, seleccionar_opcion_sga
 from app.modules.sga.scripts.cumplimiento_sla.cumplimiento_sla_fill_columns import completar_columnas_faltantes_con_python
@@ -64,10 +64,28 @@ def close_operaciones_window(operacion_window):
         logging.error(f"Error al intentar cerrar la ventana de operaciones: {e}")
         raise
 
+from datetime import datetime, date
+
+def parse_fecha(fecha):
+    if isinstance(fecha, datetime):
+        return fecha
+    elif isinstance(fecha, date):
+        return datetime.combine(fecha, datetime.min.time())  # lo convierte a datetime
+    elif isinstance(fecha, str):
+        return datetime.strptime(fecha, "%Y-%m-%d")
+    else:
+        raise TypeError(f"Tipo de fecha no soportado: {type(fecha)}")
+
+    
+
 class SGAService:
     def generate_dynamic_report(self,fecha_secuencia_inicio,fecha_secuencia_fin, indice_tabla_reporte_data_previa, indice_tabla_reporte_detalle) :
         path_excel_sga_sla_report = None
         path_excel_sga_report = None
+        fecha_inicio_dt = parse_fecha(fecha_secuencia_inicio)
+        fecha_fin_dt = parse_fecha(fecha_secuencia_fin)
+        fecha_inicio_str = ""
+        fecha_fin_str = ""
         try:
             
             navegacion_window = connect_to_sga()
@@ -81,12 +99,15 @@ class SGAService:
              
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             resultados = []
-           
-            fecha_inicio_dt = datetime.strptime(fecha_secuencia_inicio, "%Y-%m-%d")
-            fecha_fin_dt = datetime.strptime(fecha_secuencia_fin, "%Y-%m-%d")
 
-            fecha_inicio_str = fecha_inicio_dt.strftime('%d/%m/%Y')
-            fecha_fin_str = fecha_fin_dt.strftime('%d/%m/%Y')
+            if indice_tabla_reporte_detalle == 4: # reporte general
+                fecha_inicio_str = fecha_inicio_dt.strftime('%d/%m/%Y')
+                fecha_fin_str = fecha_fin_dt.strftime('%d/%m/%Y')
+                 
+            elif indice_tabla_reporte_detalle == 15: # INC_SLA_MINPUB
+           
+                fecha_inicio_str = fecha_inicio_dt.strftime('%d/%m/%Y')
+                fecha_fin_str = fecha_fin_dt.strftime('%d/%m/%Y')
 
             try:
                 
