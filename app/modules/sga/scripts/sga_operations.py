@@ -30,7 +30,7 @@ def seleccionar_atcorp(main_window):
     try:
         logger.info("Intentando seleccionar 'ATCORP'.")
         atcorp = main_window.child_window(title="ATCORP", control_type="TreeItem")
-        sleep(1)
+        sleep(7)
         atcorp.click_input()
         logger.info("'ATCORP' seleccionado correctamente.")       
     except Exception as e:
@@ -65,6 +65,7 @@ def seleccionar_data_previa(main_window, indice_reporte_tickets):
                scroll_bar.click_input()
                sleep(0.5)  
         data_previa = opciones_venta_panel.child_window(title="compute_1", control_type="Text", found_index=indice_reporte_tickets)
+        sleep(2)
         data_previa.double_click_input()
         sleep(2)
         logger.info("'275 TTABLERO DATA PREVIA' seleccionado correctamente.")
@@ -81,12 +82,14 @@ def seleccionar_fecha_secuencia(main_window, fecha_inicio=None, fecha_fin=None):
         pyperclip.copy(fecha_inicio)
         sleep(1)
         main_window.type_keys("^v")
+        sleep(1)
         logger.info(f"Estableciendo fecha de secuencia fin: {fecha_fin}")
         send_keys('{TAB}')
         sleep(1)
         pyperclip.copy(fecha_fin)
         sleep(1)
         main_window.type_keys("^v")
+        sleep(1)
         send_keys('{TAB 2}') 
 
         try:                                                                                                                                                                                                                                                                                                                                                                                
@@ -118,8 +121,11 @@ def seleccionar_clipboard():
         send_keys('{DOWN 4}')
         sleep(1)
         send_keys('{RIGHT}')
+        sleep(1)
         send_keys('{DOWN 2}')
+        sleep(1)
         send_keys('{ENTER}')
+        sleep(1)
         logger.info("Tickets copiados correctamente")
     except Exception as e:
         logger.info(f"Error al copiar del 'clipboard': {e}")
@@ -134,6 +140,7 @@ def cerrar_reporteDinamico_276():
         send_keys('{DOWN 5}')
         sleep(1)
         send_keys('{ENTER}')
+        sleep(1)
         logger.info("cerrado correctamente")
     except Exception as e:
         logger.info(f"Error al cerrar repor dinamico 276: {e}")
@@ -150,6 +157,7 @@ def select_column_codiIncidencia():
         sleep(1)
         result = '\n'.join(codticket_data.astype(str))
         pyperclip.copy(result)
+        sleep(1)
         logger.info("Columna codigo de incidencias seleccionado correctamente")
         return nro_tickets
     except Exception as e:
@@ -179,6 +187,7 @@ def seleccionar_averias_detalle(main_window, indice_reporte_detalle):
            scroll_bar.click_input()
            sleep(0.5)  
        data_previa = opciones_venta_panel.child_window(title="compute_1", control_type="Text", found_index=indice_reporte_detalle)
+       sleep(2)
        data_previa.double_click_input()
        sleep(2)
        logger.info(" ' Detalle AVERIAS' seleccionado correctamente ")
@@ -191,10 +200,10 @@ def seleccionar_checkbox_nroincidencias(main_window):
         logger.info("Intentando seleccion check box")
         checkbox_fecha_secuencia = (
             main_window.child_window(title="nro_incidencia", control_type="CheckBox")
-            .wait('exists ready', timeout=1)  
+            .wait('exists ready', timeout=3)  
         )
         checkbox_fecha_secuencia.click()
-        sleep(1)
+        sleep(2)
         logger.info("checkBox selected successfully")
     except TimeoutError:
        logger.error("El CheckBox no estuvo listo a tiempo.")
@@ -208,7 +217,7 @@ def click_button_3puntos(main_window):
         boton_tres_puntos = filtros.window(title="...", control_type="Button")
         sleep(2)
         boton_tres_puntos.click()
-        sleep(0.5)
+        sleep(1)
         logger.info("Botón '...' seleccionado correctamente.")
         return True
     except Exception as e:
@@ -216,6 +225,7 @@ def click_button_3puntos(main_window):
     
 def seleccion_multiple_listado(numero_tickets):
     try:
+        sleep(1)
         logger.info("Seleccionando multiple listado")
         send_keys('{TAB 2}')
         send_keys('{ENTER}')
@@ -293,8 +303,11 @@ def generando_reporte_sga(main_window, fecha_inicio, fecha_fin, indice_reporte_d
             cerrar_reporteDinamico_276()
         
         final_df = pd.concat(list_of_dfs, ignore_index=True)
-        pattern_non_alnum = re.compile(r"[^a-zA-Z0-9 ]")
-        final_df["remedyobs"] = final_df["remedyobs"].str.replace(pattern_non_alnum, '', regex=True)
+
+        if indice_reporte_detalle == 4: # General
+            pattern_non_alnum = re.compile(r"[^a-zA-Z0-9 ]")
+            final_df["remedyobs"] = final_df["remedyobs"].str.replace(pattern_non_alnum, '', regex=True)
+        
         logger.info("Seleccionando la columna codigo de incidencias, partiendo en lotes de  990 tickets (limit sga consulta detalle) and generate final reporte procesada y consolidada correctamente.")
         
         path_excel_sga = guardando_a_excel(fecha_inicio, fecha_fin, final_df)
