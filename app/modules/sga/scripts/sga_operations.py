@@ -2,6 +2,7 @@ import os
 import pandas as pd  # type: ignore
 from datetime import datetime
 import time
+import re
 from time import sleep
 from pywinauto.keyboard import send_keys
 import pyperclip 
@@ -290,8 +291,10 @@ def generando_reporte_sga(main_window, fecha_inicio, fecha_fin, indice_reporte_d
             list_of_dfs.append(partial_df)
             sleep(1)
             cerrar_reporteDinamico_276()
-          
+        
         final_df = pd.concat(list_of_dfs, ignore_index=True)
+        pattern_non_alnum = re.compile(r"[^a-zA-Z0-9 ]")
+        final_df["remedyobs"] = final_df["remedyobs"].str.replace(pattern_non_alnum, '', regex=True)
         logger.info("Seleccionando la columna codigo de incidencias, partiendo en lotes de  990 tickets (limit sga consulta detalle) and generate final reporte procesada y consolidada correctamente.")
         
         path_excel_sga = guardando_a_excel(fecha_inicio, fecha_fin, final_df)
