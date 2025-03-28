@@ -142,12 +142,15 @@ class SGAService:
                     "message": f"Error interno para la fecha: {str(e)}"
                     }
                 )
- 
+
+            
             close_operaciones_window(operacion_window)
 
             if indice_tabla_reporte_detalle == 4: # reporte general
                 return path_excel_sga_sla_report
-            elif indice_tabla_reporte_detalle == 15: #  # INC_SLA_MINPUB
+            elif indice_tabla_reporte_detalle == 15: #  INC_SLA_MINPUB
+                return path_excel_sga_report
+            elif indice_tabla_reporte_detalle == 18: # PARADAS DE RELOJ DEL CLIENTE
                 return path_excel_sga_report
             else:
                 raise ValueError(f"Indice de reporte desconocido : {indice_tabla_reporte_detalle}")
