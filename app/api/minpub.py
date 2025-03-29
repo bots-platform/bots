@@ -68,6 +68,8 @@ async def process_task(task_id:str, fecha_inicio, fecha_fin, word_datos_file_pat
             processing_tasks[task_id] = "failed"
             return
         
+        await asyncio.sleep(7)
+        
         indice_tabla_reporte_data_previa = 13  # DATA PREVIA MINPUB 333
         indice_tabla_reporte_detalle = 18   # PARADA_RELOJ_INCIDENCIA 380
         sga_file_path_380 = await asyncio.to_thread(
