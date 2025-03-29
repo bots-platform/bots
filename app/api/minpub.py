@@ -85,9 +85,7 @@ async def process_task(task_id:str, fecha_inicio, fecha_fin, word_datos_file_pat
             processing_tasks[task_id] = "failed"
             return
 
-        df_objetivo_1 = await asyncio.to_thread(objetivo_1, excel_file_path, sga_file_path_335, sga_file_path_380, sharepoint_cid_cuismp_path)
-
-        
+        #df_objetivo_1 = await asyncio.to_thread(objetivo_1, excel_file_path, sga_file_path_335, sga_file_path_380, sharepoint_cid_cuismp_path)
 
         processing_tasks[task_id] = "completed"
 
