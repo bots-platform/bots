@@ -58,7 +58,7 @@ def seleccionar_data_previa(main_window, indice_reporte_tickets):
         lista_reportes = main_window.child_window(title="Lista de Reportes por Area", control_type="Window")
         sleep(1)
         opciones_venta_panel = lista_reportes.child_window(title="Opciones de Venta", auto_id="1000", control_type="Pane")
-        if indice_reporte_tickets == 13 :
+        if indice_reporte_tickets == 13 : 
             vertical_scrollbar = opciones_venta_panel.child_window(title="Vertical", auto_id="NonClientVerticalScrollBar", control_type="ScrollBar")
             scroll_bar = vertical_scrollbar.child_window(title="Av Pág", auto_id="DownPageButton", control_type="Button")
             for _ in range(1):  
