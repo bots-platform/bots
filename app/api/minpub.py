@@ -6,11 +6,9 @@ import os
 import asyncio
 import uuid
 from app.modules.sga.service_tecnico_operaciones import SGAService
-from app.modules.sga.minpub.report_validator.service.objetivos.objetivo1 import objetivo_1
-from app.modules.sga.minpub.report_validator.service.objetivos.objetivo2 import objetivo_2
-from app.modules.sga.minpub.report_validator.service.objetivos.objetivo3 import objetivo_3
-from app.modules.sga.minpub.report_validator.service.objetivos.objetivo4 import objetivo_4
-from app.modules.sga.minpub.report_validator.service.objetivos.objetivo5 import objetivo_5
+from app.modules.sga.minpub.report_validator.service.objetivos.all_objetivos import all_objetivos
+
+
 
 import threading
 
@@ -50,7 +48,7 @@ def locked_generate_dynamic_report(sga_service, fecha_inicio, fecha_fin, indice_
 async def process_task(task_id:str, fecha_inicio, fecha_fin, word_datos_file_path, word_telefonia_file_path, excel_file_path, sharepoint_cid_cuismp_path):
       
     try:
-        processing_tasks[task_id] = "processing"
+        processing_tasks[task_id] = {"status": "processing", "result": None}
         sga_service = SGAService()
 
         indice_tabla_reporte_data_previa = 13   # DATA PREVIA MINPUB 333
@@ -65,7 +63,7 @@ async def process_task(task_id:str, fecha_inicio, fecha_fin, word_datos_file_pat
         )
 
         if not os.path.exists(sga_file_path_335):
-            processing_tasks[task_id] = "failed"
+            processing_tasks[task_id] = {"status": "failed", "error": str(e)}
             return
         
         await asyncio.sleep(7)
@@ -82,15 +80,22 @@ async def process_task(task_id:str, fecha_inicio, fecha_fin, word_datos_file_pat
         )
 
         if not os.path.exists(sga_file_path_380):
-            processing_tasks[task_id] = "failed"
+            processing_tasks[task_id] = {"status": "failed", "error": str(e)}
             return
 
-        #df_objetivo_1 = await asyncio.to_thread(objetivo_1, excel_file_path, sga_file_path_335, sga_file_path_380, sharepoint_cid_cuismp_path)
+        results = await asyncio.to_thread(
+            all_objetivos,
+            excel_file_path,
+            sga_file_path_335,
+            sga_file_path_380,
+            sharepoint_cid_cuismp_path
+            )
+        processing_tasks[task_id] = {"status":"completed", "result": results}
+        return results
 
-        processing_tasks[task_id] = "completed"
 
     except Exception as e:
-        processing_tasks[task_id] = "failed"
+        processing_tasks[task_id] = {"status": "failed", "error": str(e)}
         print(f"Error processing task {task_id}: {e}")
 
 @router.post("/process/")
@@ -112,17 +117,33 @@ async def process_files(
     
 
     task_id = str(uuid.uuid4()) 
-    processing_tasks[task_id] = "queued"
+    processing_tasks[task_id] = {"status":"queued", "result": None}
 
-    background_tasks.add_task(process_task, task_id, fecha_inicio, fecha_fin, word_datos_file_path, word_telefonia_file_path, excel_file_path, sharepoint_cid_cuismp_path)
+    background_tasks.add_task(
+        process_task,
+        task_id,
+        fecha_inicio,
+        fecha_fin,
+        word_datos_file_path,
+        word_telefonia_file_path,
+        excel_file_path,
+        sharepoint_cid_cuismp_path
+        )
 
     return {"task_id": task_id, "status": "queued"}
 
 @router.get("/status/{task_id}")
 async def check_status(task_id: str):
-    """Returns the status of a processing task."""
-    status = processing_tasks.get(task_id, "not_found")
-    return {"task_id": task_id, "status": status}
+    """
+    Returns the status of the background processing task.
+    If the task is completed, the result is also returned.
+    """
+    
+    task_info = processing_tasks.get(task_id)
+
+    if not task_info:
+         return {"task_id": task_id, "status": "not_found"}
+    return {"task_id": task_id, "status": task_info.get("status"), "result": task_info.get("result")}
 
    
 
