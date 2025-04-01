@@ -310,7 +310,7 @@ def generando_reporte_sga(main_window, fecha_inicio, fecha_fin, indice_reporte_d
         
         logger.info("Seleccionando la columna codigo de incidencias, partiendo en lotes de  990 tickets (limit sga consulta detalle) and generate final reporte procesada y consolidada correctamente.")
         
-        path_excel_sga = guardando_a_excel(fecha_inicio, fecha_fin, final_df)
+        path_excel_sga = guardando_a_excel(fecha_inicio, fecha_fin, final_df, indice_reporte_detalle)
         
         max_wait_time = 20
         check_interval = 2
@@ -332,11 +332,20 @@ def generando_reporte_sga(main_window, fecha_inicio, fecha_fin, indice_reporte_d
         logger.info(f"Error Seleccionando la columna codigo de incidencias, partiendo en lotes de  990 tickets (limit sga consulta detalle) and generate  reporte: {e}")
         
 
-def guardando_a_excel(fecha_inicio, fecha_fin, final_df_sga):
+def guardando_a_excel(fecha_inicio, fecha_fin, final_df_sga, indice_reporte_detalle):
+
+    output_dir = ''
 
     try:
         logger.info("tratando de guardar")
-        output_dir = 'media/sga/reporte_SGA/'
+
+        if indice_reporte_detalle == 15: # INC_SLA_MINPUB 335
+            output_dir = 'media/minpub/validator_report/extract/sga_335/'
+        elif indice_reporte_detalle == 18: # PARADAS DE RELOJ CLIENTE 380
+            output_dir = 'media/minpub/validator_report/extract/pausa_cliente/'
+        elif indice_reporte_detalle == 4: #GENERAL 276
+            output_dir = 'media/sga/reporte_SGA/'
+
         os.makedirs(output_dir, exist_ok=True)
 
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
