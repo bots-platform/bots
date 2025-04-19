@@ -8,8 +8,6 @@ import uuid
 from app.modules.sga.service_tecnico_operaciones import SGAService
 from app.modules.sga.minpub.report_validator.service.objetivos.all_objetivos import all_objetivos
 
-
-
 import threading
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -17,7 +15,7 @@ SAVE_DIR_EXTRACT_WORD_DATOS = BASE_DIR / "media" / "minpub" / "validator_report"
 SAVE_DIR_EXTRACT_WORD_TELEFONIA = BASE_DIR / "media" / "minpub" / "validator_report" / "extract" / "word_telefonia"
 SAVE_DIR_EXTRACT_EXCEL = BASE_DIR / "media" / "minpub" / "validator_report" / "extract" / "excel"
 SAVE_DIR_EXTRACT_SGA_335 = BASE_DIR / "media" / "minpub" / "validator_report" / "extract" / "sga_335" 
-CID_CUISMP_PATH = BASE_DIR / "media" / "minpub" / "validator_report" / "extract" / "sharepoint_cid_cuismp" / "MINPU - CID-CUISMP - AB.xlsx"
+CID_CUISMP_PATH = BASE_DIR / "media" / "minpub" / "validator_report" / "extract" / "sharepoint_cid_cuismp"
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
 
 router = APIRouter(prefix="/api/minpub", tags=["minpub"])
@@ -28,12 +26,11 @@ processing_tasks = {}
 sga_lock = threading.Lock()
 
 async def save_file(uploaded_file: UploadFile, save_dir: str) -> str:
-    
+
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = uploaded_file.filename.split(".")[0]
-    extension = uploaded_file.filename.split(".")[1]
-    filename_timestamp = f"{filename}_{timestamp}.{extension}"
-    file_path = os.path.join(save_dir, filename_timestamp)
+    base_name, extension = os.path.splitext(uploaded_file.filename)
+    file_name_timestamp = f"{base_name}_{timestamp}{extension}"
+    file_path = os.path.join(save_dir, file_name_timestamp)
 
     with open(file_path, "wb") as buffer:
         buffer.write(await uploaded_file.read())
@@ -104,6 +101,7 @@ async def process_files(
     word_file_datos: UploadFile = File(...),
     word_file_telefonia: UploadFile = File(...),
     excel_file: UploadFile = File(...),
+    excel_file_cuismp: UploadFile = File(...),
     fecha_inicio: str = Form(...),
     fecha_fin: str = Form(...),
 ):
@@ -113,7 +111,7 @@ async def process_files(
     word_datos_file_path = await save_file(word_file_datos, SAVE_DIR_EXTRACT_WORD_DATOS)
     word_telefonia_file_path = await save_file(word_file_telefonia, SAVE_DIR_EXTRACT_WORD_TELEFONIA)
     excel_file_path = await save_file(excel_file, SAVE_DIR_EXTRACT_EXCEL)
-    sharepoint_cid_cuismp_path = CID_CUISMP_PATH
+    excel_file_cuismp_path = await save_file(excel_file_cuismp, CID_CUISMP_PATH)
     
 
     task_id = str(uuid.uuid4()) 
@@ -127,7 +125,7 @@ async def process_files(
         word_datos_file_path,
         word_telefonia_file_path,
         excel_file_path,
-        sharepoint_cid_cuismp_path
+        excel_file_cuismp_path
         )
 
     return {"task_id": task_id, "status": "queued"}
