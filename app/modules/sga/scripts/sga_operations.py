@@ -30,7 +30,7 @@ def seleccionar_atcorp(main_window):
     try:
         logger.info("Intentando seleccionar 'ATCORP'.")
         atcorp = main_window.child_window(title="ATCORP", control_type="TreeItem")
-        sleep(7)
+        sleep(10)
         atcorp.click_input()
         logger.info("'ATCORP' seleccionado correctamente.")       
     except Exception as e:
@@ -245,12 +245,12 @@ def seleccion_multiple_listado(numero_tickets):
 def copiando_reporte_al_clipboard():
     try:
         logger.info("Copiando Reporte  al clipboard")
-        sleep(70)
+        sleep(200)
         send_keys("%A")
         sleep(1)
         send_keys('{DOWN 4}')
         sleep(1)
-        send_keys('{RIGHT}')
+        send_keys('{RIGHT}')                                                            
         send_keys('{DOWN 2}')
         send_keys('{ENTER}')
         logger.info("Reporte copiados correctamente al clipboard")
