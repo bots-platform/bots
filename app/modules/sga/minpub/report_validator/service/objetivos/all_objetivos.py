@@ -1,5 +1,5 @@
 
-from app.modules.sga.minpub.report_validator.service.objetivos.objetivo1 import validation_objetivo_1
+from app.modules.sga.minpub.report_validator.service.objetivos.objetivo_1.objetivo_1 import validation_objetivo_1
 from typing import List, Dict
 import pandas as pd
 from datetime import datetime
