@@ -116,3 +116,29 @@ def validate_indisponibilidad(df: pd.DataFrame) -> pd.DataFrame:
     df['fail_count']   = (~df['Validation_OK']).astype(int)
     return df
 
+
+@log_exceptions
+def build_failure_messages_indisponibilidad(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Returns a DataFrame of failures with columns:
+    ['nro_incidencia','mensaje','objetivo']
+    """
+    if df is None or df.empty or 'Validation_OK' not in df.columns:
+        return pd.DataFrame(columns=['nro_incidencia','mensaje','objetivo'])
+
+    mensajes = np.where(
+        df['Validation_OK'],
+        "Validación exitosa: INDISPONIBILIDAD coincide con las paradas de reloj",
+        
+        "INDISPONIBILIDAD inválida:\n"
+        + "✘ Ingresado:\n"
+        + df['INDISPONIBILIDAD'].astype(str)
+        + "\n\n✔ Esperado:\n"
+        + df['expected_indisponibilidad']
+    )
+
+    df['mensaje']  = mensajes
+    df['objetivo'] = 1.11
+
+    return df[df['fail_count'] > 0][['nro_incidencia', 'mensaje', 'TIPO REPORTE','objetivo']]
+
