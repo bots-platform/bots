@@ -66,5 +66,10 @@ def resolve_clock_stop_overlaps(clock_stops: List[Dict]) -> List[Dict]:
     return resolved_all
 
 
+def _format_interval(dt_start, dt_end) -> str:
+    return (
+        f"{dt_start.strftime('%d/%m/%Y %H:%M')} "
+        f"hasta el día {dt_end.strftime('%d/%m/%Y %H:%M')}"
+    )
 
 
