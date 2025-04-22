@@ -85,7 +85,10 @@ async def process_task(task_id:str, fecha_inicio, fecha_fin, word_datos_file_pat
             excel_file_path,
             sga_file_path_335,
             sga_file_path_380,
-            sharepoint_cid_cuismp_path
+            sharepoint_cid_cuismp_path,
+            word_datos_file_path,
+            word_telefonia_file_path
+
             )
         processing_tasks[task_id] = {"status":"completed", "result": results}
         return results
