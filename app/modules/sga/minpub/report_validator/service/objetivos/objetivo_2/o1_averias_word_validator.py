@@ -18,7 +18,7 @@ def log_exceptions(func):
         return wrapper
 
 @log_exceptions
-def validate_averias_word( merged_df: pd.DataFrame, componente_word) -> pd.DataFrame:
+def validate_averias_word( merged_df: pd.DataFrame, componente_word: str) -> pd.DataFrame:
     """
     Validate values columns coming from word and excel files
     Retun a Dataframe  with new Boolean
@@ -94,7 +94,7 @@ def validate_averias_word( merged_df: pd.DataFrame, componente_word) -> pd.DataF
  
 
 @log_exceptions
-def build_failure_messages_validate_averias_word(df: pd.DataFrame, componente_word) -> pd.DataFrame:
+def build_failure_messages_validate_averias_word(df: pd.DataFrame) -> pd.DataFrame:
     """
     Builds the 'mensaje' column using vectorized operations.
     Adds the 'objetivo2' column (constant value of 2) and filters
@@ -109,46 +109,46 @@ def build_failure_messages_validate_averias_word(df: pd.DataFrame, componente_wo
         "Validation successful",
         (
             np.where(~df['TICKET_match'], 
-                     "No coincide TICKET de WORD-DATOS: " + df['Número de ticket'].astype(str) +
+                     "No coincide TICKET de WORD: " + df['Número de ticket'].astype(str) +
                      " con EXCEL-CORTE: " + df['TICKET'].astype(str) + ". ", "") +
 
             np.where(~df['Fecha_hora_inicio_match'],
-                     " No coincide Fecha y Hora Inicio de WORD-Datos : " + df['Fecha y Hora Inicio'].astype(str) +
+                     " No coincide Fecha y Hora Inicio de WORD : " + df['Fecha y Hora Inicio'].astype(str) +
                      " es diferente a EXCEL-CORTE:  " + df['FECHA Y HORA INICIO'].astype(str) + ". ", "") +
 
             np.where(~df['fecha_hora_fin_match'],
-                     " No coincide Fecha y Hora Inicio de WORD-Datos : " + df['Fecha y Hora Fin'].astype(str) +
+                     " No coincide Fecha y Hora Inicio de WORD : " + df['Fecha y Hora Fin'].astype(str) +
                      " es diferente a EXCEL-CORTE:  " + df['FECHA Y HORA FIN'].astype(str) + ". ", "") +
 
             np.where(~df['CUISMP_match'],
-                     " No coincide CUISMP_word_telefonia de WORD-Datos : " + df['CUISMP_word_telefonia'].astype(str) +
+                     " No coincide CUISMP_word_telefonia de WORD : " + df['CUISMP_word_telefonia'].astype(str) +
                      " es diferente a CUISMP_corte_excel: " + df['CUISMP_corte_excel'].astype(str) + ". ", "") +
 
             np.where(~df['tipo_caso_match'],
-                     " No coincide Avería reportada de WORD-Datos : " + df['Avería reportada'].astype(str) +
+                     " No coincide Avería reportada de WORD : " + df['Avería reportada'].astype(str) +
                      " es diferente a TIPO CASO de Excel: " + df['TIPO CASO'].astype(str) + ". ", "") +
                     
             
             np.where(~df['averia_match'],
-                     " No coincide Causa de WORD-Datos : " + df['Causa'].astype(str) +
+                     " No coincide Causa de WORD : " + df['Causa'].astype(str) +
                      " es diferente a AVERÍA de Excel: " + df['AVERÍA'].astype(str) + ". ", "") +
 
             np.where(~df['tiempo_hhmm_match'],
-                     " No coincide TIEMPO (HH:MM) de WORD-Datos : " + df['TIEMPO (HH:MM)'].astype(str) +
+                     " No coincide TIEMPO (HH:MM) de WORD : " + df['TIEMPO (HH:MM)'].astype(str) +
                      " es diferente a Tiempo real de afectación (HH:MM) de Excel: " + df['Tiempo real de afectación (HH:MM)'].astype(str) + ". ", "") +
 
 
             np.where(~df['componente_match'],
-                     " No coincide Componente de WORD-Datos : " + df['Componente'].astype(str) +
+                     " No coincide Componente de WORD : " + df['Componente'].astype(str) +
                      " es diferente a Tiempo real de afectación (HH:MM) de Excel: " + df['COMPONENTE'].astype(str) + ". ", "") +
 
 
             np.where(~df['df_match'],
-                     " No coincide Distrito Fiscal de WORD-Datos : " + df['Distrito Fiscal'].astype(str) +
+                     " No coincide Distrito Fiscal de WORD : " + df['Distrito Fiscal'].astype(str) +
                      " es diferente a DF de Excel: " + df['DF'].astype(str) + ". ", "") +
 
              np.where(~df['fin_inicio_hhmm_match'],
-                     " No coincide Tiempo Total (HH:MM) de WORD-Datos : " + df['Tiempo Total (HH:MM)'].astype(str) +
+                     " No coincide Tiempo Total (HH:MM) de WORD : " + df['Tiempo Total (HH:MM)'].astype(str) +
                      " es diferente a FIN-INICIO (HH:MM) de Excel: " + df['FIN-INICIO (HH:MM)'].astype(str) + ". ", "") +
 
 
@@ -168,5 +168,11 @@ def build_failure_messages_validate_averias_word(df: pd.DataFrame, componente_wo
     
     df_failures = df[df['fail_count'] > 0]
     return df_failures[['nro_incidencia', 'mensaje', 'TIPO REPORTE','objetivo']]
+
+
+
+
+
+
 
 
