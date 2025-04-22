@@ -1,5 +1,8 @@
 
 from app.modules.sga.minpub.report_validator.service.objetivos.objetivo_1.objetivo_1 import validation_objetivo_1
+from app.modules.sga.minpub.report_validator.service.objetivos.objetivo_2.objetivo_2 import validation_objetivo_2
+from app.modules.sga.minpub.report_validator.service.objetivos.objetivo_2.word_extractor import extract_averias_table
+
 from typing import List, Dict
 import pandas as pd
 from datetime import datetime
@@ -195,6 +198,8 @@ def all_objetivos(
     path_sgq_dinamico_335, 
     path_sga_dinamico_380,
     path_cid_cuismp_sharepoint,
+    word_datos_file_path,
+    word_telefonia_file_path
 
 ) -> List[Dict]:
     """
@@ -214,6 +219,8 @@ def all_objetivos(
     df_sga_dinamico_335 = pd.read_excel(path_sgq_dinamico_335) 
     df_sga_dinamico_380 = pd.read_excel(path_sga_dinamico_380)
     df_cid_cuismp_sharepoint = pd.read_excel(path_cid_cuismp_sharepoint)
+    df_word_datos =  extract_averias_table(word_datos_file_path)
+    df_word_telefonia = extract_averias_table(word_telefonia_file_path)
 
     df_sga_dinamico_335['interrupcion_inicio'] = pd.to_datetime(df_sga_dinamico_335['interrupcion_inicio'], errors='coerce', dayfirst=True)
     df_sga_dinamico_335['interrupcion_fin'] = pd.to_datetime(df_sga_dinamico_335['interrupcion_fin'], errors='coerce', dayfirst=True)
@@ -258,6 +265,7 @@ def all_objetivos(
 
 
 
+
     @log_exceptions
     def merge_sga_335_corte_excel_sharepoint_cuismp_sga380(
         df_corte_excel: pd.DataFrame, 
@@ -275,7 +283,7 @@ def all_objetivos(
         Returns a merged DataFrame with common columns needed.
         """
 
-        merged_sga335_excel = pd.merge(
+        df_merged_sga335_excel = pd.merge(
             df_corte_excel,
             df_sga_dinamico_335,
             on='nro_incidencia',
@@ -284,15 +292,15 @@ def all_objetivos(
             suffixes=('_corte_excel', '_sga_dinamico_335')
         )
 
-        merge_sga_335_corte_excel_matched_with_sharepoint_cid_cuismp = pd.merge(
-        merged_sga335_excel,
+        df_merge_sga_335_corte_excel_with_sharepoint_cid_cuismp = pd.merge(
+        df_merged_sga335_excel,
         df_cid_cuismp_sharepoint,
         on='cid',
         how='left',
         suffixes=('_sga_dinamico_335_excel_matched', '_sharepoint_cid_cuismp')
         )
 
-        merge_sga_335_corte_excel_matched_with_sharepoint_cid_cuismp['sum_paradas'] = merge_sga_335_corte_excel_matched_with_sharepoint_cid_cuismp.apply(
+        df_merge_sga_335_corte_excel_with_sharepoint_cid_cuismp['sum_paradas'] = df_merge_sga_335_corte_excel_with_sharepoint_cid_cuismp.apply(
             lambda r: calculate_total_clock_stop_minutes(
                 nro_incidencia = r["nro_incidencia"],
                 interruption_start = r["interrupcion_inicio"],
@@ -302,11 +310,63 @@ def all_objetivos(
             axis= 1
         )
 
-        matched_rows = merge_sga_335_corte_excel_matched_with_sharepoint_cid_cuismp[merge_sga_335_corte_excel_matched_with_sharepoint_cid_cuismp['_merge'] == match_type]
+        matched_rows = df_merge_sga_335_corte_excel_with_sharepoint_cid_cuismp[df_merge_sga_335_corte_excel_with_sharepoint_cid_cuismp['_merge'] == match_type]
 
         return matched_rows
       
+
+    def merge_word_datos_corte_excel(
+        df_word_datos: pd.DataFrame,
+        df_corte_excel: pd.DataFrame,
+        match_type:str
+    ) -> pd.DataFrame:
+        """
+        Common merge function for Objective 2.
+
+        Merges:
+          - corte-excel  with word_telefonia on 'nro_incidencia'
+
+        Returns a merged DataFrame with common columns needed.
+        """
+        df_merge_word_datos_corte_excel = pd.merge(
+        df_word_datos,
+        df_corte_excel,
+        on='nro_incidencia',
+        how='left',
+        indicator=True,
+        suffixes=('_corte_excel', '_word_datos')
+        )
+           
+        matched_rows = df_merge_word_datos_corte_excel[df_merge_word_datos_corte_excel['_merge'] == match_type]
+        return matched_rows
+
+
+    def merge_word_telefonia_corte_excel(
+        df_word_telefonia: pd.DataFrame,
+        df_corte_excel: pd.DataFrame,
+        match_type:str
+    ) -> pd.DataFrame:
+        """
+        Common merge function for Objective 2.
+
+        Merges:
+          - corte-excel  with word_telefonia on 'nro_incidencia'
+
+        Returns a merged DataFrame with common columns needed.
+        """
         
+        df_merge_word_telefonia_corte_excel = pd.merge(
+        df_word_telefonia,
+        df_corte_excel,
+        on='nro_incidencia',
+        how='left',
+        indicator=True,
+        suffixes=('_corte_excel', '_word_telefonia')
+        )
+           
+        matched_rows = df_merge_word_telefonia_corte_excel[df_merge_word_telefonia_corte_excel['_merge'] == match_type]
+        return matched_rows
+
 
 
     df_matched_corte_sga335_Sharepoint_cuismp_sga380 = merge_sga_335_corte_excel_sharepoint_cuismp_sga380(
@@ -314,6 +374,7 @@ def all_objetivos(
         df_cid_cuismp_sharepoint, df_sga_dinamico_380,
         'both'
         )
+    
     df_unmatched_corte_sga335_Sharepoint_cuismp_sga380 = merge_sga_335_corte_excel_sharepoint_cuismp_sga380(
         df_corte_excel,
         df_sga_dinamico_335,
@@ -321,10 +382,26 @@ def all_objetivos(
         df_sga_dinamico_380,
         'left_only'
         )
+    
+    df_matched_word_datos_corte_excel = merge_word_datos_corte_excel(
+        df_word_datos,
+        df_corte_excel,
+        'both'
+        )
+    
+    df_matched_word_telefonia_corte_excel = merge_word_telefonia_corte_excel(
+        df_corte_excel,
+        df_word_telefonia,
+        'both'
+        )
+    
 
 
     obj1_df = validation_objetivo_1( df_matched_corte_sga335_Sharepoint_cuismp_sga380, df_unmatched_corte_sga335_Sharepoint_cuismp_sga380)
 
+    obj2_df = validation_objetivo_2(df_matched_word_datos_corte_excel, df_matched_word_telefonia_corte_excel)
+
+    
     results.extend(obj1_df.to_dict(orient='records'))
     
     return results
