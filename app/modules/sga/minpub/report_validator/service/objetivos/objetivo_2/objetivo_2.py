@@ -1,9 +1,7 @@
 import pandas as pd
 
-from app.modules.sga.minpub.report_validator.service.objetivos.objetivo_2.word_extractor import extract_averias_table
-
 from app.modules.sga.minpub.report_validator.service.objetivos.objetivo_2.o1_averias_word_validator import (
-    validate_averias_word
+    validate_averias_word, build_failure_messages_validate_averias_word
 )
 
 from utils.logger_config import get_sga_logger
@@ -41,12 +39,17 @@ def validation_objetivo_2(
     
     Returns a DataFrame with the failure details for Objective 1.
     """
-    df_validate_averias_word = validate_averias_word(df_matched_word_datos_corte_excel)
-    df_failures_message_validate_averias_word = 
+    df_validate_averias_word = validate_averias_word(df_matched_word_datos_corte_excel, componente_word = 'COMPONENTE II')
+    df_failures_message_validate_averias_word = build_failure_messages_validate_averias_word(df_validate_averias_word)
+
+    df_validate_averias_telefonia = validate_averias_word(df_matched_word_telefonia_corte_excel, componente_word = 'COMPONENTE VI')
+    df_failures_message_validate_averias_telefono = build_failure_messages_validate_averias_word(df_validate_averias_telefonia)
+
 
     df_failures = pd.concat(
         [
-        df_failures_message_matched_merged_corte_excel_sga335,
+        df_failures_message_validate_averias_word,
+        df_failures_message_validate_averias_telefono
     
         ],
         ignore_index=True)
