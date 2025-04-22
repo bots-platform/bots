@@ -73,19 +73,6 @@ def log_exceptions(func):
 
 
 @log_exceptions
-def validation_responsable(sga_dinamico_335):
-    raise NotImplementedError
-
-@log_exceptions
-def validation_duracion_entero_agrupacion_entero(corte_excel):
-    raise NotImplementedError
-
-@log_exceptions
-def validation_indisponibilidad(corte_excel, sga_dinamico_380_parada ):
-    raise NotImplementedError
-
-
-@log_exceptions
 def validation_objetivo_1(
     df_matched_corte_sga335_sharepoint_cuismp_sga380,
     df_unmatched_corte_sga335_sharepoint_cuismp_sga389
