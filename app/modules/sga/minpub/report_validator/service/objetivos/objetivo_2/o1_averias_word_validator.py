@@ -15,7 +15,8 @@ def log_exceptions(func):
         except Exception as e:
             logger.error(f"Error in {func.__name__}: {e}", exc_info=True)
             raise
-        return wrapper
+    return wrapper
+
 
 @log_exceptions
 def validate_averias_word( merged_df: pd.DataFrame, componente_word: str) -> pd.DataFrame:
