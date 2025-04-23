@@ -337,9 +337,9 @@ def all_objetivos(
         on='nro_incidencia',
         how='left',
         indicator=True,
-        suffixes=('_corte_excel', '_word_datos')
+        suffixes=('_word_datos', '_corte_excel')
         )
-           
+    
         matched_rows = df_merge_word_datos_corte_excel[df_merge_word_datos_corte_excel['_merge'] == match_type]
         return matched_rows
 
@@ -364,7 +364,7 @@ def all_objetivos(
         on='nro_incidencia',
         how='left',
         indicator=True,
-        suffixes=('_corte_excel', '_word_telefonia')
+        suffixes=('_word_telefonia', '_corte_excel')
         )
            
         matched_rows = df_merge_word_telefonia_corte_excel[df_merge_word_telefonia_corte_excel['_merge'] == match_type]
@@ -418,14 +418,11 @@ def all_objetivos(
         on='nro_incidencia',
         how='left',
         indicator=True,
-        suffixes=('_corte_excel', '_word_telefonia')
+        suffixes=('_word_telefonia', '_corte_excel')
         )
            
         matched_rows = df_merge_word_telefonia_corte_excel[df_merge_word_telefonia_corte_excel['_merge'] == match_type]
         return matched_rows
-
-
-
 
 
     df_matched_corte_sga335_Sharepoint_cuismp_sga380 = merge_sga_335_corte_excel_sharepoint_cuismp_sga380(
