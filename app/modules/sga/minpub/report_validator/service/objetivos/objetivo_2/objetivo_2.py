@@ -4,6 +4,11 @@ from app.modules.sga.minpub.report_validator.service.objetivos.objetivo_2.o1_ave
     validate_averias_word, build_failure_messages_validate_averias_word
 )
 
+from app.modules.sga.minpub.report_validator.service.objetivos.objetivo_2.o2_informe_tecnico_validator import (
+    validate_informe_tecnico_word, build_failure_messages_validate_informe_tecnico_word
+)
+
+
 from utils.logger_config import get_sga_logger
  
 logger = get_sga_logger()
@@ -30,8 +35,11 @@ def log_exceptions(func):
 
 @log_exceptions
 def validation_objetivo_2(
-    df_matched_word_datos_corte_excel,
-    df_matched_word_telefonia_corte_excel, 
+    df_matched_word_datos_averias_corte_excel,
+    df_matched_word_telefonia_averias_corte_excel,
+    df_matched_word_datos_informe_tecnico_corte_excel,
+    df_matched_word_telefonia_informe_tecnico_corte_excel
+
 ) -> pd.DataFrame:
     """
     Aggregates all sub-validations for Objective 2.
@@ -39,18 +47,24 @@ def validation_objetivo_2(
     
     Returns a DataFrame with the failure details for Objective 1.
     """
-    df_validate_averias_word = validate_averias_word(df_matched_word_datos_corte_excel, componente_word = 'COMPONENTE II')
-    df_failures_message_validate_averias_word = build_failure_messages_validate_averias_word(df_validate_averias_word)
+    df_validate_averias_word_datos = validate_averias_word(df_matched_word_datos_averias_corte_excel, componente_word = 'COMPONENTE II')
+    df_failures_message_validate_averias_word_datos = build_failure_messages_validate_averias_word(df_validate_averias_word_datos)
 
-    df_validate_averias_telefonia = validate_averias_word(df_matched_word_telefonia_corte_excel, componente_word = 'COMPONENTE VI')
-    df_failures_message_validate_averias_telefono = build_failure_messages_validate_averias_word(df_validate_averias_telefonia)
+    df_validate_averias_word_telefonia = validate_averias_word(df_matched_word_telefonia_averias_corte_excel, componente_word = 'COMPONENTE VI')
+    df_failures_message_validate_averias_word_telefono = build_failure_messages_validate_averias_word(df_validate_averias_word_telefonia)
 
+    df_validate_informe_tecnico_word_datos = validate_informe_tecnico_word(df_matched_word_datos_informe_tecnico_corte_excel, componente_word = 'COMPONENTE II')
+    df_failures_message_validate_informe_tecnico_word_datos = build_failure_messages_validate_informe_tecnico_word(df_validate_informe_tecnico_word_datos)
+
+    df_validate_informe_tecnico_word_telefonia = validate_informe_tecnico_word(df_matched_word_telefonia_informe_tecnico_corte_excel, componente_word = 'COMPONENTE VI')
+    df_failures_message_validate_informe_tecnico_word_telefono = build_failure_messages_validate_informe_tecnico_word(df_validate_informe_tecnico_word_telefonia)
 
     df_failures = pd.concat(
         [
-        df_failures_message_validate_averias_word,
-        df_failures_message_validate_averias_telefono
-    
+        df_failures_message_validate_averias_word_datos,
+        df_failures_message_validate_averias_word_telefono,
+        df_failures_message_validate_informe_tecnico_word_datos,
+        df_failures_message_validate_informe_tecnico_word_telefono
         ],
         ignore_index=True)
 
