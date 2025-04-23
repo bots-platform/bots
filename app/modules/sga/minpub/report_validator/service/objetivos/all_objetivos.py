@@ -319,7 +319,7 @@ def all_objetivos(
       
     # cuadro de averias 
     def merge_word_datos_averias_corte_excel(
-        df_word_datos: pd.DataFrame,
+        df_word_datos_averias: pd.DataFrame,
         df_corte_excel: pd.DataFrame,
         match_type:str
     ) -> pd.DataFrame:
@@ -332,12 +332,12 @@ def all_objetivos(
         Returns a merged DataFrame with common columns needed.
         """
         df_merge_word_datos_corte_excel = pd.merge(
-        df_word_datos,
+        df_word_datos_averias,
         df_corte_excel,
         on='nro_incidencia',
         how='left',
         indicator=True,
-        suffixes=('_word_datos', '_corte_excel')
+        suffixes=('_word_datos_averias', '_corte_excel')
         )
     
         matched_rows = df_merge_word_datos_corte_excel[df_merge_word_datos_corte_excel['_merge'] == match_type]
@@ -345,7 +345,7 @@ def all_objetivos(
 
 
     def merge_word_telefonia_averias_corte_excel(
-        df_word_telefonia: pd.DataFrame,
+        df_word_telefonia_averias: pd.DataFrame,
         df_corte_excel: pd.DataFrame,
         match_type:str
     ) -> pd.DataFrame:
@@ -359,12 +359,12 @@ def all_objetivos(
         """
         
         df_merge_word_telefonia_corte_excel = pd.merge(
-        df_word_telefonia,
+        df_word_telefonia_averias,
         df_corte_excel,
         on='nro_incidencia',
         how='left',
         indicator=True,
-        suffixes=('_word_telefonia', '_corte_excel')
+        suffixes=('_word_telefonia_averias', '_corte_excel')
         )
            
         matched_rows = df_merge_word_telefonia_corte_excel[df_merge_word_telefonia_corte_excel['_merge'] == match_type]
@@ -373,7 +373,7 @@ def all_objetivos(
     # informe tecnico
     
     def merge_word_datos_informe_corte_excel(
-        df_word_datos: pd.DataFrame,
+        df_word_informe_tecnico_datos: pd.DataFrame,
         df_corte_excel: pd.DataFrame,
         match_type:str
     ) -> pd.DataFrame:
@@ -386,12 +386,12 @@ def all_objetivos(
         Returns a merged DataFrame with common columns needed.
         """
         df_merge_word_datos_corte_excel = pd.merge(
-        df_word_datos,
+        df_word_informe_tecnico_datos,
         df_corte_excel,
         on='nro_incidencia',
         how='left',
         indicator=True,
-        suffixes=('_word_datos' , '_corte_excel')
+        suffixes=('_word_datos_informe' , '_corte_excel')
         )
            
         matched_rows = df_merge_word_datos_corte_excel[df_merge_word_datos_corte_excel['_merge'] == match_type]
@@ -399,7 +399,7 @@ def all_objetivos(
 
 
     def merge_word_telefonia_informe_corte_excel(
-        df_word_telefonia: pd.DataFrame,
+        df_word_informe_tecnico_telefonia: pd.DataFrame,
         df_corte_excel: pd.DataFrame,
         match_type:str
     ) -> pd.DataFrame:
@@ -413,24 +413,26 @@ def all_objetivos(
         """
         
         df_merge_word_telefonia_corte_excel = pd.merge(
-        df_word_telefonia,
+        df_word_informe_tecnico_telefonia,
         df_corte_excel,
         on='nro_incidencia',
         how='left',
         indicator=True,
-        suffixes=('_word_telefonia', '_corte_excel')
+        suffixes=('_word_telefonia_informe', '_corte_excel')
         )
            
         matched_rows = df_merge_word_telefonia_corte_excel[df_merge_word_telefonia_corte_excel['_merge'] == match_type]
         return matched_rows
 
 
+    #  SGA 335 - 380 - SHAREPOINT - CORTE - BOTH
     df_matched_corte_sga335_Sharepoint_cuismp_sga380 = merge_sga_335_corte_excel_sharepoint_cuismp_sga380(
         df_corte_excel, df_sga_dinamico_335,
         df_cid_cuismp_sharepoint, df_sga_dinamico_380,
         'both'
         )
     
+    #  SGA 335 - 380 - SHAREPOINT - CORTE - LEFT ONLY
     df_unmatched_corte_sga335_Sharepoint_cuismp_sga380 = merge_sga_335_corte_excel_sharepoint_cuismp_sga380(
         df_corte_excel,
         df_sga_dinamico_335,
@@ -439,37 +441,42 @@ def all_objetivos(
         'left_only'
         )
     
+    # AVERIAS - DATOS - EXCEL
     df_matched_word_datos_averias_corte_excel = merge_word_datos_averias_corte_excel(
         df_corte_excel,
         df_word_datos_averias,
         'both'
         )
-    
+   
+    # AVERIAS - TELEFONIA - EXCEL
     df_matched_word_telefonia_averias_corte_excel = merge_word_telefonia_averias_corte_excel(
         df_word_telefonia_averias,
         df_corte_excel,
         'both'
         )
     
-
+    #INFORME TECNICO - DATOS - EXCEL
     df_matched_word_datos_informe_tecnico_corte_excel = merge_word_datos_informe_corte_excel(
         df_word_datos_informe_tec,
         df_corte_excel,
         'both'
         )
     
+    #INFORME TECNICO - TELEFONIA - EXCEL
     df_matched_word_telefonia_informe_tecnico_corte_excel = merge_word_telefonia_informe_corte_excel(
         df_word_telefonia_informe_tec,
         df_corte_excel,
         'both'
         )
     
-    
+
+# OBJETIVOS 
 
     obj1_df = validation_objetivo_1(
         df_matched_corte_sga335_Sharepoint_cuismp_sga380,
         df_unmatched_corte_sga335_Sharepoint_cuismp_sga380
         )
+
 
     obj2_df = validation_objetivo_2(
         df_matched_word_datos_averias_corte_excel,
