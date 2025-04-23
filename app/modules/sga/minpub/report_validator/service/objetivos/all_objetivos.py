@@ -487,5 +487,6 @@ def all_objetivos(
 
     
     results.extend(obj1_df.to_dict(orient='records'))
+    results.extend(obj2_df.to_dict(orient='records'))
     
     return results
