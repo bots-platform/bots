@@ -95,24 +95,20 @@ def validate_averias_word( merged_df: pd.DataFrame, componente_word: str) -> pd.
  
 
 @log_exceptions
-def build_failure_messages_validate_averias_word(df: pd.DataFrame) -> pd.DataFrame:
+def build_failure_messages_validate_informe_tecnico_word(df: pd.DataFrame) -> pd.DataFrame:
     """
     Builds the 'mensaje' column using vectorized operations.
     Adds the 'objetivo2' column (constant value of 2) and filters
     rows that fail at least one validation.
     
     Returns a DataFrame with:
-      ['nro_incidencia', 'mensaje', 'objetivo']
+      ['nro_incidencia', 'mensaje', 'TIPO REPORTE','objetivo']
 
     """
     mensaje = np.where(
         df['Validation_OK'],
         "Validation successful",
         (
-            np.where(~df['TICKET_match'], 
-                     "No coincide TICKET de WORD: " + df['Número de ticket'].astype(str) +
-                     " con EXCEL-CORTE: " + df['TICKET'].astype(str) + ". ", "") +
-
             np.where(~df['Fecha_hora_inicio_match'],
                      " No coincide Fecha y Hora Inicio de WORD : " + df['Fecha y Hora Inicio'].astype(str) +
                      " es diferente a EXCEL-CORTE:  " + df['FECHA Y HORA INICIO'].astype(str) + ". ", "") +
