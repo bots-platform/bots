@@ -571,7 +571,7 @@ def all_objetivos(
         matched_rows = df_merge_word_datos_anexos_disponibilidad_corte_excel[df_merge_word_datos_anexos_disponibilidad_corte_excel['_merge'] == match_type]
         return matched_rows
 
-
+    # merge telefonia anexos disponibilidad - corte excel
     def merge_word_telefonia_anexos_disponibilidad_corte_excel(
         df_word_anexo_disponibilidad_telefonia: pd.DataFrame,
         df_corte_excel: pd.DataFrame,
@@ -661,7 +661,7 @@ def all_objetivos(
         'both'
         )
     
-    
+
 # OBJETIVOS 
 
     obj1_df = validation_objetivo_1(
