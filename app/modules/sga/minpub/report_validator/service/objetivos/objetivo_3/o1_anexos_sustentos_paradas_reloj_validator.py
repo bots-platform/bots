@@ -1,4 +1,4 @@
-# objetivo_2_validator.py
+
 
 import pandas as pd
 import numpy as np
@@ -16,3 +16,5 @@ def log_exceptions(func):
             logger.error(f"Error in {func.__name__}: {e}", exc_info=True)
             raise
     return wrapper
+
+
