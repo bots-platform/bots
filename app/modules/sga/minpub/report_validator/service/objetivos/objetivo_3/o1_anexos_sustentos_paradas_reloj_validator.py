@@ -18,3 +18,23 @@ def log_exceptions(func):
     return wrapper
 
 
+
+@log_exceptions
+def validate_anexos_indisponibilidad_word( merged_df: pd.DataFrame, componente_word: str) -> pd.DataFrame:
+    """
+    Validate anexos indisponibilidad 
+    Retun a Dataframe  with new Boolean
+    """
+
+    df = merged_df.copy()
+
+    df['expected_indisponibilidad'] = df['clock_stops_paragraph']
+    df['indisponibilidad_ok'] = (
+        df['indisponibilidad_extract'].astype(str).str.strip()
+        == df['expected_indisponibilidad']
+    )
+
+    df['Validation_OK'] = df['indisponibilidad_ok']
+    df['fail_count']   = (~df['Validation_OK']).astype(int)
+    return df
+
