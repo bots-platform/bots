@@ -95,7 +95,7 @@ def validate_averias_word( merged_df: pd.DataFrame, componente_word: str) -> pd.
  
 
 @log_exceptions
-def build_failure_messages_validate_informe_tecnico_word(df: pd.DataFrame) -> pd.DataFrame:
+def build_failure_messages_validate_averias_word(df: pd.DataFrame) -> pd.DataFrame:
     """
     Builds the 'mensaje' column using vectorized operations.
     Adds the 'objetivo2' column (constant value of 2) and filters
