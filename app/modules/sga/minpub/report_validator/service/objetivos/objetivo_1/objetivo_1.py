@@ -47,6 +47,21 @@ from app.modules.sga.minpub.report_validator.service.objetivos.objetivo_1.o8_med
     build_failure_messages_medidas_correctivas
 )
 
+from app.modules.sga.minpub.report_validator.service.objetivos.objetivo_1.o9_responsable_validator import (
+    validate_responsable,
+    build_failure_messages_responsable
+)
+
+from app.modules.sga.minpub.report_validator.service.objetivos.objetivo_1.o10_duracion_entero_validator import (
+    validate_duracion_entero,
+    build_failure_messages_duracion_entero
+)
+
+from app.modules.sga.minpub.report_validator.service.objetivos.objetivo_1.o11_indisponibilidad_validator import (
+    validate_indisponibilidad,
+    build_failure_messages_indisponibilidad
+)
+
 
 from utils.logger_config import get_sga_logger
  
@@ -100,7 +115,6 @@ def validation_objetivo_1(
     df_failures_message_fecha_inicio_fin_HHMM = build_failure_messages_diff_fin_inicio_HHMM(df_validation_fin_inicio_HHMM)
 
 
-   
     df_validation_tiempo_HHMM = validation_tiempo_HHMM_paradas_cliente(df_matched_corte_sga335_sharepoint_cuismp_sga380)
     df_failure_messages_tiempo_HHMM_paradas_cliente = buid_failure_messages_tiempo_HHMM_paradas_cliente(df_validation_tiempo_HHMM)
 
@@ -117,7 +131,15 @@ def validation_objetivo_1(
 
     df_validation_medidas_correctivas = validation_medidas_correctivas(df_matched_corte_sga335_sharepoint_cuismp_sga380)
     df_build_message_validation_medidas_correctivas = build_failure_messages_medidas_correctivas(df_validation_medidas_correctivas)
- 
+    
+    df_validation_responsable = validate_responsable(df_matched_corte_sga335_sharepoint_cuismp_sga380)
+    df_build_message_validation_responsable = build_failure_messages_responsable(df_validation_responsable)
+
+    df_validation_duracion_entero = validate_duracion_entero(df_matched_corte_sga335_sharepoint_cuismp_sga380)
+    df_build_message_validation_duracion_entero = build_failure_messages_duracion_entero(df_validation_duracion_entero)
+
+    df_validation_indisponibilidad = validate_indisponibilidad(df_matched_corte_sga335_sharepoint_cuismp_sga380)
+    df_build_message_validation_indisponibilidad = build_failure_messages_indisponibilidad(df_validation_indisponibilidad)
 
     
     df_failures = pd.concat(
@@ -130,7 +152,10 @@ def validation_objetivo_1(
         df_failure_messages_df_tipo_caso_cid_masivo_codincidencia_padre_determinacion_causa,
         df_failure_messages_validation_averia_tipificacion_problema,
         df_failure_message_validation_tipo_reporte_observacion,
-        df_build_message_validation_medidas_correctivas
+        df_build_message_validation_medidas_correctivas,
+        df_build_message_validation_responsable,
+        df_build_message_validation_duracion_entero,
+        df_build_message_validation_indisponibilidad
         ],
         ignore_index=True)
     
