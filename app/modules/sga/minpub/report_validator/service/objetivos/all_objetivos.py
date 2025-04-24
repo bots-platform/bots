@@ -1,8 +1,13 @@
 
 from app.modules.sga.minpub.report_validator.service.objetivos.objetivo_1.objetivo_1 import validation_objetivo_1
 from app.modules.sga.minpub.report_validator.service.objetivos.objetivo_2.objetivo_2 import validation_objetivo_2
+from app.modules.sga.minpub.report_validator.service.objetivos.objetivo_3.objetivo_3 import validation_objetivo_3
+
 from app.modules.sga.minpub.report_validator.service.objetivos.objetivo_2.word_averias_extractor import extract_averias_table
 from app.modules.sga.minpub.report_validator.service.objetivos.objetivo_2.word_info_tecnico_extractor import extract_tecnico_reports
+from app.modules.sga.minpub.report_validator.service.objetivos.objetivo_3.word_indisp_anexos_extractor import extract_indisponibilidad_anexos
+
+
 
 from typing import List, Dict
 import pandas as pd
@@ -268,7 +273,7 @@ def _format_interval(dt_start, dt_end) -> str:
     )
 
 @log_exceptions
-def make_expected(stops_list):
+def make_paragraph_paradas_cliente(stops_list):
 
         if not stops_list:
             return ""
@@ -322,6 +327,9 @@ def all_objetivos(
 
     df_word_datos_informe_tec =  extract_tecnico_reports(word_datos_file_path)
     df_word_telefonia_informe_tec = extract_tecnico_reports(word_telefonia_file_path)
+
+    df_word_datos_anexos_indis =  extract_indisponibilidad_anexos(word_datos_file_path)
+    df_word_telefonia_anexos_indis = extract_indisponibilidad_anexos(word_telefonia_file_path)
 
     
     df_sga_dinamico_335['interrupcion_inicio'] = pd.to_datetime(df_sga_dinamico_335['interrupcion_inicio'], errors='coerce', dayfirst=True)
@@ -419,7 +427,7 @@ def all_objetivos(
             axis= 1
         )
 
-        df_merge_sga_335_corte_excel_with_sharepoint_cid_cuismp['clock_stops_paragraph'] = df_merge_sga_335_corte_excel_with_sharepoint_cid_cuismp['clock_stops'].apply(make_expected)
+        df_merge_sga_335_corte_excel_with_sharepoint_cid_cuismp['clock_stops_paragraph'] = df_merge_sga_335_corte_excel_with_sharepoint_cid_cuismp['clock_stops'].apply(make_paragraph_paradas_cliente)
 
 
         matched_rows = df_merge_sga_335_corte_excel_with_sharepoint_cid_cuismp[df_merge_sga_335_corte_excel_with_sharepoint_cid_cuismp['_merge'] == match_type]
@@ -452,7 +460,7 @@ def all_objetivos(
         matched_rows = df_merge_word_datos_corte_excel[df_merge_word_datos_corte_excel['_merge'] == match_type]
         return matched_rows
 
-
+    
     def merge_word_telefonia_averias_corte_excel(
         df_word_telefonia_averias: pd.DataFrame,
         df_corte_excel: pd.DataFrame,
@@ -533,6 +541,66 @@ def all_objetivos(
         matched_rows = df_merge_word_telefonia_corte_excel[df_merge_word_telefonia_corte_excel['_merge'] == match_type]
         return matched_rows
 
+        # informe tecnico
+    
+
+    # merge datos anexos disponibilidad - corte excel
+
+    def merge_word_datos_anexos_disponibilidad_corte_excel(
+        df_word_anexos_disponibilidad_datos: pd.DataFrame,
+        df_corte_excel: pd.DataFrame,
+        match_type:str
+    ) -> pd.DataFrame:
+        """
+        Common merge function for Objective 2.
+
+        Merges:
+          - corte-excel  with word_telefonia anexos diponibilidad on 'nro_incidencia'
+
+        Returns a merged DataFrame with common columns needed.
+        """
+        df_merge_word_datos_anexos_disponibilidad_corte_excel = pd.merge(
+        df_word_anexos_disponibilidad_datos,
+        df_corte_excel,
+        on='nro_incidencia',
+        how='left',
+        indicator=True,
+        suffixes=('_word_datos_anexos_indisp' , '_corte_excel')
+        )
+           
+        matched_rows = df_merge_word_datos_anexos_disponibilidad_corte_excel[df_merge_word_datos_anexos_disponibilidad_corte_excel['_merge'] == match_type]
+        return matched_rows
+
+
+    def merge_word_telefonia_anexos_disponibilidad_corte_excel(
+        df_word_anexo_disponibilidad_telefonia: pd.DataFrame,
+        df_corte_excel: pd.DataFrame,
+        match_type:str
+    ) -> pd.DataFrame:
+        """
+        Common merge function for Objective 2.
+
+        Merges:
+          - corte-excel  with word_telefonia on 'nro_incidencia'
+
+        Returns a merged DataFrame with common columns needed.
+        """
+        
+        df_merge_word_telefonia_corte_excel = pd.merge(
+        df_word_anexo_disponibilidad_telefonia,
+        df_corte_excel,
+        on='nro_incidencia',
+        how='left',
+        indicator=True,
+        suffixes=('_word_telefonia_anexo_indisp', '_corte_excel')
+        )
+           
+        matched_rows = df_merge_word_telefonia_corte_excel[df_merge_word_telefonia_corte_excel['_merge'] == match_type]
+        return matched_rows
+
+    
+
+
 
     #  SGA 335 - 380 - SHAREPOINT - CORTE - BOTH
     df_matched_corte_sga335_Sharepoint_cuismp_sga380 = merge_sga_335_corte_excel_sharepoint_cuismp_sga380(
@@ -578,6 +646,22 @@ def all_objetivos(
         'both'
         )
     
+
+    #ANEXOS INDISPONIBILIDAD - DATOS - EXCEL
+    df_matched_word_datos_anexo_indisponibilidad_corte_excel = merge_word_datos_anexos_disponibilidad_corte_excel(
+        df_word_datos_anexos_indis,
+        df_corte_excel,
+        'both'
+        )
+    
+    #ANEXOS INDISPONIBILIDAD - TELEFONIA - EXCEL
+    df_matched_word_telefonia_anexo_indisponibilidad_corte_excel = merge_word_telefonia_anexos_disponibilidad_corte_excel(
+        df_word_telefonia_anexos_indis,
+        df_corte_excel,
+        'both'
+        )
+    
+    
 # OBJETIVOS 
 
     obj1_df = validation_objetivo_1(
@@ -591,8 +675,16 @@ def all_objetivos(
         df_matched_word_datos_informe_tecnico_corte_excel,
         df_matched_word_telefonia_informe_tecnico_corte_excel
         )
+    
+    obj3_df = validation_objetivo_3(
+        df_matched_word_datos_anexo_indisponibilidad_corte_excel,
+        df_matched_word_telefonia_anexo_indisponibilidad_corte_excel
+    )   
+
+
 
     results.extend(obj1_df.to_dict(orient='records'))
     results.extend(obj2_df.to_dict(orient='records'))
+    results.extend(obj3_df.to_dict(orient='records'))
     
     return results
