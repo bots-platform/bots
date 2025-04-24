@@ -61,7 +61,7 @@ def extract_indisponibilidad_anexos(path_docx: str) -> pd.DataFrame:
 
         records.append({
             "ticket": ticket,
-            "indisponibilidad_text": linea0,
+            "indisponibilidad_extract": linea0,
             "periodo": periodo,
             "total": total
         })
