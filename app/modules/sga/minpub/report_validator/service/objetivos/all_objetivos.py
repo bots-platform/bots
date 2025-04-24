@@ -1,12 +1,12 @@
 
 from app.modules.sga.minpub.report_validator.service.objetivos.objetivo_1.objetivo_1 import validation_objetivo_1
 from app.modules.sga.minpub.report_validator.service.objetivos.objetivo_2.objetivo_2 import validation_objetivo_2
-from app.modules.sga.minpub.report_validator.service.objetivos.objetivo_2.word_extractor import extract_averias_table
-from app.modules.sga.minpub.report_validator.service.objetivos.objetivo_2.info_tecnico_extractor import extract_tecnico_reports
+from app.modules.sga.minpub.report_validator.service.objetivos.objetivo_2.word_averias_extractor import extract_averias_table
+from app.modules.sga.minpub.report_validator.service.objetivos.objetivo_2.word_info_tecnico_extractor import extract_tecnico_reports
 
 from typing import List, Dict
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from utils.logger_config import get_sga_logger
  
@@ -132,7 +132,12 @@ def resolve_clock_stop_overlaps(clock_stops: List[Dict]) -> List[Dict]:
     return resolved_all
 
 @log_exceptions
-def calculate_total_clock_stop_minutes(nro_incidencia:str, interruption_start: datetime, interruption_end: datetime, df_sga_paradas: pd.DataFrame) -> float:
+def calculate_total_clock_stop_minutes_by_incidencia(
+    nro_incidencia:str,
+    interruption_start: datetime,
+    interruption_end: datetime,
+    df_sga_paradas: pd.DataFrame
+    ) -> float:
     """
     Calculate the total clock minutes for a ticket, considering constraints.
 
@@ -191,6 +196,97 @@ def calculate_total_clock_stop_minutes(nro_incidencia:str, interruption_start: d
         if not pd.isna(stop['end']) and not pd.isna(stop['start'])
     )
     return total_minutes
+
+
+@log_exceptions
+def calculate_total_clock_stop_by_incidencia(
+    nro_incidencia:str,
+    interruption_start: datetime,
+    interruption_end: datetime,
+    df_sga_paradas: pd.DataFrame
+    ) -> float:
+    """
+    Calculate the total clock stops for a ticket, considering constraints.
+
+    Args:
+        nro_incidencia: The ticket identifier
+        interrupcion_inicio: Start time of the interruption from REPORTE DINAMICO 335 
+        interrupcion_fin: End time of the interruption from REPORTE DINAMICO 335 
+    
+    Returns:
+        Total clock stop by tickets
+    
+    """   
+    df_sga_paradas['nro_incidencia'] = df_sga_paradas['nro_incidencia'].astype(str)
+    nro_incidencia_stops = df_sga_paradas[df_sga_paradas['nro_incidencia'] == nro_incidencia].copy()
+
+    if nro_incidencia_stops.empty:
+        logger.info(f"No clock stops found for incident {nro_incidencia}")
+        return 0.0
+    
+    clock_stops = []
+
+    for _, stop in nro_incidencia_stops.iterrows():
+        start_date = stop.get('startdate')
+        end_date = stop.get('enddate')
+
+        if pd.isna(start_date):
+            logger.warning(f"Skipping record with missing start date for incident {nro_incidencia}")
+            continue
+
+        if start_date < interruption_start:
+            logger.info(f"Adjusting start time to interruption en for incident {nro_incidencia}")
+            start_date = interruption_start
+
+        if not pd.isna(end_date):
+            if end_date > interruption_end:
+                logger.info(f"Adjusting end time to interruption en for incident {nro_incidencia}")
+                end_date = interruption_end
+
+            if start_date < end_date:
+                clock_stops.append({
+                    'start': start_date,
+                    'end': end_date,
+                    'nro_incidencia': nro_incidencia
+                })
+        else:
+            clock_stops.append({
+                'start': start_date,
+                'end': end_date,
+                'nro_incidencia': nro_incidencia
+            })
+    resolved_stops = resolve_clock_stop_overlaps(clock_stops)
+
+    return resolved_stops
+
+
+@log_exceptions
+def _format_interval(dt_start, dt_end) -> str:
+    return (
+        f"{dt_start.strftime('%d/%m/%Y %H:%M')} "
+        f"hasta el día {dt_end.strftime('%d/%m/%Y %H:%M')}"
+    )
+
+@log_exceptions
+def make_expected(stops_list):
+
+        if not stops_list:
+            return ""
+    
+        lines = [_format_interval(s['start'], s['end']) for s in stops_list]
+        
+        total = sum((s['end'] - s['start'] for s in stops_list), timedelta())
+        hh, rem = divmod(int(total.total_seconds()), 3600)
+        mm = rem // 60
+        total_str = f"{hh:02d}:{mm:02d}"
+
+        header = (
+            "Se tuvo indisponibilidad por parte del cliente "
+            "para continuar los trabajos el/los día(s)"
+        )
+        body = "\n".join(lines)
+        footer = f"(Total de horas sin acceso a la sede: {total_str} horas)"
+        return f"{header}\n{body}\n{footer}"
 
 
 @log_exceptions
@@ -304,7 +400,7 @@ def all_objetivos(
         )
 
         df_merge_sga_335_corte_excel_with_sharepoint_cid_cuismp['sum_paradas'] = df_merge_sga_335_corte_excel_with_sharepoint_cid_cuismp.apply(
-            lambda r: calculate_total_clock_stop_minutes(
+            lambda r: calculate_total_clock_stop_minutes_by_incidencia(
                 nro_incidencia = r["nro_incidencia"],
                 interruption_start = r["interrupcion_inicio"],
                 interruption_end = r["interrupcion_fin"],
@@ -312,6 +408,19 @@ def all_objetivos(
             ),
             axis= 1
         )
+
+        df_merge_sga_335_corte_excel_with_sharepoint_cid_cuismp['clock_stops'] = df_merge_sga_335_corte_excel_with_sharepoint_cid_cuismp.apply(
+            lambda r: calculate_total_clock_stop_by_incidencia(
+                nro_incidencia = r["nro_incidencia"],
+                interruption_start = r["interrupcion_inicio"],
+                interruption_end = r["interrupcion_fin"],
+                df_sga_paradas = df_sga_dinamico_380
+            ),
+            axis= 1
+        )
+
+        df_merge_sga_335_corte_excel_with_sharepoint_cid_cuismp['clock_stops_paragraph'] = df_merge_sga_335_corte_excel_with_sharepoint_cid_cuismp['clock_stops'].apply(make_expected)
+
 
         matched_rows = df_merge_sga_335_corte_excel_with_sharepoint_cid_cuismp[df_merge_sga_335_corte_excel_with_sharepoint_cid_cuismp['_merge'] == match_type]
 
@@ -469,14 +578,12 @@ def all_objetivos(
         'both'
         )
     
-
 # OBJETIVOS 
 
     obj1_df = validation_objetivo_1(
         df_matched_corte_sga335_Sharepoint_cuismp_sga380,
         df_unmatched_corte_sga335_Sharepoint_cuismp_sga380
         )
-
 
     obj2_df = validation_objetivo_2(
         df_matched_word_datos_averias_corte_excel,
@@ -485,7 +592,6 @@ def all_objetivos(
         df_matched_word_telefonia_informe_tecnico_corte_excel
         )
 
-    
     results.extend(obj1_df.to_dict(orient='records'))
     results.extend(obj2_df.to_dict(orient='records'))
     
