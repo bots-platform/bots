@@ -2,9 +2,9 @@ import pandas as pd
 import numpy as np
 from typing import List, Dict
 from datetime import datetime
-import language_tool_python
 import re
 
+import language_tool_python
 _tool_es = language_tool_python
 
 from utils.logger_config import get_sga_logger
@@ -65,14 +65,14 @@ def validation_medidas_correctivas(merged_df: pd.DataFrame) -> pd.DataFrame:
             return (None, None)
         
         last_two = lines[-2:]
-        inicio = None
-        fin = None
+        start = None
+        end = None
 
         start_pattern = "^Fecha y hora inicio:\s*(.*)$"
         end_pattern = "^Fecha y hora fin:\s*(.*)$"
 
         start_match = re.match(start_pattern, last_two[0], flags=re.IGNORECASE)
-        if start_pattern:
+        if start_match:
             start = start_match.group(1).strip()
         
         end_match = re.match(end_pattern, last_two[1], flags=re.IGNORECASE)
@@ -213,16 +213,29 @@ def build_failure_messages_medidas_correctivas(df:pd.DataFrame) -> pd.DataFrame:
        df['Validation_OK'],
        "Validación exitosa: MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS",
        (
-           np.where(~df['fechas_parrafos_match_columns_first_date'],
-                    " La fecha/hora de inicio del parrafo en MEDIDAS CORRECTIVAS:  ( " + df['first_date'] +
-                      " ) no coincide con la columna FECHA Y HORA INICIO DE EXCEL: " + df['FECHA Y HORA INICIO'] + ". ",
+                    np.where(~df['mc_first_ok'],
+                    " La fecha/hora de inicio del parrafo en MEDIDAS CORRECTIVAS:  ( " + df['first_dt_mc'] +
+                      " ) no coincide con la columna FECHA Y HORA INICIO DE EXCEL: " + df['FECHA_Y_HORA_INICIO_fmt'] + ". ",
                     "") +
 
-                     np.where(~df['fechas_parrafos_match_columns_last_date'],
-                    " La fecha/hora de fin del parrafo en MEDIDAS CORRECTIVAS:( " + df['last_date'] +
+                     np.where(~df['mc_last_ok'],
+                    " La fecha/hora de fin del parrafo en MEDIDAS CORRECTIVAS:( " + df['last_dt_mc'] +
                       " ) no coincide con la columna FECHA Y HORA FIN DE EXCEL: " +
-                      df['FECHA Y HORA FIN']+ ". ", 
+                      df['FECHA_Y_HORA_FIN_fmt']+ ". ", 
                     "") + 
+
+
+                     np.where(~df['mc_first_ok'],
+                    " La fecha/hora de inicio del parrafo en MEDIDAS CORRECTIVAS:  ( " + df['first_dt_mc'] +
+                      " ) no coincide con la columna FECHA Y HORA INICIO DE EXCEL: " + df['FECHA_Y_HORA_INICIO_fmt'] + ". ",
+                    "") +
+
+                     np.where(~df['mc_last_ok'],
+                    " La fecha/hora de fin del parrafo en MEDIDAS CORRECTIVAS:( " + df['last_dt_mc'] +
+                      " ) no coincide con la columna FECHA Y HORA FIN DE EXCEL: " +
+                      df['FECHA_Y_HORA_FIN_fmt']+ ". ", 
+                    "") + 
+
 
                     np.where(~df['no_errores_ortograficos'],
                     " Habian errores ortográficos/gramaticales en el parrafo en MEDIDAS CORRECTIVAS:  ( " +
