@@ -331,7 +331,21 @@ def all_objetivos(
     df_word_datos_anexos_indis =  extract_indisponibilidad_anexos(word_datos_file_path)
     df_word_telefonia_anexos_indis = extract_indisponibilidad_anexos(word_telefonia_file_path)
 
+
+    df_word_datos_averias = df_word_datos_averias.rename(columns={'Número de ticket':'nro_incidencia'})
+    df_word_datos_averias['nro_incidencia'] = df_word_datos_averias['nro_incidencia'].astype(str)
+
+    df_word_telefonia_averias = df_word_telefonia_averias.rename(columns={'Número de ticket':'nro_incidencia'})
+    df_word_telefonia_averias['nro_incidencia'] = df_word_telefonia_averias['nro_incidencia'].astype(str)
+
+    df_word_datos_anexos_indis = df_word_datos_anexos_indis.rename(columns={'ticket':'nro_incidencia'})
+    df_word_datos_anexos_indis['nro_incidencia'] = df_word_datos_anexos_indis['nro_incidencia'].astype(str)
+
+    df_word_telefonia_anexos_indis = df_word_telefonia_anexos_indis.rename(columns={'ticket':'nro_incidencia'})
+    df_word_telefonia_anexos_indis['nro_incidencia'] = df_word_telefonia_anexos_indis['nro_incidencia'].astype(str)
     
+    
+
     df_sga_dinamico_335['interrupcion_inicio'] = pd.to_datetime(df_sga_dinamico_335['interrupcion_inicio'], errors='coerce', dayfirst=True)
     df_sga_dinamico_335['interrupcion_fin'] = pd.to_datetime(df_sga_dinamico_335['interrupcion_fin'], errors='coerce', dayfirst=True)
     df_sga_dinamico_335['fecha_comunicacion_cliente'] = pd.to_datetime(df_sga_dinamico_335['fecha_comunicacion_cliente'], errors='coerce', dayfirst=True)

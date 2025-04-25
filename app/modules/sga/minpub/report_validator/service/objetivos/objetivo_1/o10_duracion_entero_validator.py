@@ -34,7 +34,7 @@ def log_exceptions(func):
 
 
 
-def validate_duracion_entero(df_merged: pd.Dataframe)-> pd.DataFrame:
+def validate_duracion_entero(df_merged: pd.DataFrame)-> pd.DataFrame:
     """
     1) Extract  the hour to the left of ':' from 'TIEMPO (HH:MM)' -> extracted_hour
     2) Check the extracted_hour == DURACION ENTERO -> duracion_entero_ok
