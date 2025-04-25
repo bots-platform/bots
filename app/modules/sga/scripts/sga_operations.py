@@ -246,10 +246,10 @@ def copiando_reporte_al_clipboard(indice_reporte_detalle):
     try:
         logger.info("Copiando Reporte  al clipboard")
         
-        if indice_reporte_detalle == 15: # 335 SLA MINPUB
-            sleep(40)
-        elif indice_reporte_detalle == 18:  # 380 PARADAS DE RELOJ DE CLIENTE
-            sleep(20) 
+        if indice_reporte_detalle == 15: # 335 SLA MINPUB, MENSUAL 200 
+            sleep(65)
+        elif indice_reporte_detalle == 18:  # 380 PARADAS DE RELOJ DE CLIENTE , MENSUAL 15
+            sleep(5) 
         else:
             sleep(90)  # 276 DATAPREVIA 
 
