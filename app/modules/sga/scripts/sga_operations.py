@@ -242,10 +242,17 @@ def seleccion_multiple_listado(numero_tickets):
         logger.error(f"Error al seleccionar multiple listado")
         raise
 
-def copiando_reporte_al_clipboard():
+def copiando_reporte_al_clipboard(indice_reporte_detalle):
     try:
         logger.info("Copiando Reporte  al clipboard")
-        sleep(200)
+        
+        if indice_reporte_detalle == 15: # 335 SLA MINPUB, MENSUAL 200 
+            sleep(65)
+        elif indice_reporte_detalle == 18:  # 380 PARADAS DE RELOJ DE CLIENTE , MENSUAL 15
+            sleep(5) 
+        else:
+            sleep(90)  # 276 DATAPREVIA 
+
         send_keys("%A")
         sleep(1)
         send_keys('{DOWN 4}')
@@ -294,7 +301,7 @@ def generando_reporte_sga(main_window, fecha_inicio, fecha_fin, indice_reporte_d
             seleccionar_checkbox_nroincidencias(main_window)
             click_button_3puntos(main_window)
             seleccion_multiple_listado(chunk_tickets_lenght)
-            copiando_reporte_al_clipboard()
+            copiando_reporte_al_clipboard(indice_reporte_detalle)
             sleep(1)
             partial_df = pd.read_clipboard(sep='\t')
             sleep(1)
