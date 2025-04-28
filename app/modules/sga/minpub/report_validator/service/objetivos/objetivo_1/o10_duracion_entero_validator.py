@@ -28,7 +28,7 @@ def validate_duracion_entero(df_merged: pd.DataFrame)-> pd.DataFrame:
     df = df_merged.copy()
 
     df['extracted_hour'] = (
-        df['TIEMPO (HHMM)']
+        df['TIEMPO:(HH:MM)']
         .astype(str)
         .str.split(':', n=1)
         .str[0]
