@@ -26,7 +26,7 @@ def validate_responsable(df_merged: pd.DataFrame) -> pd.DataFrame:
 
     df['responsable_expected'] = (
         df['tipificacion_tipo']
-        .astype()
+        .astype(str)
         .str.split('-', n=1)
         .str[0]
         .str.strip()
