@@ -29,7 +29,7 @@ def validation_averia_tipificacion_problema(merged_df:pd.DataFrame) -> pd.DataFr
     return df
 
 @log_exceptions
-def build_failure_messages_averia(df:pd.DataFrame) -> pd.DataFrame:
+def build_failure_messages_averia_tipificacion_tipo(df:pd.DataFrame) -> pd.DataFrame:
     """"
     Build descriptive failure menssages for rows that don't pass validation. 
     Returns Dataframe with only failing rows.
