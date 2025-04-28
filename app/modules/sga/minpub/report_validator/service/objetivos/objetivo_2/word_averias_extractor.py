@@ -3,18 +3,10 @@
 import pandas as pd
 from docx import Document
 from typing import List, Dict
-from utils.logger_config import get_sga_logger
 
-logger = get_sga_logger()
-
-def log_exceptions(func):
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception as e:
-            logger.error(f"Error in {func.__name__}: {e}", exc_info=True)
-            raise
-    return wrapper
+from app.modules.sga.minpub.report_validator.service.objetivos.decorators import ( 
+    log_exceptions
+)
 
 @log_exceptions
 def extract_averias_table(path_docx: str) -> pd.DataFrame:

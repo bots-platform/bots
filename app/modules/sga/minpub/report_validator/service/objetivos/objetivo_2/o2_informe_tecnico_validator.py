@@ -1,21 +1,10 @@
-# objetivo_2_validator.py
 
 import pandas as pd
 import numpy as np
-from utils.logger_config import get_sga_logger
-from typing import Tuple
 
-
-logger = get_sga_logger()
-
-def log_exceptions(func):
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception as e:
-            logger.error(f"Error in {func.__name__}: {e}", exc_info=True)
-            raise
-    return wrapper
+from app.modules.sga.minpub.report_validator.service.objetivos.decorators import ( 
+    log_exceptions
+)
 
 @log_exceptions
 def validate_informe_tecnico_word( merged_df: pd.DataFrame, componente_word: str) -> pd.DataFrame:
@@ -47,12 +36,19 @@ def validate_informe_tecnico_word( merged_df: pd.DataFrame, componente_word: str
         df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS_word'] = df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS_word_telefonia_informe']
 
 
-    df['Fecha_hora_inicio_match'] = df['FECHA Y HORA INICIO'] == df['Fecha y Hora Inicio']
-    df['fecha_hora_fin_match'] = df['FECHA Y HORA FIN'] == df['Fecha y Hora Fin']
+    if componente_word == 'COMPONENTE II':
+        df['DETERMINACIÓN DE LA CAUSA_word'] = df['DETERMINACIÓN DE LA CAUSA_word_datos_informe']
+    elif componente_word == 'COMPONENTE IV':
+        df['DETERMINACIÓN DE LA CAUSA_word'] = df['DETERMINACIÓN DE LA CAUSA_word_telefonia_informe']
+
+
+
+    df['Fecha_hora_inicio_match'] = df['FECHA_Y_HORA_INICIO_fmt'] == df['Fecha y hora inicio']
+    df['fecha_hora_fin_match'] = df['FECHA_Y_HORA_FIN_fmt'] == df['Fecha y hora fin']
     df['CUISMP_match'] = df['CUISMP_corte_excel'] == df['CUISMP_word']
     df['tipo_caso_match'] = df['TIPO CASO'] == df['Tipo Caso']
     df['observacion_match'] = df['OBSERVACIÓN'] == df['Observación']
-    df['dt_causa_match'] = df['DETERMINACIÓN DE LA CAUSA'] == df['DETERMINACIÓN DE LA CAUSA'] 
+    df['dt_causa_match'] = df['DETERMINACIÓN DE LA CAUSA_corte_excel'] == df['DETERMINACIÓN DE LA CAUSA_word'] 
     df['medidas_correctivas_match'] = df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS_corte_excel'] == df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS_word']
 
     df['Validation_OK'] = (
@@ -66,13 +62,13 @@ def validate_informe_tecnico_word( merged_df: pd.DataFrame, componente_word: str
     )
 
     df['fail_count'] = (
-        df['Fecha_hora_inicio_match'].stype(int)+ 
-        df['fecha_hora_fin_match'].stype(int)+ 
-        df['CUISMP_match'].stype(int)+ 
-        df['tipo_caso_match'].stype(int)+ 
-        df['observacion_match'].stype(int)+ 
-        df['dt_causa_match'].stype(int)+ 
-        df['medidas_correctivas_match'].stype(int)
+        (~df['Fecha_hora_inicio_match']).astype(int)+ 
+        (~df['fecha_hora_fin_match']).astype(int)+ 
+        (~df['CUISMP_match']).astype(int)+ 
+        (~df['tipo_caso_match']).astype(int)+ 
+        (~df['observacion_match']).astype(int)+ 
+        (~df['dt_causa_match']).astype(int)+ 
+        (~df['medidas_correctivas_match']).astype(int)
     )
     return df
 
@@ -92,17 +88,14 @@ def build_failure_messages_validate_informe_tecnico_word(df: pd.DataFrame) -> pd
         df['Validation_OK'],
         "Validation successful",
         (
-            np.where(~df['TICKET_match'], 
-                     "No coincide TICKET de WORD: " + df['Número de ticket'].astype(str) +
-                     " con EXCEL-CORTE: " + df['TICKET'].astype(str) + ". ", "") +
 
             np.where(~df['Fecha_hora_inicio_match'],
-                     " No coincide Fecha y Hora Inicio de WORD : " + df['Fecha y Hora Inicio'].astype(str) +
-                     " es diferente a EXCEL-CORTE:  " + df['FECHA Y HORA INICIO'].astype(str) + ". ", "") +
+                     " No coincide Fecha y hora inicio de WORD : " + df['Fecha y hora inicio'].astype(str) +
+                     " es diferente a EXCEL-CORTE:  " + df['FECHA_Y_HORA_INICIO_fmt'].astype(str) + ". ", "") +
 
             np.where(~df['fecha_hora_fin_match'],
-                     " No coincide Fecha y Hora Inicio de WORD : " + df['Fecha y Hora Fin'].astype(str) +
-                     " es diferente a EXCEL-CORTE:  " + df['FECHA Y HORA FIN'].astype(str) + ". ", "") +
+                     " No coincide Fecha y hora fin de WORD : " + df['Fecha y hora fin'].astype(str) +
+                     " es diferente a EXCEL-CORTE:  " + df['FECHA_Y_HORA_FIN_fmt'].astype(str) + ". ", "") +
 
             np.where(~df['CUISMP_match'],
                      " No coincide CUISMP_word_telefonia de WORD : " + df['CUISMP_word'].astype(str) +
@@ -114,18 +107,18 @@ def build_failure_messages_validate_informe_tecnico_word(df: pd.DataFrame) -> pd
                     
             
             np.where(~df['observacion_match'],
-                     " No coincide observacion de WORD : " + df['Observación'].astype(str) +
-                     " es diferente a AVERÍA de Excel: " + df['OBSERVACIÓN'].astype(str) + ". ", "") +
+                     " No coincide Observacion de WORD : " + df['Observación'].astype(str) +
+                     " es diferente a OBSERVACIÓN de Excel: " + df['OBSERVACIÓN'].astype(str) + ". ", "") +
 
         
             np.where(~df['dt_causa_match'],
-                     " No coincide Determinación de la causa de WORD-Datos : " + df['DETERMINACIÓN DE LA CAUSA'].astype(str) +
-                     " es diferente a DETERMINACION DE LA CAUSA de Excel: " + df['DETERMINACION DE LA CAUSA'].astype(str) + ". ", "") +
+                     " No coincide Determinación de la causa de WORD-Datos : " + df['DETERMINACIÓN DE LA CAUSA_word'].astype(str) +
+                     " es diferente a DETERMINACION DE LA CAUSA de Excel: " + df['DETERMINACIÓN DE LA CAUSA_corte_excel'].astype(str) + ". ", "") +
 
 
             np.where(~df['medidas_correctivas_match'],
                      " No coincide MEDIDAS CORRECTIVAS de WORD-Datos : " + df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS_word'].astype(str) +
-                     " es diferente a RESPONSABILIDAD de Excel: " + df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS_corte_excel'].astype(str) + ". ", "") 
+                     " es diferente a MEDIDAS CORRECTIVAS de Excel: " + df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS_corte_excel'].astype(str) + ". ", "") 
 
         )
     )
