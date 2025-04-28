@@ -123,7 +123,7 @@ def build_failure_messages_validate_informe_tecnico_word(df: pd.DataFrame) -> pd
         )
     )
     df['mensaje'] = mensaje
-    df['objetivo'] = 2.2
+    df['objetivo'] = "2.2"
     
     df_failures = df[df['fail_count'] > 0]
     return df_failures[['nro_incidencia', 'mensaje', 'TIPO REPORTE','objetivo']]
