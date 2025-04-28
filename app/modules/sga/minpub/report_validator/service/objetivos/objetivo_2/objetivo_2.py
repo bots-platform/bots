@@ -36,7 +36,7 @@ def validation_objetivo_2(
     df_validate_informe_tecnico_word_datos = validate_informe_tecnico_word(df_matched_word_datos_informe_tecnico_corte_excel, componente_word = 'COMPONENTE II')
     df_failures_message_validate_informe_tecnico_word_datos = build_failure_messages_validate_informe_tecnico_word(df_validate_informe_tecnico_word_datos)
 
-    df_validate_informe_tecnico_word_telefonia = validate_informe_tecnico_word(df_matched_word_telefonia_informe_tecnico_corte_excel, componente_word = 'COMPONENTE VI')
+    df_validate_informe_tecnico_word_telefonia = validate_informe_tecnico_word(df_matched_word_telefonia_informe_tecnico_corte_excel, componente_word = 'COMPONENTE IV')
     df_failures_message_validate_informe_tecnico_word_telefono = build_failure_messages_validate_informe_tecnico_word(df_validate_informe_tecnico_word_telefonia)
 
     df_failures = pd.concat(
