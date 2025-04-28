@@ -2,18 +2,10 @@ import re
 from typing import List, Dict
 import pandas as pd
 from docx import Document
-from utils.logger_config import get_sga_logger
 
-logger = get_sga_logger()
-
-def log_exceptions(func):
-    def wrapper(*args, **kw):
-        try:
-            return func(*args, **kw)
-        except Exception as e:
-            logger.error(f"Error in {func.__name__}: {e}", exc_info=True)
-            raise
-    return wrapper
+from app.modules.sga.minpub.report_validator.service.objetivos.decorators import ( 
+    log_exceptions
+)
 
 @log_exceptions
 def extract_indisponibilidad_anexos(path_docx: str) -> pd.DataFrame:
@@ -67,3 +59,5 @@ def extract_indisponibilidad_anexos(path_docx: str) -> pd.DataFrame:
         })
 
     return pd.DataFrame.from_records(records)
+
+

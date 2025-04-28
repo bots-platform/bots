@@ -4,34 +4,17 @@ from typing import List, Dict
 from datetime import datetime
 import re
 
-import language_tool_python
-_tool_es = language_tool_python
+from app.modules.sga.minpub.report_validator.service.objetivos.calculations import has_repetition
+from app.modules.sga.minpub.report_validator.service.objetivos.calculations import extract_date_range_body
+from app.modules.sga.minpub.report_validator.service.objetivos.calculations import extract_date_range_last
 
-from utils.logger_config import get_sga_logger
- 
-logger = get_sga_logger()
-                                                            
-def log_exceptions(func):
-    """
-    Decorator to log exceptions in a function using the shared 'logger'.
-    It will also re-raise the exception so that the caller can handle it
-    appropriately (e.g., fail fast or continue).
-    """
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception as exc:
-            logger.error(
-                f"Error in function '{func.__name__}': {exc}",
-                exc_info=True
-            )
-            # Optionally, decide whether to re-raise or swallow the exception.
-            # Usually best practice is to re-raise so the pipeline can decide what to do:
-            raise
-    return wrapper
+# import language_tool_python
+# _tool_es = language_tool_python.LanguageTool('es')
 
+from app.modules.sga.minpub.report_validator.service.objetivos.decorators import ( 
+    log_exceptions
+)
 
-@log_exceptions
 def validation_medidas_correctivas(merged_df: pd.DataFrame) -> pd.DataFrame:
     """
     Validation the column medidas correctivas y o medidas tomadas, se debe obtener
@@ -45,104 +28,10 @@ def validation_medidas_correctivas(merged_df: pd.DataFrame) -> pd.DataFrame:
     df['mc_last_ok'] = True
     df['it_first_ok'] = True
     df['it_last_ok'] = True
-    df['ortografia_ok'] = True
+    # df['ortografia_ok'] = True
+    df['no_repeticion_ok'] = True
 
-    @log_exceptions
-    def extract_date_range_last(text: str):
-        """
-        Returns (fecha_hora_inicio, fecha hora fin) strings
-        extracted from the final 2 lines that begin with:
-        'Fecha y hora inicio:' and 'Fecha y hora fin:'
 
-        If parsing fails or lines are missing, returns (None, None)
-        """
-        if not isinstance(text, str):
-            return (None, None)
-        
-        lines = [line.strip() for line in text.splitlines if line.strip()]
-
-        if len(lines) < 2:
-            return (None, None)
-        
-        last_two = lines[-2:]
-        start = None
-        end = None
-
-        start_pattern = "^Fecha y hora inicio:\s*(.*)$"
-        end_pattern = "^Fecha y hora fin:\s*(.*)$"
-
-        start_match = re.match(start_pattern, last_two[0], flags=re.IGNORECASE)
-        if start_match:
-            start = start_match.group(1).strip()
-        
-        end_match = re.match(end_pattern, last_two[1], flags=re.IGNORECASE)
-        if end_match:
-            end = end_match.group(1).strip()
-
-        return  (start, end)
-    
-    @log_exceptions
-    def extract_date_range_body(text: str):
-        if not isinstance(text, str):
-            return (None, None)
-        
-        lines = [ln.strip()  for ln in text.splitlines() if ln.strip()]
-
-        def is_meta_line(ln):
-            low = ln.lowe()
-            return low.startswith("fecha y hora inicio") or low.startswith("fecha y hora fin")
-        
-        while len(lines) and is_meta_line(lines[-1]):
-            lines.pop()
-
-        body = "\n".join(lines)
-
-        pattern = r"(\d{2}/\d{2}/d{4})\s*(?:a las\s*)?(\d{2}:\d{2})"
-        matches = re.findall(pattern, body, flags=re.IGNORECASE)
-
-        if not matches:
-            return (None, None)
-        
-        first_date, first_time = matches[0]
-        last_date, last_time = matches[-1]
-
-        return (f"{first_date} {first_time}", f"{last_date} {last_time}")
-    
-    @log_exceptions
-    def has_repetition(text: str) -> bool:
-        """
-        Returns True if text contains o forbiden repetition of:
-        - "Inmediatamente" twice, or
-        - "A través" twice.
-        """
-        if not isinstance(text, str):
-            return False
-        
-        patterns = [
-            r'(?i)\b(inmediatamente)\b.*\b\1\b',
-            r'(?i)\b(a través)\b.*\b\1\b',
-        ]
-        return any(re.search(p, text) for p in patterns )
-   
-    @log_exceptions
-    def is_langtool_clean(text:str) -> bool:
-        """
-        Return True if LanguageTool reports zero issues in the text.
-        """
-        if not isinstance(text, str) or not text.strip():
-            return True
-        
-        matches = _tool_es.check(text)
-        return len(matches) == 0
-    
-    @log_exceptions
-    def check_orthografia(text: str) -> bool:
-        """"
-        Master orthography check: no forbidden repetition AND clean per LanguageTool.
-        """
-        if has_repetition(text):
-            return False
-        return is_langtool_clean(text)
 
     date_range_mc_body = df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS'].apply(extract_date_range_body)
     df[['first_dt_mc', 'last_dt_mc']] = pd.DataFrame(date_range_mc_body.tolist(), index=df.index)
@@ -169,14 +58,14 @@ def validation_medidas_correctivas(merged_df: pd.DataFrame) -> pd.DataFrame:
     )
     
     df['mc_first_ok'] = (
-        df['first_dt_mc'] == df['FECHA_Y_HORA_FIN_fmt']
+        df['first_dt_mc'] == df['FECHA_Y_HORA_INICIO_fmt']
     )
 
     df['mc_last_ok'] = (
         df['last_dt_mc'] == df['FECHA_Y_HORA_FIN_fmt']
     )
 
-    df['mc_last_ok'] = (
+    df['it_first_ok'] = (
         df['first_dt_it'] == df['start_dt_last_it']
     )
 
@@ -184,20 +73,30 @@ def validation_medidas_correctivas(merged_df: pd.DataFrame) -> pd.DataFrame:
         df['last_dt_it'] == df['end_dt_last_it']
     )
 
-    df['ortografia_ok'] = df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS'].apply(check_orthografia)
+    # df['ortografia_ok'] = ~df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS'].apply(is_langtool_clean)
+    df['no_repeticion_ok'] = ~df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS'].apply(has_repetition)
 
  
     df['Validation_OK'] = (
         df['mc_first_ok'] &
         df['mc_last_ok'] &
-        df['mc_last_ok'] &
+        df['it_first_ok'] &
         df['it_last_ok'] &
-        df['ortografia_ok']
+        # df['ortografia_ok'] &
+        df['no_repeticion_ok'] 
     )
 
-    df['fail_count'] = (~df['Validation_OK']).astype(int)
+    df['fail_count'] = ( 
+        (~df['mc_first_ok']).astype(int)+
+        (~df['mc_last_ok']).astype(int)+
+        (~df['it_first_ok']).astype(int)+
+        (~df['it_last_ok']).astype(int)+
+        # (~df['ortografia_ok']).astype(int)+ 
+        (~df['no_repeticion_ok']).astype(int)           
+    )
 
     return df
+
 
 @log_exceptions
 def build_failure_messages_medidas_correctivas(df:pd.DataFrame) -> pd.DataFrame:
@@ -213,35 +112,34 @@ def build_failure_messages_medidas_correctivas(df:pd.DataFrame) -> pd.DataFrame:
        df['Validation_OK'],
        "Validación exitosa: MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS",
        (
-                    np.where(~df['mc_first_ok'],
-                    " La fecha/hora de inicio del parrafo en MEDIDAS CORRECTIVAS:  ( " + df['first_dt_mc'] +
-                      " ) no coincide con la columna FECHA Y HORA INICIO DE EXCEL: " + df['FECHA_Y_HORA_INICIO_fmt'] + ". ",
-                    "") +
-
-                     np.where(~df['mc_last_ok'],
-                    " La fecha/hora de fin del parrafo en MEDIDAS CORRECTIVAS:( " + df['last_dt_mc'] +
-                      " ) no coincide con la columna FECHA Y HORA FIN DE EXCEL: " +
-                      df['FECHA_Y_HORA_FIN_fmt']+ ". ", 
-                    "") + 
-
-
                      np.where(~df['mc_first_ok'],
-                    " La fecha/hora de inicio del parrafo en MEDIDAS CORRECTIVAS:  ( " + df['first_dt_mc'] +
-                      " ) no coincide con la columna FECHA Y HORA INICIO DE EXCEL: " + df['FECHA_Y_HORA_INICIO_fmt'] + ". ",
+                    " La fecha/hora de inicio del parrafo en MEDIDAS CORRECTIVAS:  ( " + df['first_dt_mc'].astype(str) +
+                      " ) no coincide con la columna FECHA Y HORA INICIO DE EXCEL: " + df['FECHA_Y_HORA_INICIO_fmt'].astype(str) + ". ",
                     "") +
 
-                     np.where(~df['mc_last_ok'],
-                    " La fecha/hora de fin del parrafo en MEDIDAS CORRECTIVAS:( " + df['last_dt_mc'] +
+                      np.where(~df['mc_last_ok'],
+                    " La fecha/hora de fin del parrafo en MEDIDAS CORRECTIVAS:( " + df['last_dt_mc'].astype(str) +
                       " ) no coincide con la columna FECHA Y HORA FIN DE EXCEL: " +
-                      df['FECHA_Y_HORA_FIN_fmt']+ ". ", 
+                      df['FECHA_Y_HORA_FIN_fmt'].astype(str)+ ". ", 
                     "") + 
 
+                      np.where(~df['it_first_ok'],
+                    " La fecha de inicio del parrafo en it_medidas_tomadas:  ( " + df['first_dt_it'].astype(str) +
+                      " ) no coincide con la fecha inicio de la penultima fila: " + df['start_dt_last_it'].astype(str) + ". ",
+                    "") +
 
-                    np.where(~df['no_errores_ortograficos'],
-                    " Habian errores ortográficos/gramaticales en el parrafo en MEDIDAS CORRECTIVAS:  ( " +
-                      df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS'] +
-                      " ) ylos errores encontrados son : ( " +
-                      df['spelling_errors']+ " ) .",
+                     np.where(~df['it_last_ok'],
+                    " La fecha de fin del parrafo en it_medidas_tomadas:( " + df['last_dt_mc'].astype(str) +
+                      " ) no coincide con la fecha fin de la ultima fila: " +
+                      df['end_dt_last_it'].astype(str) + ". ", 
+                    "") + 
+
+                    # np.where(~df['ortografia_ok'],
+                    # "  Errores ortográficos/gramaticales en el parrafo en MEDIDAS CORRECTIVAS",
+                    # "")  +
+
+                    np.where(~df['no_repeticion_ok'],
+                    " Hay palabras repetidas inmediatamente/a través en el parrafo en MEDIDAS CORRECTIVAS:",
                     "") 
        )
     )
@@ -250,6 +148,3 @@ def build_failure_messages_medidas_correctivas(df:pd.DataFrame) -> pd.DataFrame:
     df['objetivo'] = 1.8
     df_failures = df[df['fail_count'] > 0]
     return df_failures[['nro_incidencia', 'mensaje', 'TIPO REPORTE','objetivo']]
-    
-
-

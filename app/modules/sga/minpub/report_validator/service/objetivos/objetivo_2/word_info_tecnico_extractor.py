@@ -4,19 +4,10 @@ from typing import List, Dict
 
 import pandas as pd
 from docx import Document
-from utils.logger_config import get_sga_logger
 
-logger = get_sga_logger()
-
-
-def log_exceptions(func):
-    def wrapper(*args, **kw):
-        try:
-            return func(*args, **kw)
-        except Exception as e:
-            logger.error(f"Error in {func.__name__}: {e}", exc_info=True)
-            raise
-    return wrapper
+from app.modules.sga.minpub.report_validator.service.objetivos.decorators import ( 
+    log_exceptions
+)
 
 
 @log_exceptions
@@ -53,9 +44,10 @@ def extract_tecnico_reports(path_docx: str) -> pd.DataFrame:
         "DETERMINACIÓN DE LA CAUSA":re.compile(r"Determinaci.o.n de la causa\s*:\s*(.+)", re.IGNORECASE),  
     }
 
+    medidas_title_pat = re.compile(r"^MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS", re.IGNORECASE)
+
     inicio_pat = re.compile(r"^Fecha y hora inicio\s*:\s*(.+)$", re.IGNORECASE)
     fin_pat    = re.compile(r"^Fecha y hora fin\s*:\s*(.+)$",    re.IGNORECASE)
-    medidas_title_pat = re.compile(r"^MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS", re.IGNORECASE)
 
 
     for head, nxt in zip(headings, headings[1:]):

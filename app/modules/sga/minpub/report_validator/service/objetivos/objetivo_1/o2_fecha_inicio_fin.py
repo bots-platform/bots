@@ -4,29 +4,9 @@ from typing import List, Dict
 from datetime import datetime
 
 
-
-from utils.logger_config import get_sga_logger
- 
-logger = get_sga_logger()
-
-def log_exceptions(func):
-    """
-    Decorator to log exceptions in a function using the shared 'logger'.
-    It will also re-raise the exception so that the caller can handle it
-    appropriately (e.g., fail fast or continue).
-    """
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception as exc:
-            logger.error(
-                f"Error in function '{func.__name__}': {exc}",
-                exc_info=True
-            )
-            # Optionally, decide whether to re-raise or swallow the exception.
-            # Usually best practice is to re-raise so the pipeline can decide what to do:
-            raise
-    return wrapper
+from app.modules.sga.minpub.report_validator.service.objetivos.decorators import ( 
+    log_exceptions
+)
 
 
 @log_exceptions

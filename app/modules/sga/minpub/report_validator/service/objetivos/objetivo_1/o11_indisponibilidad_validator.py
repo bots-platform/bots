@@ -6,27 +6,9 @@ from datetime import datetime, timedelta
 
 import re
 
-from utils.logger_config import get_sga_logger
- 
-logger = get_sga_logger()
-                                                            
-def log_exceptions(func):
-    """
-    Decorator to log exceptions in a function using the shared 'logger'.
-    It will also re-raise the exception so that the caller can handle it
-    appropriately (e.g., fail fast or continue).
-    """
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception as exc:
-            logger.error(
-                f"Error in function '{func.__name__}': {exc}",
-                exc_info=True
-            )
-            raise
-    return wrapper
-
+from app.modules.sga.minpub.report_validator.service.objetivos.decorators import ( 
+    log_exceptions
+)
 
 @log_exceptions
 def validate_indisponibilidad(df_merged: pd.DataFrame) -> pd.DataFrame:

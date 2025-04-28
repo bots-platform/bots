@@ -2,21 +2,10 @@
 
 import pandas as pd
 import numpy as np
-from utils.logger_config import get_sga_logger
-from typing import Tuple
 
-
-logger = get_sga_logger()
-
-def log_exceptions(func):
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception as e:
-            logger.error(f"Error in {func.__name__}: {e}", exc_info=True)
-            raise
-    return wrapper
-
+from app.modules.sga.minpub.report_validator.service.objetivos.decorators import ( 
+    log_exceptions
+)
 
 
 @log_exceptions
@@ -28,14 +17,28 @@ def validate_anexos_indisponibilidad_word( merged_df: pd.DataFrame, componente_w
 
     df = merged_df.copy()
 
-    df['expected_indisponibilidad'] = df['clock_stops_paragraph']
-    df['indisponibilidad_ok'] = (
-        df['indisponibilidad_extract'].astype(str).str.strip()
-        == df['expected_indisponibilidad']
+
+    df['indisponibilidad_header_match'] = (
+        df['indisponibilidad_header'].astype(str).str.strip()== df['clock_stops_paragraph_header']
     )
 
-    df['Validation_OK'] = df['indisponibilidad_ok']
-    df['fail_count']   = (~df['Validation_OK']).astype(int)
+    df['indisponibilidad_periodos_match'] = (
+        df['indisponibilidad_periodos'].astype(str).str.strip()== df['clock_stops_paragraph_periodos']
+    )
+
+
+    df['indisponibilidad_total_match'] = (
+        df['indisponibilidad_total'].astype(str).str.strip()== df['clock_stops_paragraph_footer']
+    )
+
+    df['Validation_OK'] = df['indisponibilidad_header_match'] &  df['indisponibilidad_periodos_match'] & df['indisponibilidad_total_match']
+    
+    df['fail_count'] = (
+        (~df['indisponibilidad_header_match']).astype(int)+ 
+        (~df['indisponibilidad_periodos_match']).astype(int)+ 
+        (~df['indisponibilidad_total_match']).astype(int)
+
+    )
     return df
 
 
@@ -54,11 +57,21 @@ def build_failure_messages_validate_anexos_indisponibilidad_word(df: pd.DataFram
         df['Validation_OK'],
         "Validación exitosa: ANEXOS INDISPONIBILIDAD coincide con las paradas de reloj",
         
-        " ANEXO INDISPONIBILIDAD  inválida:\n"
-        + " No coincide indisponibilidad en anexos:\n"
-        + df['indisponibilidad_extract'].astype(str)
-        + "\n\n✔  Indisponibilidad esperada :\n"
-        + df['expected_indisponibilidad']
+        (
+            np.where(~df['indisponibilidad_header_match'],
+                    " No coincide texto inicio de word indisponibilidad en anexos : " + df['indisponibilidad_header'].astype(str) +
+                     " es diferente a sga :  " + df['clock_stops_paragraph_header'].astype(str) + ". ", "") +
+
+             np.where(~df['indisponibilidad_periodos_match'],
+                    " No coincide paradas de reloj de word indisponibilidad en anexos : " + df['indisponibilidad_periodos'].astype(str) +
+                     " es diferente a sga  :  " + df['clock_stops_paragraph_periodos'].astype(str) + ". ", "") +
+
+              np.where(~df['indisponibilidad_total_match'],
+            " No coincide total horas sin acceso a la sede de word indisponibilidad en anexos : " + df['indisponibilidad_total'].astype(str) +
+             " es diferente a sga  :  " + df['clock_stops_paragraph_footer'].astype(str) + ". ", "") 
+
+        )
+
     )
 
     df['mensaje']  = mensajes
