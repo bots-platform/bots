@@ -19,16 +19,16 @@ def validate_anexos_indisponibilidad_word( merged_df: pd.DataFrame, componente_w
 
 
     df['indisponibilidad_header_match'] = (
-        df['indisponibilidad_header'].astype(str).str.strip()== df['clock_stops_paragraph_header']
+        df['indisponibilidad_header'].astype(str).str.strip() == df['clock_stops_paragraph_header']
     )
 
     df['indisponibilidad_periodos_match'] = (
-        df['indisponibilidad_periodos'].astype(str).str.strip()== df['clock_stops_paragraph_periodos']
+        df['indisponibilidad_periodos'].astype(str).str.strip() == df['clock_stops_paragraph_periodos']
     )
 
 
     df['indisponibilidad_total_match'] = (
-        df['indisponibilidad_total'].astype(str).str.strip()== df['clock_stops_paragraph_footer']
+        df['indisponibilidad_total'].astype(str).str.strip() == df['clock_stops_paragraph_footer']
     )
 
     df['Validation_OK'] = df['indisponibilidad_header_match'] &  df['indisponibilidad_periodos_match'] & df['indisponibilidad_total_match']
@@ -75,6 +75,6 @@ def build_failure_messages_validate_anexos_indisponibilidad_word(df: pd.DataFram
     )
 
     df['mensaje']  = mensajes
-    df['objetivo'] = 3.1
+    df['objetivo'] = "3.1"
 
     return df[df['fail_count'] > 0][['nro_incidencia', 'mensaje', 'TIPO REPORTE','objetivo']]
