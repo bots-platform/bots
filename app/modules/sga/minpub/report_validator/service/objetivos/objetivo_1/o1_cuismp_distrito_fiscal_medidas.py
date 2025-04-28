@@ -70,7 +70,7 @@ def build_failure_messages_cuismp_distrito_fiscal_medidas(df: pd.DataFrame) -> p
         )
     )
     df['mensaje'] = mensaje
-    df['objetivo'] = 1.1
+    df['objetivo'] = "1.1"
     
     df_failures = df[df['fail_count'] > 0]
     return df_failures[['nro_incidencia', 'mensaje', 'TIPO REPORTE','objetivo']]

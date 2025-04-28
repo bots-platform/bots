@@ -72,7 +72,7 @@ def build_failure_messages_tipo_caso_cid_masivo_codincidencia_padre_determinacio
         )
     )
     df['mensaje'] = mensaje
-    df['objetivo'] = 1.5
+    df['objetivo'] = "1.5"
     df_failures = df[df['fail_count'] > 0]
     return df_failures[['nro_incidencia', 'mensaje', 'TIPO REPORTE','objetivo']]
 
