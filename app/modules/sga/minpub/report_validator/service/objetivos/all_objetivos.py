@@ -179,5 +179,18 @@ def all_objetivos(
     results.extend(obj1_df.to_dict(orient='records'))
     results.extend(obj2_df.to_dict(orient='records'))
     results.extend(obj3_df.to_dict(orient='records'))
-    
-    return results
+
+    df_all = pd.DataFrame(results)
+
+    df_grouped = (
+        df_all
+        .groupby('nro_incidencia', as_index=False)
+        .agg({'mensaje': lambda msgs: ' | '.join(msgs)})
+    )
+
+    return df_grouped.to_dict(orient='records')
+
+
+
+
+
