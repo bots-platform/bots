@@ -28,7 +28,7 @@ def validate_duracion_entero(df_merged: pd.DataFrame)-> pd.DataFrame:
     df = df_merged.copy()
 
     df['extracted_hour'] = (
-        df['TIEMPO:(HH:MM)']
+        df['TIEMPO (HH:MM)']
         .astype(str)
         .str.split(':', n=1)
         .str[0]
@@ -53,11 +53,10 @@ def validate_duracion_entero(df_merged: pd.DataFrame)-> pd.DataFrame:
         'Entre 8h a 24h',
     ]
 
-    df['agrupacion_expected'] == np.select(conditions, choises, default='Mayor a 24h') 
+    df['agrupacion_expected'] = np.select(conditions, choises, default='Mayor a 24h') 
 
-    df['agrupacion_entero_ok'] == (
-        df['Agrupación entero'].astype(str).str.strip()
-        == df['agrupacion_expected']
+    df['agrupacion_entero_ok'] = (
+        df['Agrupación entero'].astype(str).str.strip() == df['agrupacion_expected']
     )
 
     df['Validation_OK'] = df['duracion_entero_ok'] & df['agrupacion_entero_ok']
@@ -91,7 +90,7 @@ def build_failure_messages_duracion_entero(df: pd.DataFrame) -> pd.DataFrame:
         + np.where(
             ~df['agrupacion_entero_ok'],
             " Agrupación entero '"
-            + df['Agrupacion entero'].astype(str)
+            + df['Agrupación entero'].astype(str)
             + "' incorrecta, debe ser '"
             + df['agrupacion_expected']
             + "'.",
