@@ -11,8 +11,8 @@ from app.modules.sga.minpub.report_validator.service.objetivos.objetivo_2.objeti
 from app.modules.sga.minpub.report_validator.service.objetivos.objetivo_3.objetivo_3 import validation_objetivo_3
 
 from app.modules.sga.minpub.report_validator.service.objetivos.objetivo_2.word_averias_extractor import extract_averias_table
-from app.modules.sga.minpub.report_validator.service.objetivos.objetivo_2.word_info_tecnico_extractor import extract_tecnico_reports
-from app.modules.sga.minpub.report_validator.service.objetivos.objetivo_3.word_indisp_anexos_extractor import extract_indisponibilidad_anexos
+from app.modules.sga.minpub.report_validator.service.objetivos.calculations import extract_tecnico_reports_without_hours_last_dates
+from app.modules.sga.minpub.report_validator.service.objetivos.calculations import extract_indisponibilidad_anexos
 
 from app.modules.sga.minpub.report_validator.service.objetivos.preprocessing import ( 
     preprocess_335, preprocess_380, preprocess_corte_excel,
@@ -75,8 +75,8 @@ def all_objetivos(
     df_cid_cuismp_sharepoint = pd.read_excel(path_cid_cuismp_sharepoint)
     df_word_datos_averias =  extract_averias_table(word_datos_file_path)
     df_word_telefonia_averias = extract_averias_table(word_telefonia_file_path)
-    df_word_datos_informe_tec =  extract_tecnico_reports(word_datos_file_path)
-    df_word_telefonia_informe_tec = extract_tecnico_reports(word_telefonia_file_path)
+    df_word_datos_informe_tec =  extract_tecnico_reports_without_hours_last_dates(word_datos_file_path)
+    df_word_telefonia_informe_tec = extract_tecnico_reports_without_hours_last_dates(word_telefonia_file_path)
     df_word_datos_anexos_indis =  extract_indisponibilidad_anexos(word_datos_file_path)
     df_word_telefonia_anexos_indis = extract_indisponibilidad_anexos(word_telefonia_file_path)
 
@@ -84,6 +84,7 @@ def all_objetivos(
     # preprocess
     df_word_datos_averias = preprocess_df_word_datos_averias(df_word_datos_averias)
     df_word_telefonia_averias = preprocess_df_word_telefonia_averias(df_word_telefonia_averias)
+    
     df_word_datos_informe_tec =  preprocess_df_word_datos_informe_tecnico(df_word_datos_informe_tec)
     df_word_telefonia_informe_tec = preprocess_df_word_telefonia_informe_tecnico(df_word_telefonia_informe_tec)
 
@@ -185,7 +186,10 @@ def all_objetivos(
     df_grouped = (
         df_all
         .groupby('nro_incidencia', as_index=False)
-        .agg({'mensaje': lambda msgs: ' | '.join(msgs)})
+        .agg({'mensaje': lambda msgs: ' | '.join(msgs),
+              'objetivo': lambda objs: ' | '.join(objs), 
+              'TIPO REPORTE': 'first', 
+              })
     )
 
     return df_grouped.to_dict(orient='records')
