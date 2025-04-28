@@ -16,6 +16,7 @@ def preprocess_df_word_datos_averias(df_word_datos_averias):
 def preprocess_df_word_telefonia_averias(df_word_telefonia_averias):
     df_word_telefonia_averias = df_word_telefonia_averias.rename(columns={'Número de ticket':'nro_incidencia'})
     df_word_telefonia_averias['nro_incidencia'] = df_word_telefonia_averias['nro_incidencia'].astype(str)
+    df_word_telefonia_averias = df_word_telefonia_averias.rename(columns={'Tiempo\nTotal (HH:MM)': 'Tiempo Total (HH:MM)'})
     return df_word_telefonia_averias
 
 
@@ -80,6 +81,7 @@ def preprocess_corte_excel(df_corte_excel):
     df_corte_excel['DETERMINACIÓN DE LA CAUSA'] = df_corte_excel['DETERMINACIÓN DE LA CAUSA'].astype(str).str.strip().fillna("No disponible")
     df_corte_excel['TIPO CASO'] = df_corte_excel['TIPO CASO'].astype(str).str.strip().fillna("No disponible")
     df_corte_excel['CID'] = df_corte_excel['CID'].astype(str).str.strip().fillna("No disponible")
+    #df_corte_excel['OBSERVACIÓN'] = df_corte_excel['OBSERVACIÓN'].astype(str).str.strip().fillna("No disponible")
     df_corte_excel['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS'] = df_corte_excel['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS'].astype(str).str.strip().fillna("No disponible")
     df_corte_excel['FECHA Y HORA INICIO'] = pd.to_datetime(df_corte_excel['FECHA Y HORA INICIO'], format='%Y-%m-%d', errors='coerce')
     df_corte_excel['FECHA Y HORA FIN'] = pd.to_datetime(df_corte_excel['FECHA Y HORA FIN'], format='%Y-%m-%d', errors='coerce')
@@ -109,7 +111,7 @@ def preprocess_df_cid_cuismp_sharepoint(df_cid_cuismp_sharepoint):
     df_cid_cuismp_sharepoint = cut_decimal_part(df_cid_cuismp_sharepoint, 'CUISMP')
     df_cid_cuismp_sharepoint = df_cid_cuismp_sharepoint.rename(columns={"CID":"cid"})
     df_cid_cuismp_sharepoint["cid"] = df_cid_cuismp_sharepoint["cid"].astype(str).fillna("")
-    df_cid_cuismp_sharepoint["Distrito Fiscal"] = df_cid_cuismp_sharepoint["Distrito Fiscal"].astype(str).str.strip().fillna('No disponible').str.lower()
+    df_cid_cuismp_sharepoint["Distrito Fiscal"] = df_cid_cuismp_sharepoint["Distrito Fiscal"].astype(str).str.strip().fillna('No disponible')
     df_cid_cuismp_sharepoint["CUISMP"] = df_cid_cuismp_sharepoint["CUISMP"].astype(str).str.strip().fillna('No disponible')
     return df_cid_cuismp_sharepoint
 
