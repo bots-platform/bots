@@ -30,7 +30,7 @@ def seleccionar_atcorp(main_window):
     try:
         logger.info("Intentando seleccionar 'ATCORP'.")
         atcorp = main_window.child_window(title="ATCORP", control_type="TreeItem")
-        sleep(10)
+        sleep(25)
         atcorp.click_input()
         logger.info("'ATCORP' seleccionado correctamente.")       
     except Exception as e:
@@ -247,11 +247,11 @@ def copiando_reporte_al_clipboard(indice_reporte_detalle):
         logger.info("Copiando Reporte  al clipboard")
         
         if indice_reporte_detalle == 15: # 335 SLA MINPUB, MENSUAL 200 
-            sleep(65)
+            sleep(75)
         elif indice_reporte_detalle == 18:  # 380 PARADAS DE RELOJ DE CLIENTE , MENSUAL 15
-            sleep(5) 
+            sleep(10) 
         else:
-            sleep(90)  # 276 DATAPREVIA 
+            sleep(100)  # 276 DATAPREVIA 
 
         send_keys("%A")
         sleep(1)
