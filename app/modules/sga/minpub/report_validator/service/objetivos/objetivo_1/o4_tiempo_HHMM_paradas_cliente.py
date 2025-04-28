@@ -122,7 +122,7 @@ def buid_failure_messages_tiempo_HHMM_paradas_cliente(df: pd.DataFrame) -> pd.Da
         )
     )
     df['mensaje'] = mensaje
-    df['objetivo'] = 1.4
+    df['objetivo'] = "1.4"
 
     df_failures = df[df['fail_count'] > 0 ]
     return df_failures[['nro_incidencia', 'mensaje', 'TIPO REPORTE','objetivo']]

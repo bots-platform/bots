@@ -133,7 +133,7 @@ def build_failure_messages_fechas_fin_inicio(df: pd.DataFrame) -> pd.DataFrame:
         )
     )
     df['mensaje'] = mensaje
-    df['objetivo'] = 1.2
+    df['objetivo'] = "1.2"
 
     df_failures = df[df['fail_count'] > 0]
     return df_failures[['nro_incidencia', 'mensaje', 'TIPO REPORTE','objetivo']]
