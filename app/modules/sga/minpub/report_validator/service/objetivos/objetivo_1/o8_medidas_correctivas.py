@@ -145,6 +145,6 @@ def build_failure_messages_medidas_correctivas(df:pd.DataFrame) -> pd.DataFrame:
     )
     
     df['mensaje'] = mensajes
-    df['objetivo'] = 1.8
+    df['objetivo'] = "1.8"
     df_failures = df[df['fail_count'] > 0]
     return df_failures[['nro_incidencia', 'mensaje', 'TIPO REPORTE','objetivo']]
