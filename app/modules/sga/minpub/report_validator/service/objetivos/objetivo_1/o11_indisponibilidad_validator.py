@@ -55,7 +55,7 @@ def build_failure_messages_indisponibilidad(df: pd.DataFrame) -> pd.DataFrame:
     )
 
     df['mensaje']  = mensajes
-    df['objetivo'] = 1.11
+    df['objetivo'] = "1.11"
 
     return df[df['fail_count'] > 0][['nro_incidencia', 'mensaje', 'TIPO REPORTE','objetivo']]
 

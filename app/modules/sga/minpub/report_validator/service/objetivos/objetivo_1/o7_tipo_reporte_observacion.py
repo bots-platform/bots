@@ -34,12 +34,12 @@ def validation_tipo_reporte_observacion(merged_df:pd.DataFrame)-> pd.DataFrame:
     df['observacion_pattern_componente_tipo_reporte'] = ""
 
     componente_patterns = {
-        ('RECLAMO', 'COMPONENTE II') : "Se generó ticket para la revisión del servicio de datos de la sede {} ",
-        ('RECLAMO', 'COMPONENTE III') : "Se generó ticket para la revisión del servicio de internet de la sede {} ",
-        ('RECLAMO', 'COMPONENTE IV') : "Se generó ticket para la revisión del servicio de telefonía de la sede {} ",
-        ('PROACTIVO', 'COMPONENTE II') : "Se generó código de atención (interno) para la revisión del servicio de datos de la sede {} ",
-        ('PROACTIVO', 'COMPONENTE III') : "Se generó código de atención (interno) para la revisión del servicio de internet de la sede {} ",
-        ('PROACTIVO', 'COMPONENTE IV') : "Se generó código de atención (interno) para la revisión del servicio de telefonía de la sede {} "
+        ('RECLAMO', 'COMPONENTE II') : "Se generó ticket para la revisión del servicio de datos de la sede {}",
+        ('RECLAMO', 'COMPONENTE III') : "Se generó ticket para la revisión del servicio de internet de la sede {}",
+        ('RECLAMO', 'COMPONENTE IV') : "Se generó ticket para la revisión del servicio de telefonía de la sede {}",
+        ('PROACTIVO', 'COMPONENTE II') : "Se generó código de atención (interno) para la revisión del servicio de datos de la sede {}",
+        ('PROACTIVO', 'COMPONENTE III') : "Se generó código de atención (interno) para la revisión del servicio de internet de la sede {}",
+        ('PROACTIVO', 'COMPONENTE IV') : "Se generó código de atención (interno) para la revisión del servicio de telefonía de la sede {}"
     }
 
     for (tipo_reporte, tipo_componente), pattern_tempalte in componente_patterns.items():
@@ -159,7 +159,7 @@ def build_failure_messages_reporte_observacion(df: pd.DataFrame) -> pd.DataFrame
     )
 
     df['mensaje'] = mensaje
-    df['objetivo'] = 1.7
+    df['objetivo'] = "1.7"
 
     df_failures = df[df['fail_count'] > 0 ]
     return df_failures[['nro_incidencia', 'mensaje', 'TIPO REPORTE','objetivo']]

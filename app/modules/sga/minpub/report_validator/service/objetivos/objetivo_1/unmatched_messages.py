@@ -32,7 +32,7 @@ def build_message_merge_sga_335_corte_excel_unmatch( df: pd.DataFrame) -> pd.Dat
     )
 
     df['mensaje'] = mensaje
-    df['objetivo'] = 1.1
+    df['objetivo'] = "1.0"
 
     return df[['nro_incidencia', 'mensaje', 'TIPO REPORTE','objetivo']]
 
