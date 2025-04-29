@@ -24,10 +24,10 @@ def validation_objetivo_3(
     
     Returns a DataFrame with the failure details for Objective 1.
     """
-    df_validate_anexos_indisponibilidad_word_datos = validate_anexos_indisponibilidad_word(df_matched_word_datos_anexo_indisponibilidad_df_merged_sga, componente_word = 'COMPONENTE II')
+    df_validate_anexos_indisponibilidad_word_datos = validate_anexos_indisponibilidad_word(df_matched_word_datos_anexo_indisponibilidad_df_merged_sga)
     df_failures_message_validate_anexos_indisponibilidad_word_datos = build_failure_messages_validate_anexos_indisponibilidad_word(df_validate_anexos_indisponibilidad_word_datos)
 
-    df_validate_anexos_indisponibilidad_word_telefonia = validate_anexos_indisponibilidad_word(df_matched_word_telefonia_anexo_indisponibilidad_df_merged_sga, componente_word = 'COMPONENTE IV')
+    df_validate_anexos_indisponibilidad_word_telefonia = validate_anexos_indisponibilidad_word(df_matched_word_telefonia_anexo_indisponibilidad_df_merged_sga)
     df_failures_message_validate_anexos_indisponibilidad_word_telefonia = build_failure_messages_validate_anexos_indisponibilidad_word(df_validate_anexos_indisponibilidad_word_telefonia)    
 
     df_failures = pd.concat(
