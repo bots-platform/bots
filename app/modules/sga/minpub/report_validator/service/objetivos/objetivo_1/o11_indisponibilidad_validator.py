@@ -85,9 +85,9 @@ def build_failure_messages_indisponibilidad(df: pd.DataFrame) -> pd.DataFrame:
 
     header_err = np.where(
         ~df['indisponibilidad_header_match'],
-        "Encabezado inválido EXCEL-CORTE: "
+        "Encabezado inválido indisponibilidad EXCEL-CORTE: "
         + df['indisponibilidad_header'].astype(str)
-        + " ↔ "
+        + " es diferente a formato Encabezado Indisponibilidad: "
         + df['clock_stops_paragraph_header'].astype(str)
         + ". ",
         ""
@@ -95,9 +95,9 @@ def build_failure_messages_indisponibilidad(df: pd.DataFrame) -> pd.DataFrame:
 
     periodos_err = np.where(
         ~df['indisponibilidad_periodos_match'],
-        "Periodo(s) inválido(s): "
+        "Periodo(s) inválido(s) CORTE -EXCEL : "
         + df['indisponibilidad_periodos'].astype(str)
-        + " ↔ "
+        + " ES DIFERENTE A SGA PAUSA CLIENTE SIN OVERLAP: "
         + df['clock_stops_paragraph_periodos'].astype(str)
         + ". ",
         ""
@@ -107,7 +107,7 @@ def build_failure_messages_indisponibilidad(df: pd.DataFrame) -> pd.DataFrame:
         ~df['indisponibilidad_total_match'],
         "Total inválido EXCEL-CORTE: "
         + df['indisponibilidad_total'].astype(str)
-        + " ↔ "
+        + " ES DIFERENTE SGA PAUSA CLIENTE SIN OVERLAP: "
         + df['clock_stops_paragraph_footer'].astype(str)
         + ". ",
         ""
