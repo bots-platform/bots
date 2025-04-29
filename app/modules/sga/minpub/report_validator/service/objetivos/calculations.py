@@ -266,12 +266,13 @@ def extract_date_range_body(text: str):
     lines = [ln.strip()  for ln in text.splitlines() if ln.strip()]
     def is_meta_line(ln):
         low = ln.lower()
-        return low.startswith("fecha y hora inicio") or low.startswith("fecha y hora fin")
+        return low.startswith("fecha y hora inicio") or low.startswith("fecha y hora de inicio") or low.startswith("fecha y hora fin")
     
     while len(lines) and is_meta_line(lines[-1]):
         lines.pop()
     body = "\n".join(lines)
     pattern = r"(\d{2}/\d{2}/\d{4})\s*(?:a las\s*)?(\d{2}:\d{2})"
+
     matches = re.findall(pattern, body, flags=re.IGNORECASE)
     if not matches:
         return (None, None)
@@ -279,7 +280,6 @@ def extract_date_range_body(text: str):
     first_date, first_time = matches[0]
     last_date, last_time = matches[-1]
     return (f"{first_date} {first_time}", f"{last_date} {last_time}")
-
 
 
 
@@ -492,20 +492,20 @@ def extract_tecnico_reports_without_hours_last_dates(path_docx: str) -> pd.DataF
     return df
 
 
-
 @log_exceptions
 def extract_indisponibilidad_anexos(path_docx: str) -> pd.DataFrame:
     """
     Extrae de un .docx que contiene varios ANEXO X – TICKET Y:
       - la línea de introducción ("Se tuvo indisponibilidad...")
-      - la(s) línea(s) que contienen fechas y horas ("DD/MM/YYYY hh:mm hasta el día DD/MM/YYYY hh:mm")
+      - las líneas de periodos ("DD/MM/YYYY hh:mm hasta el día DD/MM/YYYY hh:mm")
       - la línea del total de horas (“(Total de horas sin acceso… HH:MM horas)”)
     Retorna un DataFrame con columnas:
-      ['ticket', 'indisponibilidad_text', 'periodo', 'total']
+      ['ticket', 'indisponibilidad_header', 'indisponibilidad_periodos', 'indisponibilidad_total']
     """
 
     doc = Document(path_docx)
- 
+
+
     raw = [p.text for p in doc.paragraphs]
     paragraphs_list = []
     for para in raw:
@@ -514,54 +514,72 @@ def extract_indisponibilidad_anexos(path_docx: str) -> pd.DataFrame:
             if text:
                 paragraphs_list.append(text)
 
-
-    anexo_pattern     = re.compile(r"ANEXO\s+\d+\s+–\s+TICKET\s+(\d+)", re.IGNORECASE)
-    linea0_pat_pattern    = re.compile(r"^Se tuvo indisponibilidad por parte del cliente.*", re.IGNORECASE)
-    periodo_pattern   = re.compile(
+    anexo_pattern_ticket = re.compile(r"ANEXO\s+\d+\s+–\s+TICKET\s+(\d+)", re.IGNORECASE)
+    linea0_pat_pattern   = re.compile(r"^Se tuvo indisponibilidad por parte del cliente.*", re.IGNORECASE)
+    periodo_pattern      = re.compile(
         r"^\d{1,2}/\d{1,2}/\d{4}\s+\d{1,2}:\d{2}.*hasta el día\s+\d{1,2}/\d{1,2}/\d{4}\s+\d{1,2}:\d{2}.*$",
         re.IGNORECASE
     )
-    total_hour_pattern     = re.compile(r"^\(Total de horas sin acceso a la sede:\s*\d{1,3}:\d{2}\s*horas\)", re.IGNORECASE)
+    total_hour_pattern   = re.compile(r"^\(Total de horas sin acceso a la sede:\s*\d{1,3}:\d{2}\s*horas\)", re.IGNORECASE)
 
     records: List[Dict] = []
 
     for idx, text in enumerate(paragraphs_list):
-        match = anexo_pattern.search(text)
-        if not match:
+        m_ticket = anexo_pattern_ticket.search(text)
+        if not m_ticket:
             continue
+        ticket = m_ticket.group(1)
 
-        ticket = match.group(1)
-        linea0 = ""
-        periodo = ""
-        total = ""
+        linea0  = ""
+        periodos: List[str] = []
+        total   = ""
 
-        for line in paragraphs_list[idx+1:]:
 
-            if anexo_pattern.search(line):
+        for line in paragraphs_list[idx + 1:]:
+            if anexo_pattern_ticket.search(line):
                 break
-            
+
             if linea0_pat_pattern.match(line):
                 linea0 = line
-            
-            m = periodo_pattern.search(line)
-            if m:
-                periodo = m.group(0)
-            
-            m2 = total_hour_pattern.search(line)
-            if m2:
-                total = m2.group(0)
-                break
 
+            if periodo_pattern.match(line):
+                periodos.append(line)
+
+            if total_hour_pattern.search(line):
+                total = line
+                break
 
         records.append({
             "ticket": ticket,
             "indisponibilidad_header": linea0,
-            "indisponibilidad_periodos": periodo,
+            "indisponibilidad_periodos": "\n".join(periodos),
             "indisponibilidad_total": total
         })
 
-
     return pd.DataFrame.from_records(records)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
