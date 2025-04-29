@@ -13,7 +13,7 @@ from app.modules.sga.minpub.report_validator.service.objetivos.decorators import
 @log_exceptions
 def validate_indisponibilidad(df_merged: pd.DataFrame) -> pd.DataFrame:
     """
-    Builds an 'expected_indisponibilidad' text from clock_stops_paragraph (merging overlaps)
+     clock_stops_paragraph (merging overlaps)
     and compares it to the user‑entered INDISPONIBILIDAD column.
     Adds columns:
       - expected_indisponibilidad (str)
@@ -23,10 +23,9 @@ def validate_indisponibilidad(df_merged: pd.DataFrame) -> pd.DataFrame:
     """
     df = df_merged.copy()
     
-    df['expected_indisponibilidad'] = df['clock_stops_paragraph']
+
     df['indisponibilidad_ok'] = (
-        df['INDISPONIBILIDAD'].astype(str).str.strip()
-        == df['expected_indisponibilidad']
+        df['INDISPONIBILIDAD'] == df['clock_stops_paragraph']
     )
 
     df['Validation_OK'] = df['indisponibilidad_ok']
@@ -46,17 +45,17 @@ def build_failure_messages_indisponibilidad(df: pd.DataFrame) -> pd.DataFrame:
     mensajes = np.where(
         df['Validation_OK'],
         "Validación exitosa: INDISPONIBILIDAD coincide con las paradas de reloj",
-        
-        "INDISPONIBILIDAD inválida:\n"
-        + "✘ Ingresado:\n"
-        + df['INDISPONIBILIDAD'].astype(str)
-        + "\n\n✔ Esperado:\n"
-        + df['expected_indisponibilidad']
+        (
+         np.where(~df['indisponibilidad_ok'],
+            "INDISPONIBILIDAD invalida EXCEL-CORTE: " + df['INDISPONIBILIDAD'].astype(str) + 
+            " es diferente a INDISPONIBILIDAD sin overlaps SGA  : " + df['clock_stops_paragraph'].astype(str) + ". ", "")
+        )
     )
 
     df['mensaje']  = mensajes
     df['objetivo'] = "1.11"
 
-    return df[df['fail_count'] > 0][['nro_incidencia', 'mensaje', 'TIPO REPORTE','objetivo']]
+    df_failures = df[df['fail_count'] > 0]
+    return df_failures[['nro_incidencia', 'mensaje', 'TIPO REPORTE','objetivo']]
 
 
