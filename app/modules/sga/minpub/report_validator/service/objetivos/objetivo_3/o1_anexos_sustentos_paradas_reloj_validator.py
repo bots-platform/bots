@@ -9,7 +9,7 @@ from app.modules.sga.minpub.report_validator.service.objetivos.decorators import
 
 
 @log_exceptions
-def validate_anexos_indisponibilidad_word( merged_df: pd.DataFrame, componente_word: str) -> pd.DataFrame:
+def validate_anexos_indisponibilidad_word( merged_df: pd.DataFrame) -> pd.DataFrame:
     """
     Validate anexos indisponibilidad 
     Retun a Dataframe  with new Boolean
