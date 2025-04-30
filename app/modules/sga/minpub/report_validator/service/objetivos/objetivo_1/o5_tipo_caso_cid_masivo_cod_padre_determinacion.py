@@ -58,16 +58,16 @@ def build_failure_messages_tipo_caso_cid_masivo_codincidencia_padre_determinacio
         "Determinacion de la causa coincide  despues de remover 'COMPONENTE ' prefix",
          (
             np.where(~df['causa_match'],
-                     " No coincide Determinacion de la causa Excel-Corte: (" +
+                     " \n\n No coincide Determinacion de la causa Excel-Corte: (" +
                        df['causa_excel_clean'].astype(str)+") con SGA: ("+ df['causa_sga335_clean']+ ")."  ,  "")+
             np.where(~df['tipo_caso_match'],
-                     "No coincide Tipo de Caso de CORTE-EXCEL: (" + df['TIPO CASO'].astype(str) +") con SGA: (" + 
+                     "\n\n No coincide Tipo de Caso de CORTE-EXCEL: (" + df['TIPO CASO'].astype(str) +") con SGA: (" + 
                      df['tipo_caso'].astype(str)+ "). ", "")+
             np.where(~df['cid_match'],
-                     "No coincide cid  de CORTE-EXCEL : ("+ df['CID'].astype(str) +") con SGA:(" + df['cid'].astype(str) +
+                     "\n\n No coincide cid  de CORTE-EXCEL : ("+ df['CID'].astype(str) +") con SGA:(" + df['cid'].astype(str) +
                       "). ", "")+
            np.where(~df['cod_incidencia_padre_match'],
-                     "No coincide nro incidencia padre EXCEL-CORTE: (" + df['CODINCIDENCEPADRE'].astype(str) +
+                     "\n\n  No coincide nro incidencia padre EXCEL-CORTE: (" + df['CODINCIDENCEPADRE'].astype(str) +
                        ") con SGA: (" +df['codincidencepadre'].astype(str)+ "). ", "")
         )
     )

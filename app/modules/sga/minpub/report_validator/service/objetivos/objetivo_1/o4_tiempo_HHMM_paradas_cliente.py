@@ -111,13 +111,13 @@ def buid_failure_messages_tiempo_HHMM_paradas_cliente(df: pd.DataFrame) -> pd.Da
         "Validation de TIEMPO (HH:MM) exitosa",
         (
             np.where(~df['non_negative_335'],
-                     "INTERRUPCION_FIN - INTERRUPCION_INICIO es negativo. ",  "")+
+                     "\n\n  INTERRUPCION_FIN - INTERRUPCION_INICIO es negativo. ",  "")+
             np.where(~df['non_negative_paradas'],
-                     "Suma de paradas de reloj es negativa. ", "")+
+                     "\n\n  Suma de paradas de reloj es negativa. ", "")+
             np.where(~df['non_negative_effective'],
                      "Tiempo efectivo (INTERRUPCION - paradas) es negativo.", "")+
            np.where(~df['match_corte'],
-                     "EL TIEMPO (HH:MM): " + df['TIEMPO (HH:MM)_trimed'].astype(str) +
+                     "\n\n EL TIEMPO (HH:MM): " + df['TIEMPO (HH:MM)_trimed'].astype(str) +
                        " de CORTE EXCEL  no coincide con el tiempo efectivo calculado SGA: " +df['effective_time_335_to_HHMM_str'].astype(str)  , "")
         )
     )

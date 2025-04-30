@@ -108,17 +108,17 @@ def build_failure_messages_diff_fin_inicio_HHMM(df: pd.DataFrame) -> pd.DataFram
         "FIN-INICIO validation successful",
         (
             np.where(~df['non_negative_335'],
-                     "Diferencia en fechas interrupcion(fin - inicio) en SGA - 335  es negativo. ", "") +
+                     "\n\n Diferencia en fechas interrupcion(fin - inicio) en SGA - 335  es negativo. ", "") +
             np.where(~df['non_negative_corte'],
-                     "Diferencia Fecha Hora Fin - Fecha Hora Inicio en CORTE-EXCEL  es negativo. ", "") +
+                     "\n\n Diferencia Fecha Hora Fin - Fecha Hora Inicio en CORTE-EXCEL  es negativo. ", "") +
             np.where(~df['non_negative_fin_inicio_column_corte_hhmm_to_minutes'],
-                     "FIN-INICIO (HH:MM) is negativo. ", "")+
+                     "\n\n FIN-INICIO (HH:MM) is negativo. ", "")+
             np.where(~df['match_335_corte'],
-                    "Diferencia en Fecha Incio y Fin en SGA 335: " + df["diff_335_sec_hhmm"].astype(str)+
+                    "\n\n Diferencia en Fecha Incio y Fin en SGA 335: " + df["diff_335_sec_hhmm"].astype(str)+
                       " no coincide con diferencia en Fecha Inicio y Fin en CORTE-EXCEL (FIN-INICIO (HH:MM)): " +
                         df["diff_corte_sec_hhmm"].astype(str)+ " . ", "")+
              np.where(~df['match_corte_fin_inicio_hhmm_column'],
-                    " Diferencia en Fecha Inicio y Fin en CORTE-EXCEL: " +
+                    " \n\n Diferencia en Fecha Inicio y Fin en CORTE-EXCEL: " +
                       df["diff_corte_sec_hhmm"].astype(str)+
                     " no coincide con column FIN-INICIO (HH:MM):  " +
                         df['FIN-INICIO (HH:MM)_trimed'].astype(str)+ " . ", "")
