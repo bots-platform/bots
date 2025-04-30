@@ -133,13 +133,13 @@ def build_failure_messages_reporte_observacion(df: pd.DataFrame) -> pd.DataFrame
                     "") +
 
             np.where((df['TIPO REPORTE'] == 'RECLAMO') & (~df['reclamo_medidas_correctivas_valid']),
-                     "EN EXCEL - CORTE RECLAMO: MEDIDAS CORRECTIVAS : ( "+ df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS'] +
-                     " ) no debe iniciar con 'A través de los Sistemas de Monitoreo de Claro, de manera proactiva se identificó'.",
+                     "No coincide  EXCEL - CORTE RECLAMO: MEDIDAS CORRECTIVAS : ( "+ df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS'] +
+                     "\n ) no debe iniciar con 'A través de los Sistemas de Monitoreo de Claro, de manera proactiva se identificó'.",
                     "") +
 
             np.where((df['TIPO REPORTE'] == 'RECLAMO') & (~df['reclamo_observacion_valid']),
                      "EN EXCEL - CORTE RECLAMO: OBSERVACION: debe iniciar con ( " + df['observacion_pattern_componente_tipo_reporte'].astype(str) + 
-                     " ) pero se obtuvo:  ( " + df['OBSERVACIÓN'].astype(str)+ " )." ,
+                     ") pero se obtuvo:  ( " + df['OBSERVACIÓN'].astype(str)+ ")." ,
                     "") +
 
             np.where((df['TIPO REPORTE'] == 'PROACTIVO') & (~df['proactivo_tipo_caso_valid']),
