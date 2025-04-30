@@ -52,7 +52,7 @@ def build_failure_messages_responsable(df:pd.DataFrame) -> pd.DataFrame:
     
     messages = np.where(
         df['Validation_OK'],
-        "Validation exitosa : RESPONSABLE coincide  con la primera palabra de tipificacion_tipo",
+        "\n\n Validation exitosa : RESPONSABLE coincide  con la primera palabra de tipificacion_tipo",
         (
             "RESPONSABILIDAD: " 
             + df["RESPONSABILIDAD"].astype(str)

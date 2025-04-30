@@ -124,35 +124,35 @@ def build_failure_messages_reporte_observacion(df: pd.DataFrame) -> pd.DataFrame
         "Validation de TIPO REPORTE y OBSERVACION exitosa",
         (
             np.where((df['TIPO REPORTE'] == 'RECLAMO') & (~df['reclamo_tipo_caso_valid']),
-                     "EN EXCEL - CORTE RECLAMO: tipo_caso:  ( " + df['tipo_caso'].astype(str) + 
+                     "\n\n EN EXCEL - CORTE RECLAMO: tipo_caso:  ( " + df['tipo_caso'].astype(str) + 
                      " ) no está en lista permitida (SIN SERVICIO , ENLACE LENTO, SIN SERVICIO-NO DA TONO , OTROS CALIDAD).",
                     "") +
 
             np.where((df['TIPO REPORTE'] == 'RECLAMO') & (~df['reclamo_no_monitoreo']),
-                     "EN EXCEL - CORTE RECLAMO: tipo_caso: ( " + df['tipo_caso'].astype(str) + " ) no debe terminar en 'MONITOREO'.",
+                     "\n\n EN EXCEL - CORTE RECLAMO: tipo_caso: ( " + df['tipo_caso'].astype(str) + " ) no debe terminar en 'MONITOREO'.",
                     "") +
 
             np.where((df['TIPO REPORTE'] == 'RECLAMO') & (~df['reclamo_medidas_correctivas_valid']),
-                     "No coincide  EXCEL - CORTE RECLAMO: MEDIDAS CORRECTIVAS : ( "+ df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS'] +
-                     "\n ) no debe iniciar con 'A través de los Sistemas de Monitoreo de Claro, de manera proactiva se identificó'.",
+                     "\n\n No coincide  EXCEL - CORTE RECLAMO: MEDIDAS CORRECTIVAS : ( "+ df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS'] +
+                     "\n\n ) no debe iniciar con 'A través de los Sistemas de Monitoreo de Claro, de manera proactiva se identificó'.",
                     "") +
 
             np.where((df['TIPO REPORTE'] == 'RECLAMO') & (~df['reclamo_observacion_valid']),
-                     "EN EXCEL - CORTE RECLAMO: OBSERVACION: debe iniciar con ( " + df['observacion_pattern_componente_tipo_reporte'].astype(str) + 
+                     "\n\n EN EXCEL - CORTE RECLAMO: OBSERVACION: debe iniciar con ( " + df['observacion_pattern_componente_tipo_reporte'].astype(str) + 
                      ") pero se obtuvo:  ( " + df['OBSERVACIÓN'].astype(str)+ ")." ,
                     "") +
 
             np.where((df['TIPO REPORTE'] == 'PROACTIVO') & (~df['proactivo_tipo_caso_valid']),
-                     "EN EXCEL - CORTE PROACTIVO: tipo_caso : ( " + df['tipo_caso'].astype(str) + " ) debe terminar en 'MONITOREO'.",
+                     "\n\n EN EXCEL - CORTE PROACTIVO: tipo_caso : ( " + df['tipo_caso'].astype(str) + " ) debe terminar en 'MONITOREO'.",
                     "") +
 
             np.where((df['TIPO REPORTE'] == 'PROACTIVO') & (~df['proactivo_medidas_correctivas_valid']),
-                     "EN EXCEL - CORTE PROACTIVO: MEDIDAS CORRECTIVAS: ( " + df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS']+ 
-                     " ) debe iniciar con 'A través de los Sistemas de Monitoreo de Claro, de manera proactiva se identificó'.",
+                     "\n\n EN EXCEL - CORTE PROACTIVO: MEDIDAS CORRECTIVAS: ( " + df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS']+ 
+                     " )\n\n debe iniciar con 'A través de los Sistemas de Monitoreo de Claro, de manera proactiva se identificó'.",
                     "") +
 
             np.where((df['TIPO REPORTE'] == 'PROACTIVO') & (~df['proactivo_observacion_valid']),
-                    "EN EXCEL - CORTE PROACTIVO: OBSERVACION  debe ser: ( "  + df['observacion_pattern_componente_tipo_reporte'].astype(str) +
+                    "\n\n EN EXCEL - CORTE PROACTIVO: OBSERVACION  debe ser: ( "  + df['observacion_pattern_componente_tipo_reporte'].astype(str) +
                       " )  pero se obtuvo ( "  +  df['OBSERVACIÓN'].astype(str)+ " ). " ,
                     "") 
         )

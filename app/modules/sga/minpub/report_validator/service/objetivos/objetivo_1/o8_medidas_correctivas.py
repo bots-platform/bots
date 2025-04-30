@@ -113,23 +113,23 @@ def build_failure_messages_medidas_correctivas(df:pd.DataFrame) -> pd.DataFrame:
        "Validación exitosa: MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS",
        (
                      np.where(~df['mc_first_ok'],
-                    " La fecha/hora de inicio del parrafo en MEDIDAS CORRECTIVAS:  ( " + df['first_dt_mc'].astype(str) +
+                    " \n\n La fecha/hora de inicio del parrafo en MEDIDAS CORRECTIVAS:  ( " + df['first_dt_mc'].astype(str) +
                       " ) no coincide con la columna FECHA Y HORA INICIO DE EXCEL: " + df['FECHA_Y_HORA_INICIO_fmt'].astype(str) + ". ",
                     "") +
 
                       np.where(~df['mc_last_ok'],
-                    " La fecha/hora de fin del parrafo en MEDIDAS CORRECTIVAS - excel:( " + df['last_dt_mc'].astype(str) +
+                    "\n\n  La fecha/hora de fin del parrafo en MEDIDAS CORRECTIVAS - excel:( " + df['last_dt_mc'].astype(str) +
                       " ) no coincide con la columna FECHA Y HORA FIN DE EXCEL: " +
                       df['FECHA_Y_HORA_FIN_fmt'].astype(str)+ ". ", 
                     "") + 
 
                       np.where(~df['it_first_ok'],
-                    " La fecha de inicio del parrafo en it_medidas_tomadas:  ( " + df['first_dt_it'].astype(str) +
+                    "\n\n  La fecha de inicio del parrafo en it_medidas_tomadas:  ( " + df['first_dt_it'].astype(str) +
                       " ) no coincide con la fecha inicio de la penultima fila: " + df['start_dt_last_it'].astype(str) + ". ",
                     "") +
 
                      np.where(~df['it_last_ok'],
-                    " La fecha de fin del parrafo en it_medidas_tomadas:( " + df['last_dt_it'].astype(str) +
+                    "\n\n  La fecha de fin del parrafo en it_medidas_tomadas:( " + df['last_dt_it'].astype(str) +
                       " ) no coincide con la fecha fin de la ultima fila: " +
                       df['end_dt_last_it'].astype(str) + ". ", 
                     "") + 
@@ -139,7 +139,7 @@ def build_failure_messages_medidas_correctivas(df:pd.DataFrame) -> pd.DataFrame:
                     # "")  +
 
                     np.where(~df['no_repeticion_ok'],
-                    " Hay palabras repetidas inmediatamente/a través en el parrafo en MEDIDAS CORRECTIVAS:",
+                    "\n\n  Hay palabras repetidas inmediatamente/a través en el parrafo en MEDIDAS CORRECTIVAS:",
                     "") 
        )
     )

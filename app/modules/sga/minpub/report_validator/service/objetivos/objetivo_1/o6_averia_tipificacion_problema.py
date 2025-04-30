@@ -38,7 +38,7 @@ def build_failure_messages_averia_tipificacion_tipo(df:pd.DataFrame) -> pd.DataF
     failed_rows = df[~df['Validation_OK']].copy()
 
     if not failed_rows.empty:
-        failed_rows['mensaje'] = ("No coincide AVERÍA en EXCEL-CORTE:  ("+df['AVERÍA'].astype(str)+ 
+        failed_rows['mensaje'] = ("\n\n No coincide AVERÍA en EXCEL-CORTE:  ("+df['AVERÍA'].astype(str)+ 
         ") con tipificacion problema en SGA 335: (" + df["tipificacion_problema"].astype(str) +
         "). ") 
         failed_rows['objetivo'] = "1.6"

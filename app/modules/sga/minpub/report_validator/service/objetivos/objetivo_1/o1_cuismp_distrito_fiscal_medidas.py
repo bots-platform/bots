@@ -60,13 +60,13 @@ def build_failure_messages_cuismp_distrito_fiscal_medidas(df: pd.DataFrame) -> p
         "Validation successful",
         (
             np.where(~df['CUISMP_match'], 
-                     "CUISMP en Sharepoint CID-CUISMP: " + df['CUISMP_sharepoint_cid_cuismp'].astype(str) +
+                     "\n\n CUISMP en Sharepoint CID-CUISMP: " + df['CUISMP_sharepoint_cid_cuismp'].astype(str) +
                      " es diferente a EXCEL -CORTE (CUISMP) " + df['CUISMP_sga_dinamico_335_excel_matched'].astype(str) + ". ", "") +
             np.where(~df['DF_match'], 
-                     " Distrito Fiscal en Sharepoint CID-CUISMP : " + df['Distrito Fiscal'].astype(str) +
+                     "\n\n Distrito Fiscal en Sharepoint CID-CUISMP : " + df['Distrito Fiscal'].astype(str) +
                      " es diferente a EXCEL -CORTE (DF) " + df['DF'].astype(str) + ". ", "") +
             np.where(~df['CUISMP_in_medias_tomadas'], 
-                     " CUISMP "+ df['CUISMP_sga_dinamico_335_excel_matched'].astype(str) + " no encontrado in MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS.", "")
+                     "\n\n CUISMP "+ df['CUISMP_sga_dinamico_335_excel_matched'].astype(str) + " no encontrado in MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS.", "")
         )
     )
     df['mensaje'] = mensaje

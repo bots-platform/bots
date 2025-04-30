@@ -59,16 +59,16 @@ def build_failure_messages_validate_anexos_indisponibilidad_word(df: pd.DataFram
         
         (
             np.where(~df['indisponibilidad_header_match'],
-                    " No coincide texto inicio de word indisponibilidad en anexos : " + df['indisponibilidad_header'].astype(str) +
+                    "\n\n No coincide texto inicio de word indisponibilidad en anexos : " + df['indisponibilidad_header'].astype(str) +
                      " es diferente a sga :  " + df['clock_stops_paragraph_header'].astype(str) + ". ", "") +
 
              np.where(~df['indisponibilidad_periodos_match'],
-                    " No coincide paradas de reloj de word indisponibilidad en anexos : " + df['indisponibilidad_periodos'].astype(str) +
-                     " es diferente a sga  :  " + df['clock_stops_paragraph_periodos'].astype(str) + ". ", "") +
+                    "\n\n No coincide paradas de reloj de word indisponibilidad en anexos : \n\n " + df['indisponibilidad_periodos'].astype(str) +
+                     " es diferente a sga  :  \n\n " + df['clock_stops_paragraph_periodos'].astype(str) + ". ", "") +
 
               np.where(~df['indisponibilidad_total_match'],
-            " No coincide total horas sin acceso a la sede de word indisponibilidad en anexos : " + df['indisponibilidad_total'].astype(str) +
-             " es diferente a sga  :  " + df['clock_stops_paragraph_footer'].astype(str) + ". ", "") 
+            "\n\n No coincide total horas sin acceso a la sede de word indisponibilidad en anexos : \n\n " + df['indisponibilidad_total'].astype(str) +
+             " es diferente a sga  :  \n\n " + df['clock_stops_paragraph_footer'].astype(str) + ". ", "") 
 
         )
 
