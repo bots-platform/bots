@@ -218,68 +218,102 @@ def has_repetition(text: str) -> bool:
    
 
 
+
+
+import re
+from typing import Tuple, Optional
+
 @log_exceptions
-def extract_date_range_last(text: str):
+def extract_date_range_last(text: str) -> Tuple[Optional[str], Optional[str]]:
     """
     Devuelve (fecha_hora_inicio, fecha_hora_fin) extraídas
-    de las dos últimas líneas no vacías que empiecen con
-    'Fecha y hora inicio:' y 'Fecha y hora fin:'.
+    de las dos últimas líneas que contengan un
+    'DD/MM/YYYY hh:mm' (con o sin 'a las'/'horas').
     Si falla el parseo, retorna (None, None).
     """
     if not isinstance(text, str):
         return (None, None)
-    # limpia retornos de carro literales
-    text = text.replace('\r', ' ')
-    lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+
+    # Normalizar CR y dobles barras
+    normalized = text.replace('\r', ' ')
+
+    # 1) Líneas no vacías
+    lines = [ln.strip() for ln in normalized.splitlines() if ln.strip()]
     if len(lines) < 2:
         return (None, None)
-    start_line, end_line = lines[-2], lines[-1]
-    # fecha obligatorio, “a las” opcional, hora obligatorio, “horas” opcional
-    pattern = (
-        r'^(?:Fecha y Hora|Hora)(?:\s+de)?\s+'    # “Fecha y Hora” o “Hora”, con “ de” opcional
-        r'(Inicio|Fin):\s*'                      # “Inicio:” o “Fin:”
-        r'(\d{1,2}/\d{1,2}/\d{4})'                # grupo(2) = fecha
-        r'\s*(?:a las\s*)?'                      # “a las” opcional
-        r'(\d{1,2}:\d{2})'                       # grupo(3) = hora
-        r'(?:\s+horas\.?)?'                      # “horas” opcional
+
+    # 2) Patrón único para fecha+hora
+    dt_rx = re.compile(
+        r'(\d{1,2}/\d{1,2}/\d{4})'    # fecha
+        r'\s*(?:a las\s*)?'           # opcional “a las”
+        r'(\d{1,2}:\d{2})'            # hora
+        r'(?:\s*horas\.?)?',          # opcional “horas”
+        re.IGNORECASE
     )
-    rx = re.compile(pattern, re.IGNORECASE)
-    def parse(line):
-        m = rx.match(line)
-        if not m:
-            return None
-        # m.group(1) es “Inicio” o “Fin”  
-        fecha, hora = m.group(2), m.group(3)
-        return f"{fecha} {hora}"
+
+
+
+    # 3) Filtrar sólo las líneas que casan con fecha+hora
+    date_lines = [ln for ln in lines if dt_rx.search(ln)]
+    if len(date_lines) < 2:
+        return (None, None)
+
+    # 4) Tomar las dos últimas
+    start_line, end_line = date_lines[-2], date_lines[-1]
+
+    # 5) Extraer grupos de fecha y hora
+    def parse(line: str) -> Optional[str]:
+        m = dt_rx.search(line)
+        return f"{m.group(1)} {m.group(2)}" if m else None
+
     inicio = parse(start_line)
     fin    = parse(end_line)
-    if inicio is None or fin is None:
-        return (None, None)
-    return (inicio, fin)
+    return (inicio, fin) if inicio and fin else (None, None)
 
+
+
+
+
+
+import re
+from typing import Tuple, Optional
 
 @log_exceptions
-def extract_date_range_body(text: str):
+def extract_date_range_body(text: str) -> Tuple[Optional[str], Optional[str]]:
     if not isinstance(text, str):
         return (None, None)
-    
-    lines = [ln.strip()  for ln in text.splitlines() if ln.strip()]
-    def is_meta_line(ln):
-        low = ln.lower()
-        return low.startswith("fecha y hora inicio") or low.startswith("fecha y hora de inicio") or low.startswith("fecha y hora fin")
-    
-    while len(lines) and is_meta_line(lines[-1]):
-        lines.pop()
-    body = "\n".join(lines)
-    pattern = r"(\d{2}/\d{2}/\d{4})\s*(?:a las\s*)?(\d{2}:\d{2})"
 
-    matches = re.findall(pattern, body, flags=re.IGNORECASE)
-    if not matches:
+  
+    lines = text.splitlines()
+    meta_pat = re.compile(r'(?i)^fecha y hora(?: de)? (?:inicio|fin)\s*:')
+   
+    while lines and (not lines[-1].strip() or meta_pat.match(lines[-1].strip())):
+        lines.pop()
+    clean_body = "\n".join(lines)
+
+   
+    narr_pat = re.compile(
+        r'el día\s*(\d{2}/\d{2}/\d{4})\s*a las\s*(\d{2}:\d{2})',
+        flags=re.IGNORECASE
+    )
+    matches = narr_pat.findall(clean_body)
+
+    if matches:
+        start_date, start_time = matches[0]
+        end_date,   end_time   = matches[-1]
+        return (f"{start_date} {start_time}", f"{end_date} {end_time}")
+
+   
+    generic_pat = re.compile(r'(\d{2}/\d{2}/\d{4})\s*(?:a las\s*)?(\d{2}:\d{2})',
+                             flags=re.IGNORECASE)
+    all_matches = generic_pat.findall(clean_body)
+    if not all_matches:
         return (None, None)
-    
-    first_date, first_time = matches[0]
-    last_date, last_time = matches[-1]
-    return (f"{first_date} {first_time}", f"{last_date} {last_time}")
+    fd, ft = all_matches[0]
+    ld, lt = all_matches[-1]
+    return (f"{fd} {ft}", f"{ld} {lt}")
+
+
 
 
 
