@@ -113,24 +113,24 @@ def build_failure_messages_medidas_correctivas(df:pd.DataFrame) -> pd.DataFrame:
        "Validación exitosa: MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS",
        (
                      np.where(~df['mc_first_ok'],
-                    " \n\n La fecha/hora de inicio del parrafo en MEDIDAS CORRECTIVAS:  ( " + df['first_dt_mc'].astype(str) +
-                      " ) no coincide con la columna FECHA Y HORA INICIO DE EXCEL: " + df['FECHA_Y_HORA_INICIO_fmt'].astype(str) + ". ",
+                    " \n\n La primera fecha/hora  del parrafo (CUERPO) en columna MEDIDAS CORRECTIVAS - EXCEL: \n\n  ( " + df['first_dt_mc'].astype(str) +
+                      " ) no coincide con la columna FECHA Y HORA INICIO DE EXCEL - CORTE : " + df['FECHA_Y_HORA_INICIO_fmt'].astype(str) + ". ",
                     "") +
 
                       np.where(~df['mc_last_ok'],
-                    "\n\n  La fecha/hora de fin del parrafo en MEDIDAS CORRECTIVAS - excel:( " + df['last_dt_mc'].astype(str) +
-                      " ) no coincide con la columna FECHA Y HORA FIN DE EXCEL: " +
+                    "\n\n  La última fecha/hora del parrafo (CUERPO) en columna MEDIDAS CORRECTIVAS - EXCEL: \n\n ( " + df['last_dt_mc'].astype(str) +
+                      " ) no coincide con la columna FECHA Y HORA FIN DE EXCEL - CORTE : " +
                       df['FECHA_Y_HORA_FIN_fmt'].astype(str)+ ". ", 
                     "") + 
 
                       np.where(~df['it_first_ok'],
-                    "\n\n  La fecha de inicio del parrafo en it_medidas_tomadas:  ( " + df['first_dt_it'].astype(str) +
-                      " ) no coincide con la fecha inicio de la penultima fila: " + df['start_dt_last_it'].astype(str) + ". ",
+                    "\n\n  La primera fecha/hora del parrafo en it_medidas_tomadas SGA:  \n\n ( " + df['first_dt_it'].astype(str) +
+                      " ) no coincide con la Fecha y hora inicio de la penultima fila it_medidas_tomadas SGA : " + df['start_dt_last_it'].astype(str) + ". ",
                     "") +
 
                      np.where(~df['it_last_ok'],
-                    "\n\n  La fecha de fin del parrafo en it_medidas_tomadas:( " + df['last_dt_it'].astype(str) +
-                      " ) no coincide con la fecha fin de la ultima fila: " +
+                    "\n\n  La última fecha/hora del parrafo (CUERPO) en it_medidas_tomadas SGA : \n\n ( " + df['last_dt_it'].astype(str) +
+                      " ) no coincide con la Fecha y hora fin de la última fila SGA it_medidas_tomadas SGA: " +
                       df['end_dt_last_it'].astype(str) + ". ", 
                     "") + 
 
