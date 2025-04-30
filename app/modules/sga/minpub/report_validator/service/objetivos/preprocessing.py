@@ -125,5 +125,6 @@ def preprocess_df_cid_cuismp_sharepoint(df_cid_cuismp_sharepoint):
     df_cid_cuismp_sharepoint["cid"] = df_cid_cuismp_sharepoint["cid"].astype(str).fillna("")
     df_cid_cuismp_sharepoint["Distrito Fiscal"] = df_cid_cuismp_sharepoint["Distrito Fiscal"].astype(str).str.strip().fillna('No disponible')
     df_cid_cuismp_sharepoint["CUISMP"] = df_cid_cuismp_sharepoint["CUISMP"].astype(str).str.strip().fillna('No disponible')
+    df_cid_cuismp_sharepoint["SEDE"] = df_cid_cuismp_sharepoint["SEDE"].astype(str).str.strip().fillna('No disponible')
     return df_cid_cuismp_sharepoint
 
