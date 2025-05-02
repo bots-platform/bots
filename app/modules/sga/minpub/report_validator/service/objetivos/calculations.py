@@ -4,6 +4,8 @@ import pandas as pd
 import re
 from datetime import datetime, timedelta
 from docx import Document
+from typing import Tuple, Optional
+
 # import language_tool_python
 # _tool_es = language_tool_python.LanguageTool('es')
 
@@ -15,6 +17,8 @@ from utils.logger_config import get_sga_logger
 logger = get_sga_logger()
 
 
+
+#PARADAS DE RELOJ
 @log_exceptions
 def resolve_clock_stop_overlaps(clock_stops: List[Dict]) -> List[Dict]:
     """
@@ -219,9 +223,7 @@ def has_repetition(text: str) -> bool:
 
 
 
-
-import re
-from typing import Tuple, Optional
+# EXTRACT RANGE DATOS FECHA INICIO Y FIN FROM INDISPONIBILIDAD EXCEL Y SGA 
 
 @log_exceptions
 def extract_date_range_last(text: str) -> Tuple[Optional[str], Optional[str]]:
@@ -272,12 +274,6 @@ def extract_date_range_last(text: str) -> Tuple[Optional[str], Optional[str]]:
 
 
 
-
-
-
-import re
-from typing import Tuple, Optional
-
 @log_exceptions
 def extract_date_range_body(text: str) -> Tuple[Optional[str], Optional[str]]:
     if not isinstance(text, str):
@@ -296,27 +292,46 @@ def extract_date_range_body(text: str) -> Tuple[Optional[str], Optional[str]]:
         r'el día\s*(\d{2}/\d{2}/\d{4})\s*a las\s*(\d{2}:\d{2})',
         flags=re.IGNORECASE
     )
-    matches = narr_pat.findall(clean_body)
+
+        # 2) patrón unificado: opcional “día”, opcional “a las”, y opcional “horas”
+    combined_pat = re.compile(
+        r'el(?:\s*d[ií]a)?\s*'           # “el” + opcional “ día”
+        r'(\d{2}/\d{2}/\d{4})\s*'        # fecha
+        r'(?:a las\s*)?'                 # opcional “a las”
+        r'(\d{1,2}:\d{2})'               # hora
+        r'(?:\s*horas?)?',               # opcional “ horas”
+        flags=re.IGNORECASE
+    )
+
+    matches = combined_pat.findall(clean_body)
+
+    if not matches:
+        return (None, None)
+
+    # helper para rellenar con ceros día, mes y hora
+    def _normalize(fecha: str, hora: str) -> str:
+        d, m, y = fecha.split('/')
+        h, mm = hora.split(':')
+        d = d.zfill(2)
+        m = m.zfill(2)
+        h = h.zfill(2)
+        mm = mm.zfill(2)
+        return f"{d}/{m}/{y} {h}:{mm}"
+
 
     if matches:
         start_date, start_time = matches[0]
         end_date,   end_time   = matches[-1]
-        return (f"{start_date} {start_time}", f"{end_date} {end_time}")
+        #return (f"{start_date} {start_time}", f"{end_date} {end_time}")
+        return (_normalize(start_date, start_time), _normalize(end_date, end_time))
 
    
-    generic_pat = re.compile(r'(\d{2}/\d{2}/\d{4})\s*(?:a las\s*)?(\d{2}:\d{2})',
-                             flags=re.IGNORECASE)
-    all_matches = generic_pat.findall(clean_body)
-    if not all_matches:
-        return (None, None)
-    fd, ft = all_matches[0]
-    ld, lt = all_matches[-1]
-    return (f"{fd} {ft}", f"{ld} {lt}")
 
 
 
 
 
+# WORD REPORTE TECNICO
 @log_exceptions
 def extract_tecnico_reports(path_docx: str) -> pd.DataFrame:
     """
@@ -407,6 +422,7 @@ def extract_tecnico_reports(path_docx: str) -> pd.DataFrame:
     df = pd.DataFrame.from_records(records)
 
     return df
+
 
 
 @log_exceptions
@@ -504,7 +520,8 @@ def extract_tecnico_reports_without_hours_last_dates(path_docx: str) -> pd.DataF
             for sub in block_lines[med_idx+1:]:
                 if not sub:
                    
-                    break
+                    #break
+                    continue
               
                 mi = rx.match(sub)
                 if mi:
@@ -526,6 +543,7 @@ def extract_tecnico_reports_without_hours_last_dates(path_docx: str) -> pd.DataF
     return df
 
 
+# WORD ANEXOS
 @log_exceptions
 def extract_indisponibilidad_anexos(path_docx: str) -> pd.DataFrame:
     """
@@ -554,7 +572,24 @@ def extract_indisponibilidad_anexos(path_docx: str) -> pd.DataFrame:
         r"^\d{1,2}/\d{1,2}/\d{4}\s+\d{1,2}:\d{2}.*hasta el día\s+\d{1,2}/\d{1,2}/\d{4}\s+\d{1,2}:\d{2}.*$",
         re.IGNORECASE
     )
-    total_hour_pattern   = re.compile(r"^\(Total de horas sin acceso a la sede:\s*\d{1,3}:\d{2}\s*horas\)", re.IGNORECASE)
+    total_hour_pattern   = re.compile(r"^\(Total de horas sin acceso a la sede:\s*(\d{1,3}:\d{2})\s*horas\)", re.IGNORECASE)
+
+     # padding helpers
+    _day_pad_start = re.compile(r"^(\d)(?=/)")
+    _day_pad_end   = re.compile(r"(?<=hasta el día\s)(\d)(?=/)", re.IGNORECASE)
+    _hour_pad      = re.compile(r"\b(\d)(?=:\d{2}(?::\d{2})?)")
+
+    def pad_periodo(line: str) -> str:
+        # pad day at start
+        line = _day_pad_start.sub(lambda m: m.group(1).zfill(2), line)
+        # pad day after "hasta el día"
+        line = _day_pad_end.sub(lambda m: m.group(1).zfill(2), line)
+        # pad any single-digit hour
+        return _hour_pad.sub(lambda m: m.group(1).zfill(2), line)
+    
+    def pad_total(tm: str) -> str:
+        # sometimes "7:00" → "07:00"
+        return _hour_pad.sub(lambda m: m.group(1).zfill(2), tm)
 
     records: List[Dict] = []
 
@@ -566,7 +601,8 @@ def extract_indisponibilidad_anexos(path_docx: str) -> pd.DataFrame:
 
         linea0  = ""
         periodos: List[str] = []
-        total   = ""
+        footer   = ""
+        total = ""
 
 
         for line in paragraphs_list[idx + 1:]:
@@ -576,17 +612,26 @@ def extract_indisponibilidad_anexos(path_docx: str) -> pd.DataFrame:
             if linea0_pat_pattern.match(line):
                 linea0 = line
 
+            # if periodo_pattern.match(line):
+            #     periodos.append(line) 
+
             if periodo_pattern.match(line):
-                periodos.append(line)
+                periodos.append(pad_periodo(line))
 
             if total_hour_pattern.search(line):
-                total = line
+                footer = line
+                
+            m_total =  total_hour_pattern.search(line)
+            if m_total:
+                total = m_total.group(1)
                 break
+                
 
         records.append({
             "ticket": ticket,
             "indisponibilidad_header": linea0,
             "indisponibilidad_periodos": "\n".join(periodos),
+            "indisponibilidad_footer": footer,
             "indisponibilidad_total": total
         })
 
