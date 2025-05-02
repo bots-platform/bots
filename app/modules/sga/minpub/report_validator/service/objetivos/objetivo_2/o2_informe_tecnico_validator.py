@@ -90,35 +90,35 @@ def build_failure_messages_validate_informe_tecnico_word(df: pd.DataFrame) -> pd
         (
 
             np.where(~df['Fecha_hora_inicio_match'],
-                     "\n\n  No coincide Fecha y hora inicio de WORD informe técnico : " + df['Fecha y hora inicio'].astype(str) +
-                     " es diferente a EXCEL-CORTE:  " + df['FECHA_Y_HORA_INICIO_fmt'].astype(str) + ". ", "") +
+                     "\n\n  No coincide Fecha y hora inicio de WORD informe técnico : \n\n" + df['Fecha y hora inicio'].astype(str) +
+                     "\n\n es diferente a EXCEL-CORTE:  \n\n" + df['FECHA_Y_HORA_INICIO_fmt'].astype(str) + "", "") +
 
             np.where(~df['fecha_hora_fin_match'],
-                     "\n\n  No coincide Fecha y hora fin de WORD informe técnico : " + df['Fecha y hora fin'].astype(str) +
-                     " es diferente a EXCEL-CORTE:  " + df['FECHA_Y_HORA_FIN_fmt'].astype(str) + ". ", "") +
+                     "\n\n  No coincide Fecha y hora fin de WORD en informe técnico : \n\n" + df['Fecha y hora fin'].astype(str) +
+                     "\n\n es diferente a EXCEL-CORTE:  \n\n" + df['FECHA_Y_HORA_FIN_fmt'].astype(str) + "", "") +
 
             np.where(~df['CUISMP_match'],
-                     "\n\n  No coincide CUISMP_word_telefonia de WORD informe técnico : " + df['CUISMP_word'].astype(str) +
-                     " es diferente a CUISMP_corte_excel: " + df['CUISMP_corte_excel'].astype(str) + ". ", "") +
+                     "\n\n  No coincide CUISMP_word_telefonia de WORD informe técnico : \n\n" + df['CUISMP_word'].astype(str) +
+                     "\n\n es diferente a CUISMP en EXCEL-CORTE: \n\n" + df['CUISMP_corte_excel'].astype(str) + "", "") +
 
             np.where(~df['tipo_caso_match'],
-                     "\n\n  No coincide Avería reportada de WORD informe técnico : " + df['Tipo Caso'].astype(str) +
-                     " es diferente a TIPO CASO de Excel: " + df['TIPO CASO'].astype(str) + ". ", "") +
+                     "\n\n  No coincide Avería reportada de WORD informe técnico : \n\n" + df['Tipo Caso'].astype(str) +
+                     "\n\n es diferente a TIPO CASO en EXCEL-CORTE: \n\n" + df['TIPO CASO'].astype(str) + ". ", "") +
                     
             
             np.where(~df['observacion_match'],
-                     "\n\n  No coincide Observacion de WORD informe técnico : " + df['Observación'].astype(str) +
-                     " es diferente a OBSERVACIÓN de Excel: " + df['OBSERVACIÓN'].astype(str) + ". ", "") +
+                     "\n\n  No coincide Observacion de WORD informe técnico : \n\n" + df['Observación'].astype(str) +
+                     "\n\n es diferente a OBSERVACIÓN en EXCEL-CORTE: \n\n" + df['OBSERVACIÓN'].astype(str) + " ", "") +
 
         
             np.where(~df['dt_causa_match'],
-                     "\n\n  No coincide Determinación de la causa de WORD informe técnico : " + df['DETERMINACIÓN DE LA CAUSA_word'].astype(str) +
-                     " es diferente a DETERMINACION DE LA CAUSA de Excel: " + df['DETERMINACIÓN DE LA CAUSA_corte_excel'].astype(str) + ". ", "") +
+                     "\n\n  No coincide Determinación de la causa de WORD informe técnico : \n\n" + df['DETERMINACIÓN DE LA CAUSA_word'].astype(str) +
+                     "\n\n es diferente a DETERMINACION DE LA CAUSA en EXCEL-CORTE: \n\n" + df['DETERMINACIÓN DE LA CAUSA_corte_excel'].astype(str) + " ", "") +
 
 
             np.where(~df['medidas_correctivas_match'],
-                     "\n\n  No coincide MEDIDAS CORRECTIVAS de WORD informe técnico : " + df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS_word'].astype(str) +
-                     "\n\n es diferente a MEDIDAS CORRECTIVAS de Excel: " + df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS_corte_excel'].astype(str) + ". ", "") 
+                     "\n\n  No coincide MEDIDAS CORRECTIVAS de WORD informe técnico : \n\n" + df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS_word'].astype(str) +
+                     "\n\n es diferente a MEDIDAS CORRECTIVAS en EXCEL-CORTE: \n\n" + df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS_corte_excel'].astype(str) + " ", "") 
 
         )
     )
