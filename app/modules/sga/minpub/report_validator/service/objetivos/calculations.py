@@ -328,9 +328,6 @@ def extract_date_range_body(text: str) -> Tuple[Optional[str], Optional[str]]:
    
 
 
-
-
-
 # WORD REPORTE TECNICO
 @log_exceptions
 def extract_tecnico_reports(path_docx: str) -> pd.DataFrame:
