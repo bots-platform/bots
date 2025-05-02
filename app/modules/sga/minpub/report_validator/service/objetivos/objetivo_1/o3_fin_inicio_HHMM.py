@@ -16,16 +16,6 @@ def validation_fin_inicio_HHMM(merged_df: pd.DataFrame) -> pd.DataFrame:
                                      df['fecha_generacion'],
                                      df['interrupcion_inicio'])
     
-    # from datetime import timedelta
-    # def round_up_time(x):
-    # # If seconds are 59, add 1 minute and set seconds to 0
-    #     if x.second == 59:
-    #         x += timedelta(minutes=1)
-    #         x = x.replace(second=0)
-    #     return x
-
-    # df['Expected_Inicio_trimmed'] = df['Expected_Inicio'].apply(round_up_time)
-    # df['interrupcion_fin_trimmed'] = df['interrupcion_fin'].apply(round_up_time)
 
     df['Expected_Inicio_trimmed'] = df['Expected_Inicio'].apply(lambda x: x.replace(second=0))
     df['interrupcion_fin_trimmed'] = df['interrupcion_fin'].apply(lambda x: x.replace(second=0))
@@ -33,7 +23,6 @@ def validation_fin_inicio_HHMM(merged_df: pd.DataFrame) -> pd.DataFrame:
     df['duration_diff_335_sec'] = df['interrupcion_fin_trimmed'] - df['Expected_Inicio_trimmed']
     df['diff_335_sec_hhmm'] = df['duration_diff_335_sec'].apply(lambda x: f"{int(x.total_seconds() // 3600):02}:{int(x.total_seconds() % 3600 // 60):02d}")
 
-    # df['diff_335_sec'] = (df['interrupcion_fin_trimmed'] - df['Expected_Inicio_trimmed']).dt.total_seconds()
     df['duration_diff_corte_sec'] = (df['FECHA Y HORA FIN'] - df['FECHA Y HORA INICIO'])
     df['diff_corte_sec_hhmm'] = df['duration_diff_corte_sec'].apply(lambda x: f"{int(x.total_seconds() // 3600):02}:{int(x.total_seconds() % 3600 // 60):02d}")
 
@@ -49,10 +38,6 @@ def validation_fin_inicio_HHMM(merged_df: pd.DataFrame) -> pd.DataFrame:
             print(f"Error with {hhmm_str}: {e}")
             return np.nan
     
-    df['FIN-INICIO (HH:MM)_trimed'] = df['FIN-INICIO (HH:MM)'].apply(
-    lambda x: str(x)[:5] if isinstance(x, str) and x.endswith(":00") else x
-    )
-
     df['fin_inicio_hhmm_column_corte_to_minutes'] = df['FIN-INICIO (HH:MM)_trimed'].apply(parse_hhmm_to_minutes)
 
     df['non_negative_335'] = df['duration_diff_335_sec'].dt.total_seconds() >= 0
@@ -67,9 +52,6 @@ def validation_fin_inicio_HHMM(merged_df: pd.DataFrame) -> pd.DataFrame:
 
     df['duration_diff_335_min'] = df['diff_335_sec_hhmm'].apply(hhmm_to_minutes) 
     df['duration_diff_corte_min'] = df['diff_corte_sec_hhmm'].apply(hhmm_to_minutes) 
-
-    #df['match_335_corte'] = df['diff_335_sec_hhmm'] == df['diff_corte_sec_hhmm']
-
 
     df['match_335_corte'] = abs(df['duration_diff_335_min'] - df['duration_diff_corte_min']) <= 1
 

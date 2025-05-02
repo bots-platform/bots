@@ -44,18 +44,6 @@ def validation_fecha_inicio_fin(merged_df: pd.DataFrame) -> pd.DataFrame:
     df['interrupcion_fin_trimmed'] = df['interrupcion_fin'].apply(lambda x: x.replace(second=0))
 
 
-    # tolerance_seconds = 60
-
-    # df['Fecha_Inicio_match'] = df.apply(
-    #     lambda row: abs((row['Expected_Inicio_trimmed'] - row['FECHA Y HORA INICIO']).total_seconds()) <= tolerance_seconds,
-    #     axis=1
-    # )
-
-    # df['Fecha_Fin_match'] = df.apply(
-    #     lambda row: abs((row['interrupcion_fin_trimmed'] - row['FECHA Y HORA FIN']).total_seconds()) <= tolerance_seconds,
-    #     axis=1
-    # )
-
     df['Fecha_Inicio_match'] = df['Expected_Inicio_trimmed'] == df['FECHA Y HORA INICIO']
     df['Fecha_Fin_match'] = df['interrupcion_fin_trimmed'] == df['FECHA Y HORA FIN']
 
