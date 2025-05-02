@@ -6,7 +6,7 @@ from app.modules.sga.minpub.report_validator.service.objetivos.cleaning import (
     handle_null_values, cut_decimal_part
 )
 
-
+# TABLA AVERIAS WORD
 def preprocess_df_word_datos_averias(df_word_datos_averias):
     df_word_datos_averias = df_word_datos_averias.rename(columns={'Número de ticket':'nro_incidencia'})
     df_word_datos_averias['nro_incidencia'] = df_word_datos_averias['nro_incidencia'].astype(str)
@@ -24,6 +24,7 @@ def preprocess_df_word_telefonia_averias(df_word_telefonia_averias):
     return df_word_telefonia_averias
 
 
+#INFORME TECNICO WORD
 def preprocess_df_word_datos_informe_tecnico(df_word_datos_informe_tec):
     df_word_datos_informe_tec = df_word_datos_informe_tec.rename(columns={'ticket':'nro_incidencia'})
     df_word_datos_informe_tec['nro_incidencia'] = df_word_datos_informe_tec['nro_incidencia'].astype(str)
@@ -40,7 +41,7 @@ def preprocess_df_word_telefonia_informe_tecnico(df_word_telefonia_informe_tec):
     
     return df_word_telefonia_informe_tec
 
-
+# ANEXOS INDISPONIBILIDAD WORD
 def preprocess_df_word_datos_anexos_indis(df_word_datos_anexos_indis):
     df_word_datos_anexos_indis = df_word_datos_anexos_indis.rename(columns={'ticket':'nro_incidencia'})
     df_word_datos_anexos_indis['nro_incidencia'] = df_word_datos_anexos_indis['nro_incidencia'].astype(str)
