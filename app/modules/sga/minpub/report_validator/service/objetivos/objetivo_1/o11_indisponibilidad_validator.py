@@ -21,21 +21,63 @@ def validate_indisponibilidad(
     """
     df = merged_df.copy()
 
+    _header_pat   = re.compile(r"^Se tuvo indisponibilidad por parte del cliente.*", re.IGNORECASE)
+    _periodo_pat  = re.compile(
+        r"^\d{1,2}/\d{1,2}/\d{4}\s+\d{1,2}:\d{2}.*hasta el día\s+\d{1,2}/\d{1,2}/\d{4}\s+\d{1,2}:\d{2}.*$",
+        re.IGNORECASE
+    )
 
-    def split_indispo(paragraph: str):
-    
-        if not isinstance(paragraph, str) or not paragraph.strip():
-            return pd.Series({
-                'indisponibilidad_header': "",
-                'indisponibilidad_periodos': "",
-                'indisponibilidad_total': ""
-            })
-        lines = [l.strip() for l in paragraph.splitlines() if l.strip()]
+    _hour_pad = re.compile(r"\b(\d)(?=:\d{2}(?::\d{2})?)")
+    _day_pad_start = re.compile(r"^(\d)(?=/)")
+    _day_pad_end = re.compile(r"(?<=hasta el día\s)(\d)(?=/)")
+
+    def pad_periodo(line: str) -> str:
+
+        line = _day_pad_start.sub(lambda m: m.group(1).zfill(2), line)
+        line = _day_pad_end.sub(lambda m: m.group(1).zfill(2), line)
+        line = _hour_pad.sub(lambda m: m.group(1).zfill(2), line)
+        return line  
+
+    _total_pat    = re.compile(
+        r"^\(Total de horas sin acceso a la sede:\s*(\d{1,3}:\d{2})\s*horas\)",
+        re.IGNORECASE
+    )
+
+    def split_indispo(text: str) -> pd.Series:
+        """
+        Dado un bloque de texto que contiene:
+          - 1 línea header (Se tuvo indisponibilidad...)
+          - varias líneas periodo (DD/MM/YYYY hh:mm ... hasta el día ...)
+          - 1 línea total (Total de horas… HH:MM horas)
+        Devuelve una Series con tres campos:
+          ['indisponibilidad_header', 'indisponibilidad_periodos', 'indisponibilidad_total']
+        """
+
+        lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+
+        header = ""
+        for ln in lines:
+            if _header_pat.match(ln):
+                header = ln
+                break
+        
+
+        periodos = [ln for ln in lines if _periodo_pat.match(ln)]
+        periodos_fill_ceros = [pad_periodo(l) for l in periodos]
+
+        total = ""
+        for ln in lines:
+            m = _total_pat.match(ln)
+            if m:
+                total = m.group(1)
+                break
+
         return pd.Series({
-            'indisponibilidad_header': lines[0],
-            'indisponibilidad_periodos': "\n".join(lines[1:-1]) if len(lines) > 2 else "",
-            'indisponibilidad_total': lines[-1] if len(lines) > 1 else ""
+            "indisponibilidad_header":   header,
+            "indisponibilidad_periodos": "\n".join(periodos_fill_ceros),
+            "indisponibilidad_total":    total,
         })
+
 
     df[['indisponibilidad_header',
         'indisponibilidad_periodos',
@@ -54,9 +96,11 @@ def validate_indisponibilidad(
         == df['clock_stops_paragraph_periodos']
     )
     df['indisponibilidad_total_match'] = (
-        df['indisponibilidad_total'].astype(str).str.strip()
-        == df['clock_stops_paragraph_footer']
+        df['indisponibilidad_total'].astype(str).str.strip() == df['clock_stops_paragraph_footer']
     )
+
+
+
 
     df['Validation_OK'] = (
         df['indisponibilidad_header_match']
@@ -85,21 +129,21 @@ def build_failure_messages_indisponibilidad(df: pd.DataFrame) -> pd.DataFrame:
 
     header_err = np.where(
         ~df['indisponibilidad_header_match'],
-        "\n\n Encabezado inválido indisponibilidad EXCEL-CORTE columna INDISPONIBILIDAD: "
+        "\n\n Encabezado inválido en EXCEL-CORTE columna INDISPONIBILIDAD: \n\n"
         + df['indisponibilidad_header'].astype(str)
-        + " es diferente a formato Encabezado Indisponibilidad: "
+        + "\n\n es diferente a formato de Encabezado Indisponibilidad debe ser: \n\n "
         + df['clock_stops_paragraph_header'].astype(str)
-        + ". ",
+        + " ",
         ""
     )
 
     periodos_err = np.where(
         ~df['indisponibilidad_periodos_match'],
-        "\n\n Periodo(s) inválido(s) CORTE - EXCEL columna INDISPONIBILIDAD : \n\n"
+        "\n\n Parada(s) de clientes en  CORTE - EXCEL columna INDISPONIBILIDAD : \n\n"
         + df['indisponibilidad_periodos'].astype(str)
         + "\n\n  ES DIFERENTE A SGA PAUSA CLIENTE SIN OVERLAP: \n\n"
         + df['clock_stops_paragraph_periodos'].astype(str)
-        + ". ",
+        + " ",
         ""
     )
 
@@ -107,9 +151,9 @@ def build_failure_messages_indisponibilidad(df: pd.DataFrame) -> pd.DataFrame:
         ~df['indisponibilidad_total_match'],
         "\n\n Total inválido CORTE - EXCEL columna INDISPONIBILIDAD: \n\n "
         + df['indisponibilidad_total'].astype(str)
-        + "\n\n  ES DIFERENTE SGA PAUSA CLIENTE SIN OVERLAP: \n\n "
+        + "\n\n  ES DIFERENTE a total SGA PAUSA CLIENTE SIN OVERLAP: \n\n "
         + df['clock_stops_paragraph_footer'].astype(str)
-        + ". ",
+        + " ",
         ""
     )
 
