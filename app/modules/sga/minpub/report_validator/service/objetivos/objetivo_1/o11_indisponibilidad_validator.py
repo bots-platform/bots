@@ -123,7 +123,7 @@ def build_failure_messages_indisponibilidad(df: pd.DataFrame) -> pd.DataFrame:
     Returns a DataFrame of failures with columns:
     ['nro_incidencia','mensaje','TIPO REPORTE','objetivo']
     """
-    # guard
+
     if df is None or df.empty or 'Validation_OK' not in df.columns:
         return pd.DataFrame(columns=['nro_incidencia','mensaje','TIPO REPORTE','objetivo'])
 

@@ -64,7 +64,6 @@ def validate_averias_word( merged_df: pd.DataFrame, componente_word: str) -> pd.
 
 
     df['Validation_OK'] = (
-        # df['TICKET_match'] &
         df['Fecha_hora_inicio_match'] &
         df['fecha_hora_fin_match'] &
         df['CUISMP_match'] &
@@ -74,7 +73,6 @@ def validate_averias_word( merged_df: pd.DataFrame, componente_word: str) -> pd.
         df['componente_match'] &
         df['df_match'] &
         df['fin_inicio_hhmm_match'] &
-        # df['dt_causa_match'] &
         df['responsabilidad_match']
     )
 
@@ -135,12 +133,6 @@ def build_failure_messages_validate_averias_word(df: pd.DataFrame) -> pd.DataFra
              np.where(~df['fin_inicio_hhmm_match'],
                      " \n\n No coincide Tiempo Total (HH:MM) de WORD CUADRO DE AVERIAS : \n\n" + df['Tiempo Total (HH:MM)'].astype(str) +
                      "\n\n es diferente a la columna FIN-INICIO (HH:MM) de CORTE-EXCEL: \n\n" + df['FIN-INICIO (HH:MM)_trimed'].astype(str) + ". ", "") +
-
-
-            # np.where(~df['dt_causa_match'],
-            #          " No coincide Determinación de la causa de WORD-Datos : " + df['Determinación de la causa'].astype(str) +
-            #          " es diferente a DETERMINACION DE LA CAUSA de Excel: " + df['DETERMINACION DE LA CAUSA'].astype(str) + ". ", "") +
-
 
             np.where(~df['responsabilidad_match'],
                      "\n\n  No coincide Responsable de WORD CUADRO DE AVERIAS : \n\n" + df['responsable'].astype(str) +
