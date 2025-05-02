@@ -7,7 +7,7 @@ from app.modules.sga.minpub.report_validator.service.objetivos.decorators import
 )
 
 from app.modules.sga.minpub.report_validator.service.objetivos.formattings import ( 
-    make_paragraph_paradas_cliente, make_paragraph_paradas_cliente_header,
+    make_paragraph_paradas_cliente, make_paragraph_paradas_cliente_total, make_paragraph_paradas_cliente_header,
     make_paragraph_paradas_cliente_periodos, make_paragraph_paradas_cliente_footer
 )
 
@@ -73,7 +73,7 @@ def merge_sga_335_corte_excel_sharepoint_cuismp_sga380(
         df_merge_sga_335_corte_excel_with_sharepoint_cid_cuismp['clock_stops_paragraph'] = df_merge_sga_335_corte_excel_with_sharepoint_cid_cuismp['clock_stops'].apply(make_paragraph_paradas_cliente)
         df_merge_sga_335_corte_excel_with_sharepoint_cid_cuismp['clock_stops_paragraph_header'] = df_merge_sga_335_corte_excel_with_sharepoint_cid_cuismp['clock_stops'].apply(make_paragraph_paradas_cliente_header)
         df_merge_sga_335_corte_excel_with_sharepoint_cid_cuismp['clock_stops_paragraph_periodos'] = df_merge_sga_335_corte_excel_with_sharepoint_cid_cuismp['clock_stops'].apply(make_paragraph_paradas_cliente_periodos)
-        df_merge_sga_335_corte_excel_with_sharepoint_cid_cuismp['clock_stops_paragraph_footer'] = df_merge_sga_335_corte_excel_with_sharepoint_cid_cuismp['clock_stops'].apply(make_paragraph_paradas_cliente_footer)
+        df_merge_sga_335_corte_excel_with_sharepoint_cid_cuismp['clock_stops_paragraph_footer'] = df_merge_sga_335_corte_excel_with_sharepoint_cid_cuismp['clock_stops'].apply(make_paragraph_paradas_cliente_total)
 
 
         matched_rows = df_merge_sga_335_corte_excel_with_sharepoint_cid_cuismp[df_merge_sga_335_corte_excel_with_sharepoint_cid_cuismp['_merge'] == match_type]
