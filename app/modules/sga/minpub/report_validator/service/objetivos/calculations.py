@@ -236,15 +236,12 @@ def extract_date_range_last(text: str) -> Tuple[Optional[str], Optional[str]]:
     if not isinstance(text, str):
         return (None, None)
 
-    # Normalizar CR y dobles barras
     normalized = text.replace('\r', ' ')
 
-    # 1) Líneas no vacías
     lines = [ln.strip() for ln in normalized.splitlines() if ln.strip()]
     if len(lines) < 2:
         return (None, None)
 
-    # 2) Patrón único para fecha+hora
     dt_rx = re.compile(
         r'(\d{1,2}/\d{1,2}/\d{4})'    # fecha
         r'\s*(?:a las\s*)?'           # opcional “a las”
@@ -254,16 +251,12 @@ def extract_date_range_last(text: str) -> Tuple[Optional[str], Optional[str]]:
     )
 
 
-
-    # 3) Filtrar sólo las líneas que casan con fecha+hora
     date_lines = [ln for ln in lines if dt_rx.search(ln)]
     if len(date_lines) < 2:
         return (None, None)
 
-    # 4) Tomar las dos últimas
     start_line, end_line = date_lines[-2], date_lines[-1]
 
-    # 5) Extraer grupos de fecha y hora
     def parse(line: str) -> Optional[str]:
         m = dt_rx.search(line)
         return f"{m.group(1)} {m.group(2)}" if m else None
@@ -293,7 +286,6 @@ def extract_date_range_body(text: str) -> Tuple[Optional[str], Optional[str]]:
         flags=re.IGNORECASE
     )
 
-        # 2) patrón unificado: opcional “día”, opcional “a las”, y opcional “horas”
     combined_pat = re.compile(
         r'el(?:\s*d[ií]a)?\s*'           # “el” + opcional “ día”
         r'(\d{2}/\d{2}/\d{4})\s*'        # fecha
@@ -308,7 +300,6 @@ def extract_date_range_body(text: str) -> Tuple[Optional[str], Optional[str]]:
     if not matches:
         return (None, None)
 
-    # helper para rellenar con ceros día, mes y hora
     def _normalize(fecha: str, hora: str) -> str:
         d, m, y = fecha.split('/')
         h, mm = hora.split(':')
@@ -322,7 +313,6 @@ def extract_date_range_body(text: str) -> Tuple[Optional[str], Optional[str]]:
     if matches:
         start_date, start_time = matches[0]
         end_date,   end_time   = matches[-1]
-        #return (f"{start_date} {start_time}", f"{end_date} {end_time}")
         return (_normalize(start_date, start_time), _normalize(end_date, end_time))
 
    
@@ -571,21 +561,18 @@ def extract_indisponibilidad_anexos(path_docx: str) -> pd.DataFrame:
     )
     total_hour_pattern   = re.compile(r"^\(Total de horas sin acceso a la sede:\s*(\d{1,3}:\d{2})\s*horas\)", re.IGNORECASE)
 
-     # padding helpers
+    
     _day_pad_start = re.compile(r"^(\d)(?=/)")
     _day_pad_end   = re.compile(r"(?<=hasta el día\s)(\d)(?=/)", re.IGNORECASE)
     _hour_pad      = re.compile(r"\b(\d)(?=:\d{2}(?::\d{2})?)")
 
     def pad_periodo(line: str) -> str:
-        # pad day at start
+        
         line = _day_pad_start.sub(lambda m: m.group(1).zfill(2), line)
-        # pad day after "hasta el día"
         line = _day_pad_end.sub(lambda m: m.group(1).zfill(2), line)
-        # pad any single-digit hour
         return _hour_pad.sub(lambda m: m.group(1).zfill(2), line)
     
     def pad_total(tm: str) -> str:
-        # sometimes "7:00" → "07:00"
         return _hour_pad.sub(lambda m: m.group(1).zfill(2), tm)
 
     records: List[Dict] = []
@@ -608,9 +595,6 @@ def extract_indisponibilidad_anexos(path_docx: str) -> pd.DataFrame:
 
             if linea0_pat_pattern.match(line):
                 linea0 = line
-
-            # if periodo_pattern.match(line):
-            #     periodos.append(line) 
 
             if periodo_pattern.match(line):
                 periodos.append(pad_periodo(line))
