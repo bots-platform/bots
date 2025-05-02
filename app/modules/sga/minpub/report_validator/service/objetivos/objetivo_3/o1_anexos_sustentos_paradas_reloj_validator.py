@@ -60,7 +60,7 @@ def build_failure_messages_validate_anexos_indisponibilidad_word(df: pd.DataFram
         (
             np.where(~df['indisponibilidad_header_match'],
                     "\n\n No coincide texto inicio de WORD ANEXOS INDISPONIBILIDAD : \n\n" + df['indisponibilidad_header'].astype(str) +
-                     "\n\n es diferente a SGA PAUSA CLIENTE SIN OVERLAP\n\n:  " + df['clock_stops_paragraph_header'].astype(str) + ". ", "") +
+                     "\n\n es diferente a SGA PAUSA CLIENTE SIN OVERLAP: \n\n" + df['clock_stops_paragraph_header'].astype(str) + "", "") +
 
              np.where(~df['indisponibilidad_periodos_match'],
                     "\n\n No coincide paradas de reloj de WORD ANEXOS INDISPONIBILIDAD : \n\n" + df['indisponibilidad_periodos'].astype(str) +
@@ -68,7 +68,7 @@ def build_failure_messages_validate_anexos_indisponibilidad_word(df: pd.DataFram
 
               np.where(~df['indisponibilidad_total_match'],
             "\n\n No coincide total horas sin acceso a la sede de WORD ANEXOS INDISPONIBILIDAD : \n\n " + df['indisponibilidad_total'].astype(str) +
-             "\n\n es diferente a SGA PAUSA CLIENTE SIN OVERLAP\n\n :  \n\n " + df['clock_stops_paragraph_footer'].astype(str), "") 
+             "\n\n es diferente a SGA PAUSA CLIENTE SIN OVERLAP :  \n\n " + df['clock_stops_paragraph_footer'].astype(str), "") 
 
         )
 

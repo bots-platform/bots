@@ -117,7 +117,7 @@ def build_failure_messages_fechas_fin_inicio(df: pd.DataFrame) -> pd.DataFrame:
                      "\n\n Las columnas ‘FECHA Y HORA INICIO’ y/o ‘FECHA Y HORA FIN’ están vacías. ",
                      "") +
             np.where(~df['Fecha_Inicio_match'],
-                     "\n\n Desajuste en ‘FECHA Y HORA INICIO’: SGA: \n\n" +
+                     "\n\n Desajuste en FECHA Y HORA INICIO  SGA: \n\n" +
                      df['Expected_Inicio_trimmed_fm']+
                      "\n\n no coincide con CORTE-EXCEL: \n\n" +
                     df['FECHA_Y_HORA_INICIO_fmt']+
