@@ -25,35 +25,54 @@ def preprocess_df_word_telefonia_averias(df_word_telefonia_averias):
     return df_word_telefonia_averias
 
 
-#INFORME TECNICO WORD
+# INFORME TÉCNICO WORD
 def preprocess_df_word_datos_informe_tecnico(df_word_datos_informe_tec):
-    df_word_datos_informe_tec = df_word_datos_informe_tec.rename(columns={'ticket':'nro_incidencia'})
-    df_word_datos_informe_tec['nro_incidencia'] = df_word_datos_informe_tec['nro_incidencia'].astype(str)
-    # df_word_datos_informe_tec['Fecha y Hora Inicio'] = pd.to_datetime(df_word_datos_informe_tec['Fecha y Hora Inicio'], format='%Y-%m-%d', errors='coerce')
-    # df_word_datos_informe_tec['Fecha y Hora Fin'] = pd.to_datetime(df_word_datos_informe_tec['Fecha y Hora Fin'], format='%Y-%m-%d', errors='coerce')
-    return df_word_datos_informe_tec
+  
+    if df_word_datos_informe_tec is None:
+        cols = ['nro_incidencia', 'Fecha y Hora Inicio', 'Fecha y Hora Fin']
+        return pd.DataFrame(columns=cols)
 
-def preprocess_df_word_telefonia_informe_tecnico(df_word_telefonia_informe_tec): 
-    df_word_telefonia_informe_tec = df_word_telefonia_informe_tec.rename(columns={'ticket':'nro_incidencia'})
-    df_word_telefonia_informe_tec['nro_incidencia'] = df_word_telefonia_informe_tec['nro_incidencia'].astype(str)
-    # df_word_telefonia_informe_tec['Fecha y Hora Inicio'] = pd.to_datetime(df_word_telefonia_informe_tec['Fecha y Hora Inicio'], format='%Y-%m-%d', errors='coerce')
-    # df_word_telefonia_informe_tec['Fecha y Hora Fin'] = pd.to_datetime(df_word_telefonia_informe_tec['Fecha y Hora Fin'], format='%Y-%m-%d', errors='coerce')
+    df = df_word_datos_informe_tec.rename(columns={'ticket': 'nro_incidencia'})
+    df['nro_incidencia'] = df['nro_incidencia'].astype(str)
+    # df['Fecha y Hora Inicio'] = pd.to_datetime(df['Fecha y Hora Inicio'], format='%Y-%m-%d', errors='coerce')
+    # df['Fecha y Hora Fin']    = pd.to_datetime(df['Fecha y Hora Fin'],    format='%Y-%m-%d', errors='coerce')
+    return df
 
-    
-    return df_word_telefonia_informe_tec
+
+def preprocess_df_word_telefonia_informe_tecnico(df_word_telefonia_informe_tec):
+    if df_word_telefonia_informe_tec is None:
+        cols = ['nro_incidencia', 'Fecha y Hora Inicio', 'Fecha y Hora Fin']
+        return pd.DataFrame(columns=cols)
+
+    df = df_word_telefonia_informe_tec.rename(columns={'ticket': 'nro_incidencia'})
+    df['nro_incidencia'] = df['nro_incidencia'].astype(str)
+    # df['Fecha y Hora Inicio'] = pd.to_datetime(df['Fecha y Hora Inicio'], format='%Y-%m-%d', errors='coerce')
+    # df['Fecha y Hora Fin']    = pd.to_datetime(df['Fecha y Hora Fin'],    format='%Y-%m-%d', errors='coerce')
+    return df
 
 # ANEXOS INDISPONIBILIDAD WORD
 def preprocess_df_word_datos_anexos_indis(df_word_datos_anexos_indis):
-    df_word_datos_anexos_indis = df_word_datos_anexos_indis.rename(columns={'ticket':'nro_incidencia'})
-    df_word_datos_anexos_indis['nro_incidencia'] = df_word_datos_anexos_indis['nro_incidencia'].astype(str)
- 
+    if df_word_datos_anexos_indis is None:
+        cols = ['nro_incidencia', 'indisponibilidad_header', 'indisponibilidad_periodos',
+                'indisponibilidad_footer', 'indisponibilidad_total']
+        return pd.DataFrame(columns=cols)
 
-    return df_word_datos_anexos_indis
+    df = df_word_datos_anexos_indis.rename(columns={'ticket': 'nro_incidencia'})
+    df['nro_incidencia'] = df['nro_incidencia'].astype(str)
+    return df
 
-def preprocess_df_word_telefonia_anexos_indis(df_word_telefonia_anexos_indis): 
-    df_word_telefonia_anexos_indis = df_word_telefonia_anexos_indis.rename(columns={'ticket':'nro_incidencia'})
-    df_word_telefonia_anexos_indis['nro_incidencia'] = df_word_telefonia_anexos_indis['nro_incidencia'].astype(str)
-    return df_word_telefonia_anexos_indis
+
+def preprocess_df_word_telefonia_anexos_indis(df_word_telefonia_anexos_indis):
+    if df_word_telefonia_anexos_indis is None:
+        cols = ['nro_incidencia', 'indisponibilidad_header', 'indisponibilidad_periodos',
+                'indisponibilidad_footer', 'indisponibilidad_total']
+        return pd.DataFrame(columns=cols)
+
+    df = df_word_telefonia_anexos_indis.rename(columns={'ticket': 'nro_incidencia'})
+    df['nro_incidencia'] = df['nro_incidencia'].astype(str)
+    return df
+
+
 
 
 # SGA DINAMICO 335 
@@ -73,6 +92,7 @@ def preprocess_335(df_sga_dinamico_335):
     df_sga_dinamico_335 = cut_decimal_part(df_sga_dinamico_335, 'codincidencepadre')
     df_sga_dinamico_335["codincidencepadre"] = df_sga_dinamico_335["codincidencepadre"].astype(str).str.strip().fillna('No disponible')
     return df_sga_dinamico_335
+
 
 def preprocess_380(df_sga_dinamico_380):
     df_sga_dinamico_380['startdate'] = pd.to_datetime(df_sga_dinamico_380['startdate'],  errors='coerce', dayfirst=True)

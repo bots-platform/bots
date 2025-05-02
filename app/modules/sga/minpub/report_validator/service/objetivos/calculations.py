@@ -532,7 +532,7 @@ def extract_tecnico_reports_without_hours_last_dates(path_docx: str) -> pd.DataF
 
 # WORD ANEXOS
 @log_exceptions
-def extract_indisponibilidad_anexos(path_docx: str) -> pd.DataFrame:
+def extract_indisponibilidad_anexos(path_docx: str) ->  Optional[pd.DataFrame]:
     """
     Extrae de un .docx que contiene varios ANEXO X – TICKET Y:
       - la línea de introducción ("Se tuvo indisponibilidad...")
@@ -615,6 +615,9 @@ def extract_indisponibilidad_anexos(path_docx: str) -> pd.DataFrame:
             "indisponibilidad_footer": footer,
             "indisponibilidad_total": total
         })
+    
+    if not records:
+        return None
 
     return pd.DataFrame.from_records(records)
 

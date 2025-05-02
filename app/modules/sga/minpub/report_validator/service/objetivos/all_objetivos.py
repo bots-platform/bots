@@ -77,18 +77,32 @@ def all_objetivos(
     df_word_telefonia_averias = extract_averias_table(word_telefonia_file_path)
     df_word_datos_informe_tec =  extract_tecnico_reports_without_hours_last_dates(word_datos_file_path)
     df_word_telefonia_informe_tec = extract_tecnico_reports_without_hours_last_dates(word_telefonia_file_path)
-    df_word_datos_anexos_indis =  extract_indisponibilidad_anexos(word_datos_file_path)
-    df_word_telefonia_anexos_indis = extract_indisponibilidad_anexos(word_telefonia_file_path)
 
+    raw_datos_anexos = extract_indisponibilidad_anexos(word_datos_file_path)
+    raw_tel_anexos  = extract_indisponibilidad_anexos(word_telefonia_file_path)
 
-    # preprocess
+    cols = ['ticket', 'indisponibilidad_header', 'indisponibilidad_periodos',
+            'indisponibilidad_footer', 'indisponibilidad_total']
+    
+    df_word_datos_anexos_indis = (
+        raw_datos_anexos
+        if raw_datos_anexos is not None
+        else pd.DataFrame(columns=cols)
+    )
+    df_word_telefonia_anexos_indis = (
+        raw_tel_anexos
+        if raw_tel_anexos is not None
+        else pd.DataFrame(columns=cols)
+    )
+
+    # preprocess 
     df_word_datos_averias = preprocess_df_word_datos_averias(df_word_datos_averias)
     df_word_telefonia_averias = preprocess_df_word_telefonia_averias(df_word_telefonia_averias)
     
     df_word_datos_informe_tec =  preprocess_df_word_datos_informe_tecnico(df_word_datos_informe_tec)
     df_word_telefonia_informe_tec = preprocess_df_word_telefonia_informe_tecnico(df_word_telefonia_informe_tec)
 
-    df_word_datos_anexos_indis = preprocess_df_word_datos_anexos_indis(df_word_datos_anexos_indis)
+    df_word_datos_anexos_indis    = preprocess_df_word_datos_anexos_indis(df_word_datos_anexos_indis)
     df_word_telefonia_anexos_indis = preprocess_df_word_telefonia_anexos_indis(df_word_telefonia_anexos_indis)
 
     df_sga_dinamico_335 = preprocess_335(df_sga_dinamico_335)
