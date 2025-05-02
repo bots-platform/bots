@@ -80,18 +80,18 @@ def build_failure_messages_duracion_entero(df: pd.DataFrame) -> pd.DataFrame:
         "Validación exitosa: DURACION ENTERO y Agrupacion entero",
         np.where(
             ~df['duracion_entero_ok'],
-            "\n\n Duración entero EXCEL-CORTE: " 
+            "\n\n Duración entero EXCEL-CORTE: \n\n" 
             + df['Duracion entero'].astype(str) 
-            + " ≠ hora extraída de TIEMPO (HH:MM): " 
+            + "\n\n es diferente a hora extraída de TIEMPO (HH:MM) en EXCEL-CORTE: \n\n" 
             + df['extracted_hour'].astype(str) 
             + ".",
             ""
         )
         + np.where(
             ~df['agrupacion_entero_ok'],
-            "\n\n  Agrupación entero '"
+            "\n\n Es incorrecto Agrupación entero en CORTE-EXCEL: \n\n"
             + df['Agrupación entero'].astype(str)
-            + "' incorrecta, debe ser '"
+            + "\n\n debe ser: \n\n"
             + df['agrupacion_expected']
             + "'.",
             ""

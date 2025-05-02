@@ -54,11 +54,11 @@ def build_failure_messages_responsable(df:pd.DataFrame) -> pd.DataFrame:
         df['Validation_OK'],
         "\n\n Validation exitosa : RESPONSABLE coincide  con la primera palabra de tipificacion_tipo",
         (
-            "RESPONSABILIDAD: " 
+            "\n\n No coincide la columna RESPONSABILIDAD en CORTE-EXCEL: \n\n" 
             + df["RESPONSABILIDAD"].astype(str)
-            + " ' no coincide con la primera palabra' "
+            + "\n\n no coincide con la primera palabra de tipificacion_tipo en SGA 335 \n\n"
             + df['responsable_expected'].astype(str)
-            +"' de tipificacion_tipo'."
+            +"."
         )
     )
 

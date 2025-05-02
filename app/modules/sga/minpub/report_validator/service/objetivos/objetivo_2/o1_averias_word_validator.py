@@ -98,43 +98,43 @@ def build_failure_messages_validate_averias_word(df: pd.DataFrame) -> pd.DataFra
         "Validation successful",
         (
             np.where(~df['Fecha_hora_inicio_match'],
-                     "\n\n  No coincide Fecha y Hora Inicio de WORD cuadro averias : " + df['Fecha y Hora Inicio'].astype(str) +
-                     " es diferente a EXCEL-CORTE:  " + df['FECHA_Y_HORA_INICIO_fmt'].astype(str) + ". ", "") +
+                     "\n\n  No coincide Fecha y Hora Inicio de WORD CUADRO AVERIAS : \n\n" + df['Fecha y Hora Inicio'].astype(str) +
+                     "\n\n es diferente a FECHA Y HORA INICIO en EXCEL-CORTE:  \n\n" + df['FECHA_Y_HORA_INICIO_fmt'].astype(str) + ". ", "") +
 
             np.where(~df['fecha_hora_fin_match'],
-                     "\n\n  No coincide Fecha y Hora Fin de WORD cuadro averias : " + df['Fecha y Hora Fin'].astype(str) +
-                     " es diferente a EXCEL-CORTE:  " + df['FECHA_Y_HORA_FIN_fmt'].astype(str) + ". ", "") +
+                     "\n\n  No coincide Fecha y Hora Fin de WORD CUADRO AVERIAS : \n\n" + df['Fecha y Hora Fin'].astype(str) +
+                     "\n\n es diferente columna FECHA Y HORA FIN en EXCEL-CORTE:  \n\n" + df['FECHA_Y_HORA_FIN_fmt'].astype(str) + ". ", "") +
 
             np.where(~df['CUISMP_match'],
-                     "\n\n  No coincide CUISMP word cuadro averias : " + df['cuismp_word_averia'].astype(str) +
-                     " es diferente a CUISMP_corte_excel: " + df['CUISMP_corte_excel'].astype(str) + ". ", "") +
+                     "\n\n  No coincide CUISMP en WORD CUADRO AVERIAS : \n\n" + df['cuismp_word_averia'].astype(str) +
+                     "\n\n es diferente a CUISMP en CORTE-EXCEL: \n\n" + df['CUISMP_corte_excel'].astype(str) + ". ", "") +
 
             np.where(~df['tipo_caso_match'],
-                     "\n\n  No coincide Avería reportada de WORD cuadro averias : " + df['Avería reportada'].astype(str) +
-                     " es diferente a TIPO CASO de Excel: " + df['TIPO CASO'].astype(str) + ". ", "") +
+                     "\n\n  No coincide Avería reportada de WORD CUADRO AVERIAS : \n\n" + df['Avería reportada'].astype(str) +
+                     "\n\n es diferente a TIPO CASO en EXCEL-CORTE: \n\n" + df['TIPO CASO'].astype(str) + ". ", "") +
                     
             
             np.where(~df['averia_match'],
-                     "\n\n  No coincide Causa de WORD cuadro averias : " + df['Causa'].astype(str) +
-                     " es diferente a AVERÍA de Excel: " + df['AVERÍA'].astype(str) + ". ", "") +
+                     "\n\n  No coincide DETERMINACION DE LA CAUSE de WORD CUADRO AVERIAS : \n\n" + df['Causa'].astype(str) +
+                     "\n\n es diferente a AVERÍA de CORTE-EXCEL: \n\n" + df['AVERÍA'].astype(str) + ". ", "") +
 
             np.where(~df['tiempo_hhmm_match'],
-                     "\n\n  No coincide TIEMPO (HH:MM) de WORD cuadro averias: " + df['Tiempo real de afectación (HH:MM)'].astype(str) +
-                     " es diferente a Tiempo real de afectación (HH:MM) de Excel: " + df['TIEMPO (HH:MM)_trimed'].astype(str) + ". ", "") +
+                     "\n\n  No coincide Tiempo real de afectación de WORD CUADRO DE AVERIAS: \n\n" + df['Tiempo real de afectación (HH:MM)'].astype(str) +
+                     " es diferente a TIEMPO (HH:MM) de EXCEL-CORTE: " + df['TIEMPO (HH:MM)_trimed'].astype(str) + ". ", "") +
 
 
             np.where(~df['componente_match'],
-                     " \n\n No coincide Componente de WORD cuadro averias : " + df['Componente'].astype(str) +
-                     " es diferente a COMPONENTE de Excel: " + df['COMPONENTE'].astype(str) + ". ", "") +
+                     " \n\n No coincide COMPONENTE en  de WORD CUADRO DE AVERIAS : \n\n" + df['Componente'].astype(str) +
+                     "\n\n es diferente a la  columna COMPONENTE de CORTE-EXCEL: \n\n" + df['COMPONENTE'].astype(str) + ". ", "") +
 
 
             np.where(~df['df_match'],
-                     "\n\n  No coincide Distrito Fiscal de WORD cuadro averias : " + df['Distrito Fiscal'].astype(str) +
-                     " es diferente a DF de Excel: " + df['DF'].astype(str) + ". ", "") +
+                     "\n\n  No coincide Distrito Fiscal de WORD CUADRO DE AVERIAS : \n\n" + df['Distrito Fiscal'].astype(str) +
+                     "\n\n es diferente a column DF de CORTE-EXCEL: \n\n" + df['DF'].astype(str) + ". ", "") +
 
              np.where(~df['fin_inicio_hhmm_match'],
-                     " \n\n No coincide Tiempo Total (HH:MM) de WORD cuadro averias : " + df['Tiempo Total (HH:MM)'].astype(str) +
-                     " es diferente a FIN-INICIO (HH:MM) de Excel: " + df['FIN-INICIO (HH:MM)_trimed'].astype(str) + ". ", "") +
+                     " \n\n No coincide Tiempo Total (HH:MM) de WORD CUADRO DE AVERIAS : \n\n" + df['Tiempo Total (HH:MM)'].astype(str) +
+                     "\n\n es diferente a la columna FIN-INICIO (HH:MM) de CORTE-EXCEL: \n\n" + df['FIN-INICIO (HH:MM)_trimed'].astype(str) + ". ", "") +
 
 
             # np.where(~df['dt_causa_match'],
@@ -143,8 +143,8 @@ def build_failure_messages_validate_averias_word(df: pd.DataFrame) -> pd.DataFra
 
 
             np.where(~df['responsabilidad_match'],
-                     "\n\n  No coincide Responsable de WORD-Datos cuadro averias : " + df['responsable'].astype(str) +
-                     " es diferente a RESPONSABILIDAD de Excel: " + df['RESPONSABILIDAD'].astype(str) + ". ", "") 
+                     "\n\n  No coincide Responsable de WORD CUADRO DE AVERIAS : \n\n" + df['responsable'].astype(str) +
+                     "\n\n es diferente a la columna RESPONSABILIDAD de CORTE-EXCEL: \n\n" + df['RESPONSABILIDAD'].astype(str) + ". ", "") 
 
         )
     )
