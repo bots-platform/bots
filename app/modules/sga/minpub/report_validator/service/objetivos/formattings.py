@@ -98,3 +98,24 @@ def make_paragraph_paradas_cliente_footer(stops_list):
         body = "\n".join(lines)
         footer = f"(Total de horas sin acceso a la sede: {total_str} horas)"
         return f"{footer}"
+
+@log_exceptions
+def make_paragraph_paradas_cliente_total(stops_list):
+
+        if not stops_list:
+            return ""
+    
+        lines = [_format_interval(s['start'], s['end']) for s in stops_list]
+        
+        total = sum((s['end'] - s['start'] for s in stops_list), timedelta())
+        hh, rem = divmod(int(total.total_seconds()), 3600)
+        mm = rem // 60
+        total_str = f"{hh:02d}:{mm:02d}"
+
+        header = (
+            "Se tuvo indisponibilidad por parte del cliente "
+            "para continuar los trabajos el/los día(s)"
+        )
+        body = "\n".join(lines)
+        footer = f"(Total de horas sin acceso a la sede: {total_str} horas)"
+        return total_str
