@@ -13,11 +13,25 @@ from app.modules.sga.minpub.report_validator.service.objetivos.decorators import
 def validate_duracion_entero(df_merged: pd.DataFrame) -> pd.DataFrame:
     df = df_merged.copy()
 
-    df['td'] = pd.to_timedelta(df['TIEMPO (HH:MM)'])
 
-    df['extracted_hour'] = (df['td'].dt.total_seconds() // 3600).astype(int)
+    pat = re.compile(
+        r'^(?:(?P<days>\d+)\s+day[s]?,\s*)?'  # "1 day, " o nada
+        r'(?P<hours>\d{1,2}):'               # horas antes del primer ':'
+    )
+
+    def extract_total_hours(x):
+        s = str(x).strip()
+        m = pat.match(s)
+        if not m:
+            return pd.NA  # o 0, según lo que quieras
+        days = int(m.group('days')) if m.group('days') else 0
+        hrs  = int(m.group('hours'))
+        return days * 24 + hrs
+
+    df['extracted_hour'] = df['TIEMPO (HH:MM)'].apply(extract_total_hours).astype(int)
 
     df['duracion_entero_ok'] = df['extracted_hour'] == df['Duracion entero']
+
 
     conditions = [
         df['Duracion entero'] == 0,
@@ -44,7 +58,6 @@ def validate_duracion_entero(df_merged: pd.DataFrame) -> pd.DataFrame:
     df['fail_count']   = (~df['Validation_OK']).astype(int)
 
     return df
-
 
 
 @log_exceptions
