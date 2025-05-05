@@ -60,14 +60,14 @@ def build_failure_messages_cuismp_distrito_fiscal_medidas(df: pd.DataFrame) -> p
         "Validation successful",
         (
             np.where(~df['CUISMP_match'], 
-                     "\n\n CUISMP en Sharepoint CID-CUISMP: \n\n" + df['CUISMP_sharepoint_cid_cuismp'].astype(str) +
-                     "\n\n es diferente a EXCEL -CORTE (CUISMP): \n\n" + df['CUISMP_sga_dinamico_335_excel_matched'].astype(str) + ". ", "") +
+                     "\n CUISMP en Sharepoint CID-CUISMP: \n" + df['CUISMP_sharepoint_cid_cuismp'].astype(str) +
+                     "\n es diferente a EXCEL -CORTE (CUISMP): \n" + df['CUISMP_sga_dinamico_335_excel_matched'].astype(str), "") +
             np.where(~df['DF_match'], 
-                     "\n\n Distrito Fiscal en Sharepoint CID-CUISMP: \n\n" + df['Distrito Fiscal'].astype(str) +
-                     "\n\n es diferente a EXCEL -CORTE (DF):  \n\n" + df['DF'].astype(str) + ". ", "") +
+                     "\n Distrito Fiscal en Sharepoint CID-CUISMP: \n" + df['Distrito Fiscal'].astype(str) +
+                     "\n es diferente a EXCEL -CORTE (DF):  \n" + df['DF'].astype(str), "") +
             np.where(~df['CUISMP_in_medias_tomadas'], 
-                     "\n\n CUISMP: \n\n "+ df['CUISMP_sga_dinamico_335_excel_matched'].astype(str) +
-                    "\n\n no encontrado in MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS.", "")
+                     "\n CUISMP: \n "+ df['CUISMP_sga_dinamico_335_excel_matched'].astype(str) +
+                    "\n no encontrado in MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS.", "")
         )
     )
     df['mensaje'] = mensaje
