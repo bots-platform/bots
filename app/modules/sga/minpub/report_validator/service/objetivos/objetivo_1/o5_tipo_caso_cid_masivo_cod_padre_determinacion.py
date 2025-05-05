@@ -19,14 +19,22 @@ def remove_componente_prefix(text: str) -> str:
     """ 
     if not isinstance(text, str):
         return ""
+    text = text.replace('\r', ' ')
+    text = text.replace('_x000D_', '').strip()
     cleaned = pattern.sub("", text).strip()
+    return cleaned
+
+def remove_special_caracteres(text: str) -> str:
+    if not isinstance(text, str):
+        return ""
+    cleaned = text.replace('_x000D_', '').strip()
     return cleaned
 
 @log_exceptions
 def validation_tipo_caso_cid_masivo_codincidencia_padre_determinacion_causa(merged_df: pd.DataFrame) -> pd.DataFrame:
     df = merged_df.copy()
 
-    df['causa_excel_clean'] = df['DETERMINACIÓN DE LA CAUSA'].apply(remove_componente_prefix) 
+    df['causa_excel_clean'] = df['DETERMINACIÓN DE LA CAUSA'].apply(remove_special_caracteres)
     df['causa_sga335_clean'] = df['it_determinacion_de_la_causa'].apply(remove_componente_prefix)
 
     df['causa_match'] =  df['causa_excel_clean'] == df['causa_sga335_clean']
@@ -59,7 +67,7 @@ def build_failure_messages_tipo_caso_cid_masivo_codincidencia_padre_determinacio
          (
             np.where(~df['causa_match'],
                      " \n\n No coincide Determinacion de la causa Excel-Corte: \n\n" +
-                       df['causa_excel_clean'].astype(str)+"\n\n con SGA Determinación de la causa: \n\n"+ df['causa_sga335_clean']+ ")."  ,  "")+
+                       df['causa_excel_clean'].astype(str)+"\n\n con SGA Determinación de la causa: \n\n"+ df['causa_sga335_clean'],  "")+
             np.where(~df['tipo_caso_match'],
                      "\n\n No coincide Tipo de Caso de CORTE-EXCEL: \n\n" + df['TIPO CASO'].astype(str) +"\n\n con SGA determinación de la causa: \n\n" + 
                      df['tipo_caso'].astype(str)+ "). ", "")+
