@@ -102,21 +102,20 @@ def build_failure_messages_fechas_fin_inicio(df: pd.DataFrame) -> pd.DataFrame:
         "Validación de fechas exitosa",
         (
             np.where(~df['NotEmpty'],
-                     "\n\n Las columnas ‘FECHA Y HORA INICIO’ y/o ‘FECHA Y HORA FIN’ están vacías. ",
+                     "\n Las columnas ‘FECHA Y HORA INICIO’ y/o ‘FECHA Y HORA FIN’ están vacías. ",
                      "") +
             np.where(~df['Fecha_Inicio_match'],
-                     "\n\n Desajuste en FECHA Y HORA INICIO  SGA: \n\n" +
+                     "\n (interrupcion_inicio|fecha generacion) en SGA: \n" +
                      df['Expected_Inicio_trimmed_fm']+
-                     "\n\n no coincide con CORTE-EXCEL: \n\n" +
-                    df['FECHA_Y_HORA_INICIO_fmt']+
-                    ". ",
+                     "\n no coincide con FECHA Y HORA INICIO CORTE-EXCEL: \n" +
+                    df['FECHA_Y_HORA_INICIO_fmt'],
                      "") +
             np.where(~df['Fecha_Fin_match'],
-                     "\n\n Desajuste en ‘FECHA Y HORA FIN’: SGA: \n\n" +
+                     "\n (interrupcion_fin) en SGA: \n" +
                     df['interrupcion_fin_trimmed_fm']+
-                     "\n\n CORTE-EXCEL: \n\n" +
+                     "\n no coincide con FECHA Y HORA FIN CORTE-EXCEL: \n" +
                     df['FECHA_Y_HORA_FIN_fmt'] +
-                      ".",
+                      "",
                      "")
         )
     )

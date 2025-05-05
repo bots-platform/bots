@@ -52,13 +52,12 @@ def build_failure_messages_responsable(df:pd.DataFrame) -> pd.DataFrame:
     
     messages = np.where(
         df['Validation_OK'],
-        "\n\n Validation exitosa : RESPONSABLE coincide  con la primera palabra de tipificacion_tipo",
+        "\n Validation exitosa : RESPONSABLE coincide  con la primera palabra de tipificacion_tipo",
         (
-            "\n\n No coincide la columna RESPONSABILIDAD en CORTE-EXCEL: \n\n" 
+            "\n No coincide la columna RESPONSABILIDAD en CORTE-EXCEL: \n" 
             + df["RESPONSABILIDAD"].astype(str)
-            + "\n\n no coincide con la primera palabra de tipificacion_tipo en SGA 335 \n\n"
+            + "\n no coincide con la primera palabra de tipificacion_tipo en SGA 335: \n"
             + df['responsable_expected'].astype(str)
-            +"."
         )
     )
 
