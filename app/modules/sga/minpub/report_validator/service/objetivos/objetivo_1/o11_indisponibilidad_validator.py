@@ -36,8 +36,8 @@ def validate_indisponibilidad(
         line = _day_pad_start.sub(lambda m: m.group(1).zfill(2), line)
         line = _day_pad_end.sub(lambda m: m.group(1).zfill(2), line)
         line = _hour_pad.sub(lambda m: m.group(1).zfill(2), line)
-        return line  
-
+        return line
+    
     _total_pat    = re.compile(
         r"^\(Total de horas sin acceso a la sede:\s*(\d{1,3}:\d{2})\s*horas\)",
         re.IGNORECASE
@@ -61,14 +61,15 @@ def validate_indisponibilidad(
                 header = ln
                 break
         
-
         periodos = [ln for ln in lines if _periodo_pat.match(ln)]
         periodos_fill_ceros = [pad_periodo(l) for l in periodos]
-
+        
         total = ""
         for ln in lines:
             m = _total_pat.match(ln)
             if m:
+                line = _hour_pad.sub(lambda m: m.group(1).zfill(2), ln)
+                m = _total_pat.match(line)
                 total = m.group(1)
                 break
 
@@ -100,8 +101,6 @@ def validate_indisponibilidad(
     )
 
 
-
-
     df['Validation_OK'] = (
         df['indisponibilidad_header_match']
         & df['indisponibilidad_periodos_match']
@@ -129,31 +128,28 @@ def build_failure_messages_indisponibilidad(df: pd.DataFrame) -> pd.DataFrame:
 
     header_err = np.where(
         ~df['indisponibilidad_header_match'],
-        "\n\n Encabezado inválido en EXCEL-CORTE columna INDISPONIBILIDAD: \n\n"
+        "\n Encabezado inválido en EXCEL-CORTE columna INDISPONIBILIDAD: \n"
         + df['indisponibilidad_header'].astype(str)
-        + "\n\n es diferente a formato de Encabezado Indisponibilidad debe ser: \n\n "
-        + df['clock_stops_paragraph_header'].astype(str)
-        + " ",
+        + "\n es diferente a formato de Encabezado Indisponibilidad debe ser: \n"
+        + df['clock_stops_paragraph_header'].astype(str),
         ""
     )
 
     periodos_err = np.where(
         ~df['indisponibilidad_periodos_match'],
-        "\n\n Parada(s) de clientes en  CORTE - EXCEL columna INDISPONIBILIDAD : \n\n"
+        "\n Parada(s) de clientes en  CORTE - EXCEL columna INDISPONIBILIDAD : \n"
         + df['indisponibilidad_periodos'].astype(str)
-        + "\n\n  ES DIFERENTE A SGA PAUSA CLIENTE SIN OVERLAP: \n\n"
-        + df['clock_stops_paragraph_periodos'].astype(str)
-        + " ",
+        + "\n  ES DIFERENTE A SGA PAUSA CLIENTE SIN OVERLAP: \n"
+        + df['clock_stops_paragraph_periodos'].astype(str),
         ""
     )
 
     total_err = np.where(
         ~df['indisponibilidad_total_match'],
-        "\n\n Total inválido CORTE - EXCEL columna INDISPONIBILIDAD: \n\n "
+        "\n Total inválido CORTE - EXCEL columna INDISPONIBILIDAD: \n"
         + df['indisponibilidad_total'].astype(str)
-        + "\n\n  ES DIFERENTE a total SGA PAUSA CLIENTE SIN OVERLAP: \n\n "
-        + df['clock_stops_paragraph_footer'].astype(str)
-        + " ",
+        + "\n  ES DIFERENTE a total SGA PAUSA CLIENTE SIN OVERLAP: \n"
+        + df['clock_stops_paragraph_footer'].astype(str),
         ""
     )
 
