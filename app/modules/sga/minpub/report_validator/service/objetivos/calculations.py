@@ -202,8 +202,6 @@ def calculate_total_clock_stop_by_incidencia(
     return resolved_stops
 
 
-
-
 @log_exceptions
 def has_repetition(text: str) -> bool:
     """
@@ -220,8 +218,6 @@ def has_repetition(text: str) -> bool:
     ]
     return any(re.search(p, text) for p in patterns )
    
-
-
 
 # EXTRACT RANGE DATOS FECHA INICIO Y FIN FROM INDISPONIBILIDAD EXCEL Y SGA 
 
@@ -257,12 +253,29 @@ def extract_date_range_last(text: str) -> Tuple[Optional[str], Optional[str]]:
 
     start_line, end_line = date_lines[-2], date_lines[-1]
 
+    def _normalize(fecha: str, hora: str) -> str:
+        d, m, y = fecha.split('/')
+        h, mm = hora.split(':')
+        d = d.zfill(2)
+        m = m.zfill(2)
+        h = h.zfill(2)
+        mm = mm.zfill(2)
+        return f"{d}/{m}/{y} {h}:{mm}"
+
     def parse(line: str) -> Optional[str]:
         m = dt_rx.search(line)
-        return f"{m.group(1)} {m.group(2)}" if m else None
+        # return f"{m.group(1)} {m.group(2)}" if m else None
+        fecha = m.group(1)
+        hora = m.group(2)
+        fecha_hora_normzalize = _normalize(fecha, hora)
+        return fecha_hora_normzalize
 
     inicio = parse(start_line)
     fin    = parse(end_line)
+
+
+
+    
     return (inicio, fin) if inicio and fin else (None, None)
 
 
@@ -386,12 +399,11 @@ def extract_tecnico_reports(path_docx: str) -> pd.DataFrame:
             if medidas_title_pat.match(line):
                 med_idx = i
                 break
-        if med_idx is not None:
 
+        if med_idx is not None:
             meds = []
             for sub in block_lines[med_idx+1:]:
                 if not sub:
-                   
                     break
                 meds.append(sub)
               
@@ -506,9 +518,9 @@ def extract_tecnico_reports_without_hours_last_dates(path_docx: str) -> pd.DataF
             meds = []
             for sub in block_lines[med_idx+1:]:
                 if not sub:
-                   
-                    #break
                     continue
+                if sub.lower().startswith("detalle de solicitudes") or sub.lower().startswith("solicitudes"):
+                    break
               
                 mi = rx.match(sub)
                 if mi:
@@ -519,6 +531,7 @@ def extract_tecnico_reports_without_hours_last_dates(path_docx: str) -> pd.DataF
                     continue
 
                 meds.append(sub)
+
 
             row["MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS"] = " ".join(meds).strip()
 
