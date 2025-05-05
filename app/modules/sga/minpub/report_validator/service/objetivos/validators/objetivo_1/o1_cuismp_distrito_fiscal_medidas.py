@@ -1,0 +1,79 @@
+import pandas as pd
+import numpy as np
+from typing import List, Dict
+from datetime import datetime
+from utils.logger_config import get_sga_logger
+ 
+from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import ( 
+    log_exceptions
+)
+
+@log_exceptions
+def validation_cuismp_distrito_fiscal_medidas(merged_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Performs the CUISMP and DF validations on the merged DataFrame.
+    
+    Returns a DataFrame with the new boolean flags and a failure count.
+    """
+
+    df = merged_df.copy()
+
+    df['CUISMP_match'] = df['CUISMP_sga_dinamico_335_excel_matched'] == df['CUISMP_sharepoint_cid_cuismp']
+
+    df['DF_match'] = df['DF'] == df['Distrito Fiscal']
+
+    medidas_col = 'MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS'
+
+    df['CUISMP_in_medias_tomadas'] = df.apply(
+        lambda row: (
+            pd.notnull(row[medidas_col]) 
+            and pd.notnull(row['CUISMP_sga_dinamico_335_excel_matched']) 
+            and row['CUISMP_sga_dinamico_335_excel_matched'] in row[medidas_col]
+        ), 
+        axis=1
+    )
+
+    df['Validation_OK'] = df['CUISMP_match'] & df['DF_match'] & df['CUISMP_in_medias_tomadas']
+
+    df['fail_count'] = (~df['CUISMP_match']).astype(int) + \
+                                (~df['DF_match']).astype(int) + \
+                                (~df['CUISMP_in_medias_tomadas']).astype(int)
+
+    return df  
+
+
+
+
+@log_exceptions
+def build_failure_messages_cuismp_distrito_fiscal_medidas(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Builds the 'mensaje' column using vectorized operations.
+    Adds the 'objetivo' column (constant value of 1) and filters
+    rows that fail at least one validation.
+    
+    Returns a DataFrame with:
+      ['nro_incidencia', 'mensaje', 'objetivo']
+
+    """
+    mensaje = np.where(
+        df['Validation_OK'],
+        "Validation successful",
+        (
+            np.where(~df['CUISMP_match'], 
+                     "\n CUISMP en Sharepoint CID-CUISMP: \n" + df['CUISMP_sharepoint_cid_cuismp'].astype(str) +
+                     "\n es diferente a EXCEL -CORTE (CUISMP): \n" + df['CUISMP_sga_dinamico_335_excel_matched'].astype(str), "") +
+            np.where(~df['DF_match'], 
+                     "\n Distrito Fiscal en Sharepoint CID-CUISMP: \n" + df['Distrito Fiscal'].astype(str) +
+                     "\n es diferente a EXCEL -CORTE (DF):  \n" + df['DF'].astype(str), "") +
+            np.where(~df['CUISMP_in_medias_tomadas'], 
+                     "\n CUISMP: \n "+ df['CUISMP_sga_dinamico_335_excel_matched'].astype(str) +
+                    "\n no encontrado in MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS.", "")
+        )
+    )
+    df['mensaje'] = mensaje
+    df['objetivo'] = "1.1"
+    
+    df_failures = df[df['fail_count'] > 0]
+    return df_failures[['nro_incidencia', 'mensaje', 'TIPO REPORTE','objetivo']]
+
+
