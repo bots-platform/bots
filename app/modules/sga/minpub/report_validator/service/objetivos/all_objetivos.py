@@ -155,8 +155,8 @@ def all_objetivos(
     
     # AVERIAS - DATOS - EXCEL
     df_matched_word_datos_averias_corte_excel = merge_word_datos_averias_corte_excel(
-        df_corte_excel,
         df_word_datos_averias,
+        df_corte_excel,
         'both'
         )
    
@@ -183,16 +183,16 @@ def all_objetivos(
     
     #ANEXOS INDISPONIBILIDAD - DATOS - EXCEL
     df_matched_word_datos_anexo_indisponibilidad_df_merged_sga = merge_word_datos_anexos_disponibilidad_df_merged_sga(
-        df_word_datos_anexos_indis,
         df_matched_corte_sga335_Sharepoint_cuismp_sga380,
-        'both'
+        df_word_datos_anexos_indis,
+        'left_only'
         )
     
     #ANEXOS INDISPONIBILIDAD - TELEFONIA - EXCEL
     df_matched_word_telefonia_anexo_indisponibilidad_df_merged_sga = merge_word_telefonia_anexos_disponibilidad_df_merged_sga(
-        df_word_telefonia_anexos_indis,
         df_matched_corte_sga335_Sharepoint_cuismp_sga380,
-        'both'
+        df_word_telefonia_anexos_indis,
+        'left_only'
         )
     
 

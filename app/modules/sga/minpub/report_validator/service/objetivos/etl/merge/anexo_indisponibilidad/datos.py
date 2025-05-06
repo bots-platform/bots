@@ -8,8 +8,8 @@ from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators 
 
 @log_exceptions
 def merge_word_datos_anexos_disponibilidad_df_merged_sga(
-        df_word_anexos_disponibilidad_datos: pd.DataFrame,
         df_matched_corte_sga335_Sharepoint_cuismp_sga380: pd.DataFrame,
+        df_word_anexos_disponibilidad_datos: pd.DataFrame,
         match_type:str
     ) -> pd.DataFrame:
         """
@@ -21,15 +21,15 @@ def merge_word_datos_anexos_disponibilidad_df_merged_sga(
         Returns a merged DataFrame with common columns needed.
         """
         df_merge_word_datos_anexos_disponibilidad_df_merged_sga = pd.merge(
-        df_word_anexos_disponibilidad_datos,
         df_matched_corte_sga335_Sharepoint_cuismp_sga380,
+        df_word_anexos_disponibilidad_datos,
         on='nro_incidencia',
         how='left',
         indicator='merge_flag_datos',
         suffixes=('_word_datos_anexos_indisp' , '_dfs_merged')
         )
            
-        matched_rows = df_merge_word_datos_anexos_disponibilidad_df_merged_sga[df_merge_word_datos_anexos_disponibilidad_df_merged_sga['_merge'] == match_type]
+        matched_rows = df_merge_word_datos_anexos_disponibilidad_df_merged_sga[df_merge_word_datos_anexos_disponibilidad_df_merged_sga['merge_flag_datos'] == match_type]
         return matched_rows
 
     
