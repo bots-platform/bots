@@ -20,8 +20,8 @@ def validation_averia_tipificacion_problema(merged_df:pd.DataFrame) -> pd.DataFr
     """
     df = merged_df.copy()
 
-    df['averia_direct_match'] = (df['AVERÍA'] == df['tipificacion_problema']) 
-    df['averia_partial_37'] = (df['AVERÍA'].str[:37] == df['tipificacion_problema'].str[:37])
+    df['averia_direct_match'] = (df['AVERÍA'].astype(str).str.strip() == df['tipificacion_problema'].astype(str).str.strip())
+    df['averia_partial_37'] = (df['AVERÍA'].astype(str).str.strip().str[:37] == df['tipificacion_problema'].astype(str).str.strip().str[:37])
 
     df['Validation_OK'] = df['averia_direct_match'] | df['averia_partial_37']
     df['fail_count'] = (~df['Validation_OK']).astype(int)
