@@ -118,7 +118,7 @@ def build_failure_messages_medidas_correctivas(df:pd.DataFrame) -> pd.DataFrame:
                     "") +
 
                       np.where(~df['mc_last_ok'],
-                    "\n  La última fecha/hora del parrafo (CUERPO) en columna MEDIDAS CORRECTIVAS - EXCEL: \n\n" + df['last_dt_mc'].astype(str) +
+                    "\n  La última fecha/hora del parrafo (CUERPO) en columna MEDIDAS CORRECTIVAS - EXCEL: \n" + df['last_dt_mc'].astype(str) +
                       "\n no coincide con la columna FECHA Y HORA FIN DE EXCEL - CORTE : \n" +
                       df['FECHA_Y_HORA_FIN_fmt'].astype(str), 
                     "") + 

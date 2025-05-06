@@ -213,12 +213,13 @@ def has_repetition(text: str) -> bool:
     
     patterns = [
         r'(?i)\b(inmediatamente)\b.*\b\1\b',
-        r'(?i)\b(a través)\b.*\b\1\b',
+        r'(?i)\b(A través de los Sistemas)\b.*\b\1\b',
     ]
     return any(re.search(p, text) for p in patterns )
    
 
 # EXTRACT RANGE DATOS FECHA INICIO Y FIN FROM INDISPONIBILIDAD EXCEL Y SGA 
+
 
 @log_exceptions
 def extract_date_range_last(text: str) -> Tuple[Optional[str], Optional[str]]:
@@ -234,19 +235,18 @@ def extract_date_range_last(text: str) -> Tuple[Optional[str], Optional[str]]:
     normalized = text.replace('\r', ' ')
 
     lines = [ln.strip() for ln in normalized.splitlines() if ln.strip()]
+    
     if len(lines) < 2:
         return (None, None)
 
-    dt_rx = re.compile(
-        r'(\d{1,2}/\d{1,2}/\d{4})'    # fecha
-        r'\s*(?:a las\s*)?'           # opcional “a las”
-        r'(\d{1,2}:\d{2})'            # hora
-        r'(?:\s*horas\.?)?',          # opcional “horas”
-        re.IGNORECASE
+    # Captura DD/MM/YYYY seguido de HH:MM, separados por cualquier cosa
+    fecha_hora_pat = re.compile(
+    r'(\d{2}/\d{2}/\d{4})\D{0,10}(\d{1,2}:\d{2})',
+    flags=re.IGNORECASE
     )
 
 
-    date_lines = [ln for ln in lines if dt_rx.search(ln)]
+    date_lines = [ln for ln in lines if fecha_hora_pat.search(ln)]
     if len(date_lines) < 2:
         return (None, None)
 
@@ -262,7 +262,7 @@ def extract_date_range_last(text: str) -> Tuple[Optional[str], Optional[str]]:
         return f"{d}/{m}/{y} {h}:{mm}"
 
     def parse(line: str) -> Optional[str]:
-        m = dt_rx.search(line)
+        m = fecha_hora_pat.search(line)
         # return f"{m.group(1)} {m.group(2)}" if m else None
         fecha = m.group(1)
         hora = m.group(2)
@@ -271,9 +271,6 @@ def extract_date_range_last(text: str) -> Tuple[Optional[str], Optional[str]]:
 
     inicio = parse(start_line)
     fin    = parse(end_line)
-
-
-
     
     return (inicio, fin) if inicio and fin else (None, None)
 
@@ -292,21 +289,12 @@ def extract_date_range_body(text: str) -> Tuple[Optional[str], Optional[str]]:
     clean_body = "\n".join(lines)
 
    
-    narr_pat = re.compile(
-        r'el día\s*(\d{2}/\d{2}/\d{4})\s*a las\s*(\d{2}:\d{2})',
-        flags=re.IGNORECASE
+    fecha_hora_pat = re.compile(
+    r'(\d{2}/\d{2}/\d{4})\D{0,10}(\d{1,2}:\d{2})',
+    flags=re.IGNORECASE
     )
-
-    combined_pat = re.compile(
-        r'el(?:\s*d[ií]a)?\s*'           # “el” + opcional “ día”
-        r'(\d{2}/\d{2}/\d{4})\s*'        # fecha
-        r'(?:a las\s*)?'                 # opcional “a las”
-        r'(\d{1,2}:\d{2})'               # hora
-        r'(?:\s*horas?)?',               # opcional “ horas”
-        flags=re.IGNORECASE
-    )
-
-    matches = combined_pat.findall(clean_body)
+    
+    matches = fecha_hora_pat.findall(clean_body)
 
     if not matches:
         return (None, None)
@@ -320,26 +308,10 @@ def extract_date_range_body(text: str) -> Tuple[Optional[str], Optional[str]]:
         mm = mm.zfill(2)
         return f"{d}/{m}/{y} {h}:{mm}"
 
-
     if matches:
         start_date, start_time = matches[0]
         end_date,   end_time   = matches[-1]
         return (_normalize(start_date, start_time), _normalize(end_date, end_time))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
