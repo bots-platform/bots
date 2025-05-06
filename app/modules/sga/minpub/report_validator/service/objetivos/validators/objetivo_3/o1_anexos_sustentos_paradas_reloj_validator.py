@@ -17,6 +17,7 @@ def validate_anexos_indisponibilidad_word( merged_df: pd.DataFrame) -> pd.DataFr
 
     df = merged_df.copy()
 
+    df = df[df['clock_stops_paragraph_header'] != "" ]
 
     df['indisponibilidad_header_match'] = (
         df['indisponibilidad_header'].astype(str).str.strip() == df['clock_stops_paragraph_header']
