@@ -1,5 +1,6 @@
 
 import pandas as pd
+import numpy as np
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.cleaning import ( 
     handle_null_values, cut_decimal_part
 )
@@ -20,5 +21,36 @@ def preprocess_335(df):
     df["cid"] = df["cid"].astype(str).str.strip().fillna('No disponible')
     df = cut_decimal_part(df, 'codincidencepadre')
     df["codincidencepadre"] = df["codincidencepadre"].astype(str).str.strip().fillna('No disponible')
+
+    df['fecha_generacion_truncated']    = df['fecha_generacion'].dt.floor('T')
+    df['interrupcion_inicio_truncated'] = df['interrupcion_inicio'].dt.floor('T')
+    df['interrupcion_fin_truncated']    = df['interrupcion_fin'].dt.floor('T')
+
+    mask_masivo = df['masivo'] == "Si"
+    df['Expected_Inicio_truncated'] = np.where(
+        mask_masivo,
+        df['fecha_generacion_truncated'],
+        df['interrupcion_inicio_truncated']
+    )
+
+    neg_mask = mask_masivo & (
+        df['interrupcion_fin_truncated'] - df['Expected_Inicio_truncated'] < pd.Timedelta(0)
+    )
+    df.loc[neg_mask, 'Expected_Inicio_truncated'] = df.loc[neg_mask, 'interrupcion_inicio_truncated']
+
+    df['Expected_Inicio_truncated_fm'] = (
+        df['Expected_Inicio_truncated']
+        .dt.strftime('%d/%m/%Y %H:%M')
+        .fillna("N/A")
+        .astype(str)
+    )
+
+    df['interrupcion_fin_truncated_fm'] = (
+        df['interrupcion_fin_truncated']
+        .dt.strftime('%d/%m/%Y %H:%M')
+        .fillna("N/A")
+        .astype(str)
+    )
+
 
     return df
