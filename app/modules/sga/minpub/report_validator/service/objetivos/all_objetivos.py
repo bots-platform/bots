@@ -181,22 +181,29 @@ def all_objetivos(
         'both'
         )
     
+    
+
+    df_componente_ii = df_matched_corte_sga335_Sharepoint_cuismp_sga380[
+        df_matched_corte_sga335_Sharepoint_cuismp_sga380['COMPONENTE'] == 'COMPONENTE II'
+    ]
+
     #ANEXOS INDISPONIBILIDAD - DATOS - EXCEL
     df_matched_word_datos_anexo_indisponibilidad_df_merged_sga = merge_word_datos_anexos_disponibilidad_df_merged_sga(
-        df_matched_corte_sga335_Sharepoint_cuismp_sga380,
+        df_componente_ii,
         df_word_datos_anexos_indis,
-        'left_only'
-        )
-    
-    #ANEXOS INDISPONIBILIDAD - TELEFONIA - EXCEL
-    df_matched_word_telefonia_anexo_indisponibilidad_df_merged_sga = merge_word_telefonia_anexos_disponibilidad_df_merged_sga(
-        df_matched_corte_sga335_Sharepoint_cuismp_sga380,
-        df_word_telefonia_anexos_indis,
-        'left_only'
         )
     
 
+    df_componente_iv = df_matched_corte_sga335_Sharepoint_cuismp_sga380[
+        df_matched_corte_sga335_Sharepoint_cuismp_sga380['COMPONENTE'] == 'COMPONENTE IV'
+    ]
     
+    #ANEXOS INDISPONIBILIDAD - TELEFONIA - EXCEL
+    df_matched_word_telefonia_anexo_indisponibilidad_df_merged_sga = merge_word_telefonia_anexos_disponibilidad_df_merged_sga(
+        df_componente_iv,
+        df_word_telefonia_anexos_indis,
+        )
+
 #  RUN OBJETIVOS 
 
     obj1_df = run_objetivo_1(
