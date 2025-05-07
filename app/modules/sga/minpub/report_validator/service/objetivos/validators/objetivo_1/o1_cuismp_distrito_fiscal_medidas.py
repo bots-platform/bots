@@ -20,7 +20,7 @@ def validation_cuismp_distrito_fiscal_medidas(merged_df: pd.DataFrame) -> pd.Dat
 
     df['CUISMP_match'] = df['CUISMP_sga_dinamico_335_excel_matched'] == df['CUISMP_sharepoint_cid_cuismp']
 
-    df['DF_match'] = df['DF'] == df['Distrito Fiscal']
+    df['DF_match'] = df['DF'].astype(str).str.lower() == df['Distrito Fiscal'].astype(str).str.lower()
 
     medidas_col = 'MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS'
 
