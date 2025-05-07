@@ -20,15 +20,8 @@ def validation_tiempo_HHMM_paradas_cliente(df_merged: pd.DataFrame) -> pd.DataFr
 
     df = df_merged.copy()
 
-    df['Expected_Inicio'] = np.where(df['masivo'] == "Si",
-                                     df['fecha_generacion'],
-                                     df['interrupcion_inicio'])
-    
-    df['Expected_Inicio_trimmed'] = df['Expected_Inicio'].apply(lambda x: x.replace(second=0))
-    df['interrupcion_fin_trimmed'] = df['interrupcion_fin'].apply(lambda x: x.replace(second=0))
-
     df['diff_335_min'] = (
-        (df['interrupcion_fin_trimmed'] - df['Expected_Inicio_trimmed'])
+        (df['interrupcion_fin_truncated'] - df['Expected_Inicio_truncated'])
         .dt.total_seconds()/60
     )
 
@@ -38,10 +31,8 @@ def validation_tiempo_HHMM_paradas_cliente(df_merged: pd.DataFrame) -> pd.DataFr
         try:
             h,m = str(hhmm_str).split(':')
             total_minutes = float(h)*60 + float(m)
-            #print(f"Converted {hhmm_str} to {total_minutes} seconds")
             return total_minutes
         except Exception as e:
-            #print(f"Error with {hhmm_str}: {e}")
             return np.nan
         
     df['TIEMPO (HH:MM)_trimed'] = df['TIEMPO (HH:MM)'].apply(

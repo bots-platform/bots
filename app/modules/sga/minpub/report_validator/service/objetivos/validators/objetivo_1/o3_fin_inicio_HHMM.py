@@ -12,16 +12,14 @@ def validation_fin_inicio_HHMM(merged_df: pd.DataFrame) -> pd.DataFrame:
 
     df = merged_df.copy()
     
-    df['Expected_Inicio'] = np.where(df['masivo'] == "Si",
-                                     df['fecha_generacion'],
-                                     df['interrupcion_inicio'])
-    
+    df['duration_diff_335'] = df['interrupcion_fin_truncated'] - df['Expected_Inicio_truncated']
 
-    df['Expected_Inicio_trimmed'] = df['Expected_Inicio'].apply(lambda x: x.replace(second=0))
-    df['interrupcion_fin_trimmed'] = df['interrupcion_fin'].apply(lambda x: x.replace(second=0))
-
-    df['duration_diff_335_sec'] = df['interrupcion_fin_trimmed'] - df['Expected_Inicio_trimmed']
-    df['diff_335_sec_hhmm'] = df['duration_diff_335_sec'].apply(lambda x: f"{int(x.total_seconds() // 3600):02}:{int(x.total_seconds() % 3600 // 60):02d}")
+    df['duration_diff_335_sec']  = df['duration_diff_335'].dt.total_seconds().astype(int)
+    df['diff_335_sec_hhmm'] = (
+        df['duration_diff_335_sec'] // 3600
+    ).astype(str).str.zfill(2) + ":" + (
+        (df['duration_diff_335_sec'] % 3600) // 60
+    ).astype(str).str.zfill(2)
 
     df['duration_diff_corte_sec'] = (df['FECHA Y HORA FIN'] - df['FECHA Y HORA INICIO'])
     df['diff_corte_sec_hhmm'] = df['duration_diff_corte_sec'].apply(lambda x: f"{int(x.total_seconds() // 3600):02}:{int(x.total_seconds() % 3600 // 60):02d}")
@@ -40,7 +38,7 @@ def validation_fin_inicio_HHMM(merged_df: pd.DataFrame) -> pd.DataFrame:
     
     df['fin_inicio_hhmm_column_corte_to_minutes'] = df['FIN-INICIO (HH:MM)_trimed'].apply(parse_hhmm_to_minutes)
 
-    df['non_negative_335'] = df['duration_diff_335_sec'].dt.total_seconds() >= 0
+    df['non_negative_335'] = df['duration_diff_335_sec'] >= 0
     df['non_negative_corte'] = df['duration_diff_corte_sec'].dt.total_seconds() >= 0
 
     df['non_negative_fin_inicio_column_corte_hhmm_to_minutes'] = df['fin_inicio_hhmm_column_corte_to_minutes'] >= 0
