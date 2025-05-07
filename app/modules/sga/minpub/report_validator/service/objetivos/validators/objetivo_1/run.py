@@ -33,7 +33,7 @@ from app.modules.sga.minpub.report_validator.service.objetivos.validators.objeti
 
 from app.modules.sga.minpub.report_validator.service.objetivos.validators.objetivo_1.o6_averia_tipificacion_problema import (
     validation_averia_tipificacion_problema,
-    build_failure_messages_averia_tipificacion_tipo
+    build_failure_messages_averia_tipificacion_problema
 )
 
 from app.modules.sga.minpub.report_validator.service.objetivos.validators.objetivo_1.o7_tipo_reporte_observacion import (
@@ -105,7 +105,7 @@ def run_objetivo_1(
 
     
     df_validation_averia_tipificacion_problema = validation_averia_tipificacion_problema(df_matched_corte_sga335_sharepoint_cuismp_sga380)
-    df_failure_messages_validation_averia_tipificacion_problema = build_failure_messages_averia_tipificacion_tipo(df_validation_averia_tipificacion_problema)
+    df_failure_messages_validation_averia_tipificacion_problema = build_failure_messages_averia_tipificacion_problema(df_validation_averia_tipificacion_problema)
 
     df_validation_tipo_reporte_observacion = validation_tipo_reporte_observacion(df_matched_corte_sga335_sharepoint_cuismp_sga380)
     df_failure_message_validation_tipo_reporte_observacion = build_failure_messages_reporte_observacion(df_validation_tipo_reporte_observacion)
