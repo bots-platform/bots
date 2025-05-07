@@ -21,27 +21,39 @@ def validation_averia_tipificacion_problema(merged_df:pd.DataFrame) -> pd.DataFr
     df = merged_df.copy()
 
     df['averia_direct_match'] = (df['AVERÍA'].astype(str).str.strip() == df['tipificacion_problema'].astype(str).str.strip())
-    df['averia_partial_37'] = (df['AVERÍA'].astype(str).str.strip().str[:37] == df['tipificacion_problema'].astype(str).str.strip().str[:37])
+    df['averia_partial_37_match'] = (df['AVERÍA'].astype(str).str.strip().str[:37] == df['tipificacion_problema'].astype(str).str.strip().str[:37])
 
-    df['Validation_OK'] = df['averia_direct_match'] | df['averia_partial_37']
+    df['averia_match'] = df['averia_direct_match'] | df['averia_partial_37_match']
+
+    df['Validation_OK'] = df['averia_match']
     df['fail_count'] = (~df['Validation_OK']).astype(int)
 
     return df
 
 @log_exceptions
-def build_failure_messages_averia_tipificacion_tipo(df:pd.DataFrame) -> pd.DataFrame:
+def build_failure_messages_averia_tipificacion_problema(df:pd.DataFrame) -> pd.DataFrame:
     """"
     Build descriptive failure menssages for rows that don't pass validation. 
     Returns Dataframe with only failing rows.
     """
 
-    failed_rows = df[~df['Validation_OK']].copy()
+    mensaje = np.where(
+        df['Validation_OK'],
+        " Tipificacion problema  coincide",
+        (
+        np.where(~df['averia_match'],
+            "\n No coincide columnna AVERÍA en EXCEL-CORTE: \n" +
+            df['AVERÍA'].astype(str)+"\n con tipificacion_problema en SGA 335: \n"+ 
+            df['tipificacion_problema'].astype(str), "")           
+         )
+        )
 
-    if not failed_rows.empty:
-        failed_rows['mensaje'] = ("\n No coincide columnna AVERÍA en EXCEL-CORTE:  \n"+df['AVERÍA'].astype(str)+ 
-        "\n con tipificacion_problema en SGA 335: \n" + df["tipificacion_problema"].astype(str)) 
-        failed_rows['objetivo'] = "1.6"
 
-    return failed_rows[['nro_incidencia', 'mensaje', 'TIPO REPORTE','objetivo']]
+    df['mensaje'] = mensaje
+    df['objetivo'] = "1.6"
+    df_failures = df[df['fail_count'] > 0]
+    return df_failures[['nro_incidencia', 'mensaje', 'TIPO REPORTE','objetivo']]
+
+
 
 
