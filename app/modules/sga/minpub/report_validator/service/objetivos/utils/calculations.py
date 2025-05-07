@@ -9,7 +9,6 @@ from typing import Tuple, Optional
 # import language_tool_python
 # _tool_es = language_tool_python.LanguageTool('es')
 
-
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import ( 
     log_exceptions
 )
@@ -221,6 +220,7 @@ def has_repetition(text: str) -> bool:
 # EXTRACT RANGE DATOS FECHA INICIO Y FIN FROM INDISPONIBILIDAD EXCEL Y SGA 
 
 
+
 @log_exceptions
 def extract_date_range_last(text: str) -> Tuple[Optional[str], Optional[str]]:
     """
@@ -275,47 +275,44 @@ def extract_date_range_last(text: str) -> Tuple[Optional[str], Optional[str]]:
     return (inicio, fin) if inicio and fin else (None, None)
 
 
+
 @log_exceptions
 def extract_date_range_body(text: str) -> Tuple[Optional[str], Optional[str]]:
     if not isinstance(text, str):
         return (None, None)
 
-  
     lines = text.splitlines()
     meta_pat = re.compile(r'(?i)^fecha y hora(?: de)? (?:inicio|fin)\s*:')
-   
+
     while lines and (not lines[-1].strip() or meta_pat.match(lines[-1].strip())):
         lines.pop()
     clean_body = "\n".join(lines)
 
-   
     fecha_hora_pat = re.compile(
-    r'(\d{2}/\d{2}/\d{4})\D{0,10}(\d{1,2}:\d{2})',
-    flags=re.IGNORECASE
+        r'(\d{2}/\d{2}/\d{4})\D{0,10}(\d{1,2}:\d{2})',
+        flags=re.IGNORECASE
     )
-    
-    matches = fecha_hora_pat.findall(clean_body)
-
-    if not matches:
-        return (None, None)
 
     def _normalize(fecha: str, hora: str) -> str:
         d, m, y = fecha.split('/')
         h, mm = hora.split(':')
-        d = d.zfill(2)
-        m = m.zfill(2)
-        h = h.zfill(2)
-        mm = mm.zfill(2)
-        return f"{d}/{m}/{y} {h}:{mm}"
+        return f"{d.zfill(2)}/{m.zfill(2)}/{y} {h.zfill(2)}:{mm.zfill(2)}"
 
-    if matches:
-        start_date, start_time = matches[0]
-        end_date,   end_time   = matches[-1]
-        return (_normalize(start_date, start_time), _normalize(end_date, end_time))
+    midpoint = len(clean_body) / 2
+    start_date = None
+    end_date = None
 
+    for match in fecha_hora_pat.finditer(clean_body):
+        fecha, hora = match.groups()
+        full_date = _normalize(fecha, hora)
+        pos = match.start()
 
+        if pos < midpoint and not start_date:
+            start_date = full_date
+        elif pos >= midpoint:
+            end_date = full_date
 
-
+    return (start_date, end_date)
 
 
 
