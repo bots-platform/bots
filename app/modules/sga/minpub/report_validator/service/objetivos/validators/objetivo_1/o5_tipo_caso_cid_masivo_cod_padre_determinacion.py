@@ -66,18 +66,17 @@ def build_failure_messages_tipo_caso_cid_masivo_codincidencia_padre_determinacio
         "Determinacion de la causa coincide  despues de remover 'COMPONENTE ' prefix",
          (
             np.where(~df['causa_match'],
-                     " \n\n No coincide Determinacion de la causa Excel-Corte: \n\n" +
-                       df['causa_excel_clean'].astype(str)+"\n\n con SGA Determinación de la causa: \n\n"+ df['causa_sga335_clean'],  "")+
+                     " \n No coincide Determinacion de la causa Excel-Corte: \n" +
+                       df['causa_excel_clean'].astype(str)+"\n con SGA Determinación de la causa: \n"+ df['causa_sga335_clean'],  "")+
             np.where(~df['tipo_caso_match'],
-                     "\n\n No coincide Tipo de Caso de CORTE-EXCEL: \n\n" + df['TIPO CASO'].astype(str) +"\n\n con SGA determinación de la causa: \n\n" + 
-                     df['tipo_caso'].astype(str)+ "). ", "")+
+                     "\n No coincide Tipo de Caso de CORTE-EXCEL: \n" + df['TIPO CASO'].astype(str) +"\n con SGA determinación de la causa: \n\n" + 
+                     df['tipo_caso'].astype(str), "")+
             np.where(~df['cid_match'],
-                     "\n\n No coincide cid  de CORTE-EXCEL : \n\n"+ df['CID'].astype(str) +
-                     "\n\n con SGA: \n\n" + df['cid'].astype(str) +
-                      "). ", "")+
+                     "\n No coincide cid  de CORTE-EXCEL : \n"+ df['CID'].astype(str) +
+                     "\n con SGA: \n" + df['cid'].astype(str), "")+
            np.where(~df['cod_incidencia_padre_match'],
-                     "\n\n  No coincide nro incidencia padre EXCEL-CORTE: \n\n" + df['CODINCIDENCEPADRE'].astype(str) +
-                       "con columna SGA codeincidencepadre: \n\n" +df['codincidencepadre'].astype(str)+ "). ", "")
+                     "\n  No coincide nro incidencia padre EXCEL-CORTE: \n" + df['CODINCIDENCEPADRE'].astype(str) +
+                       "con columna SGA codeincidencepadre: \n" +df['codincidencepadre'].astype(str), "")
         )
     )
     df['mensaje'] = mensaje
