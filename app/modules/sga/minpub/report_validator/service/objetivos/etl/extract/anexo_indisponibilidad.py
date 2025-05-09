@@ -31,8 +31,6 @@ def extract_indisponibilidad_anexos(path_docx: str) ->  Optional[pd.DataFrame]:
                 paragraphs_list.append(text)
 
     anexo_pattern_ticket = re.compile(r"ANEXO\s+\d+\s+–\s+TICKET\s+(\d+)", re.IGNORECASE)
-    # Busca “anexo” y “ticket” en cualquier caso, y captura el número
-    #anexo_pattern_ticket = re.compile(r"ANEXO.*?TICKET.*?(\d+)", re.IGNORECASE)
 
     linea0_pat_pattern   = re.compile(r"^Se tuvo indisponibilidad por parte del cliente.*", re.IGNORECASE)
     periodo_pattern      = re.compile(
@@ -92,7 +90,7 @@ def extract_indisponibilidad_anexos(path_docx: str) ->  Optional[pd.DataFrame]:
             "indisponibilidad_header": linea0,
             "indisponibilidad_periodos": "\n".join(periodos),
             "indisponibilidad_footer": footer,
-            "indisponibilidad_total": total
+            "indisponibilidad_total": pad_total(total)
         })
     
     if not records:
