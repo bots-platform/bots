@@ -12,48 +12,10 @@ def validation_fin_inicio_HHMM(merged_df: pd.DataFrame) -> pd.DataFrame:
 
     df = merged_df.copy()
     
-    df['duration_diff_335'] = df['interrupcion_fin_truncated'] - df['Expected_Inicio_truncated']
-
-    df['duration_diff_335_sec']  = df['duration_diff_335'].dt.total_seconds().astype(int)
-    df['diff_335_sec_hhmm'] = (
-        df['duration_diff_335_sec'] // 3600
-    ).astype(str).str.zfill(2) + ":" + (
-        (df['duration_diff_335_sec'] % 3600) // 60
-    ).astype(str).str.zfill(2)
-
-    df['duration_diff_corte_sec'] = (df['FECHA Y HORA FIN'] - df['FECHA Y HORA INICIO'])
-    df['diff_corte_sec_hhmm'] = df['duration_diff_corte_sec'].apply(lambda x: f"{int(x.total_seconds() // 3600):02}:{int(x.total_seconds() % 3600 // 60):02d}")
-
-    def parse_hhmm_to_minutes(hhmm_str):
-        if pd.isna(hhmm_str):
-            return np.nan
-        try:
-            h,m = str(hhmm_str).split(':')
-            total_minutes = float(h) * 60 + float(m)
-            print(f"Converted {hhmm_str} to {total_minutes} seconds")
-            return total_minutes
-        except Exception as e: 
-            print(f"Error with {hhmm_str}: {e}")
-            return np.nan
-    
-    df['fin_inicio_hhmm_column_corte_to_minutes'] = df['FIN-INICIO (HH:MM)_trimed'].apply(parse_hhmm_to_minutes)
-
     df['non_negative_335'] = df['duration_diff_335_sec'] >= 0
     df['non_negative_corte'] = df['duration_diff_corte_sec'].dt.total_seconds() >= 0
-
     df['non_negative_fin_inicio_column_corte_hhmm_to_minutes'] = df['fin_inicio_hhmm_column_corte_to_minutes'] >= 0
-
-
-    def hhmm_to_minutes(hhmm_str):
-        hh, mm = hhmm_str.split(":")
-        return int(hh) * 60 + int (mm)
-
-    df['duration_diff_335_min'] = df['diff_335_sec_hhmm'].apply(hhmm_to_minutes) 
-    df['duration_diff_corte_min'] = df['diff_corte_sec_hhmm'].apply(hhmm_to_minutes) 
-
     df['match_335_corte'] = abs(df['duration_diff_335_min'] - df['duration_diff_corte_min']) <= 1
-
-
     df['match_corte_fin_inicio_hhmm_column'] = df['diff_corte_sec_hhmm'] == df['FIN-INICIO (HH:MM)_trimed']
 
     df['Validation_OK'] = (

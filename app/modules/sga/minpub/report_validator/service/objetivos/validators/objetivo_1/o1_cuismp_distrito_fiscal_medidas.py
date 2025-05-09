@@ -11,9 +11,27 @@ from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators 
 @log_exceptions
 def validation_cuismp_distrito_fiscal_medidas(merged_df: pd.DataFrame) -> pd.DataFrame:
     """
-    Performs the CUISMP and DF validations on the merged DataFrame.
-    
-    Returns a DataFrame with the new boolean flags and a failure count.
+     Valida coincidencias de CUISMP y Distrito Fiscal, y presencia de CUISMP en medidas.
+
+    Parámetros
+    ----------
+    merged_df : pandas.DataFrame
+        Debe contener las columnas:
+        - CUISMP_sga_dinamico_335_excel_matched
+        - CUISMP_sharepoint_cid_cuismp
+        - DF
+        - Distrito Fiscal
+        - MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS
+
+    Devuelve
+    -------
+    pandas.DataFrame
+        Copia del DataFrame con estas columnas añadidas:
+        - CUISMP_match
+        - DF_match
+        - CUISMP_in_medias_tomadas
+        - Validation_OK
+        - fail_count
     """
 
     df = merged_df.copy()
@@ -47,12 +65,26 @@ def validation_cuismp_distrito_fiscal_medidas(merged_df: pd.DataFrame) -> pd.Dat
 @log_exceptions
 def build_failure_messages_cuismp_distrito_fiscal_medidas(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Builds the 'mensaje' column using vectorized operations.
-    Adds the 'objetivo' column (constant value of 1) and filters
-    rows that fail at least one validation.
-    
-    Returns a DataFrame with:
-      ['nro_incidencia', 'mensaje', 'objetivo']
+   Genera mensajes de error y filtra filas fallidas de CUISMP y Distrito Fiscal.
+
+    Para cada fila con `fail_count > 0`, construye la columna `mensaje`
+    con la descripción de las validaciones que fallaron y añade `objetivo="1.1"`.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Debe contener:
+        - Flags de validación: Validation_OK, CUISMP_match, DF_match,
+          CUISMP_in_medias_tomadas, fail_count
+        - Datos de CUISMP y DF: CUISMP_sharepoint_cid_cuismp,
+          CUISMP_sga_dinamico_335_excel_matched, Distrito Fiscal, DF
+        - Identificadores: nro_incidencia, TIPO REPORTE
+
+    Returns
+    -------
+    pandas.DataFrame
+        DataFrame filtrado con filas donde `fail_count > 0` y columnas:
+        ['nro_incidencia', 'mensaje', 'TIPO REPORTE', 'objetivo'].
 
     """
     mensaje = np.where(
