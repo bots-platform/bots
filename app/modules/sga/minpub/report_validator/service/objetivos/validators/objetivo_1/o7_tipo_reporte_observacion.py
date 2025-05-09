@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+import re
+
 from typing import List, Dict
 from datetime import datetime
 
@@ -28,7 +30,13 @@ def validation_tipo_reporte_observacion(merged_df:pd.DataFrame)-> pd.DataFrame:
     df = merged_df.copy()
 
     valid_tipo_caso_reclamo = {"SIN SERVICIO", "ENLACE LENTO", "SIN SERVICIO-NO DA TONO", "OTROS CALIDAD"}
-    proactive_speech = "A través de los Sistemas de Monitoreo de Claro, de manera proactiva se identificó"
+    
+    pattern = re.compile(
+        r'(?i)^a través de los sistemas de monitoreo de (?-i:Claro), de manera proactiva se identificó'
+    )
+
+
+
 
 
     df['observacion_pattern_componente_tipo_reporte'] = ""
@@ -56,19 +64,42 @@ def validation_tipo_reporte_observacion(merged_df:pd.DataFrame)-> pd.DataFrame:
     for col in validation_columns:
         df[col] = True
 
+
+
+    reclamo_mask = df['TIPO REPORTE'] == 'RECLAMO'
+    if reclamo_mask.any():
+        medidas = df.loc[reclamo_mask, 'MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS']
+        # .str.match aplica el regex al comienzo de la cadena
+        match_mask = medidas.str.match(pattern)
+        # Valid es True cuando NO arranca con ese texto
+        df.loc[reclamo_mask, 'reclamo_medidas_correctivas_valid'] = ~match_mask
+
+
+
     reclamo_mask = df['TIPO REPORTE'] == 'RECLAMO'
     proactivo_mask = df['TIPO REPORTE'] == 'PROACTIVO'
     
     if reclamo_mask.any():
         df.loc[reclamo_mask, 'reclamo_tipo_caso_valid'] = df.loc[reclamo_mask, 'tipo_caso'].isin(valid_tipo_caso_reclamo)
         df.loc[reclamo_mask, 'reclamo_no_monitoresoruo'] = ~df.loc[reclamo_mask, 'tipo_caso'].str.endswith('MONITOREO')
-        df.loc[reclamo_mask,'reclamo_medidas_correctivas_valid'] = ~df.loc[reclamo_mask, 'MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS'].str.startswith(proactive_speech)
-        df.loc[reclamo_mask, 'reclamo_observacion_valid'] = df.loc[reclamo_mask, 'OBSERVACIÓN'] == df.loc[reclamo_mask, 'observacion_pattern_componente_tipo_reporte']
+        
+        medidas = df.loc[reclamo_mask, 'MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS']
+        match_mask = medidas.str.match(pattern)
+        df.loc[reclamo_mask, 'reclamo_medidas_correctivas_valid'] = ~match_mask
+        
+        
+        df.loc[reclamo_mask, 'reclamo_observacion_valid'] = df.loc[reclamo_mask, 'OBSERVACIÓN'].str.lower() == df.loc[reclamo_mask, 'observacion_pattern_componente_tipo_reporte'].str.lower()
 
     if proactivo_mask.any():
         df.loc[proactivo_mask, 'proactivo_tipo_caso_valid'] = df.loc[proactivo_mask, 'tipo_caso'].str.endswith('MONITOREO')
-        df.loc[proactivo_mask, 'proactivo_medidas_correctivas_valid'] = df.loc[proactivo_mask, 'MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS'].str.startswith(proactive_speech)
-        df.loc[proactivo_mask, 'proactivo_observacion_valid'] = df.loc[proactivo_mask, 'OBSERVACIÓN'] == df.loc[proactivo_mask, 'observacion_pattern_componente_tipo_reporte']
+
+      
+
+        medidas = df.loc[proactivo_mask, 'MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS']
+        match_mask = medidas.str.match(pattern)
+        df.loc[proactivo_mask, 'proactivo_medidas_correctivas_valid'] = match_mask
+        
+        df.loc[proactivo_mask, 'proactivo_observacion_valid'] = df.loc[proactivo_mask, 'OBSERVACIÓN'].str.lower() == df.loc[proactivo_mask, 'observacion_pattern_componente_tipo_reporte'].str.lower()
 
 
 
