@@ -2,9 +2,11 @@
 from typing import List, Dict
 import pandas as pd
 
+from app.modules.sga.minpub.report_validator.service.objetivos.etl.extract.corte_excel import extract_corte_excel
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import ( 
     log_exceptions
 )
+
 
 from app.modules.sga.minpub.report_validator.service.objetivos.validators.objetivo_1.run import run_objetivo_1
 from app.modules.sga.minpub.report_validator.service.objetivos.validators.objetivo_2.run import run_objetivo_2
@@ -20,6 +22,7 @@ from app.modules.sga.minpub.report_validator.service.objetivos.etl.extract.infor
 from app.modules.sga.minpub.report_validator.service.objetivos.etl.extract.anexo_indisponibilidad import (
     extract_indisponibilidad_anexos
 )
+from app.modules.sga.minpub.report_validator.service.objetivos.etl.extract.sga_335 import extract_sga_335
 
 
 # TRANSFORM IMPORTS
@@ -73,7 +76,7 @@ merge_word_telefonia_anexos_disponibilidad_df_merged_sga
 @log_exceptions
 def all_objetivos(
     path_corte_excel, 
-    path_sgq_dinamico_335, 
+    path_sga_dinamico_335, 
     path_sga_dinamico_380,
     path_cid_cuismp_sharepoint,
     word_datos_file_path,
@@ -95,10 +98,12 @@ def all_objetivos(
     
     # EXTRACT INVOQUE
     df_corte_excel = pd.read_excel(path_corte_excel, skipfooter=2, engine="openpyxl")
-    df_sga_dinamico_335 = pd.read_excel(path_sgq_dinamico_335) 
+    
     df_sga_dinamico_380 = pd.read_excel(path_sga_dinamico_380)
     df_cid_cuismp_sharepoint = pd.read_excel(path_cid_cuismp_sharepoint)
 
+    #df_corte_excel = extract_corte_excel(path_corte_excel, skipfooter=2)
+    df_sga_dinamico_335 =  extract_sga_335(path_sga_dinamico_335)
     df_word_datos_averias =  extract_averias_table(word_datos_file_path)
     df_word_telefonia_averias = extract_averias_table(word_telefonia_file_path)
     df_word_datos_informe_tec =  extract_tecnico_reports_without_hours_last_dates(word_datos_file_path)
