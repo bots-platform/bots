@@ -1,12 +1,16 @@
 
 import re
 import pandas as pd
+import numpy as np
 
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.cleaning import ( 
     handle_null_values, cut_decimal_part
 )
 
 def preprocess_corte_excel(df):
+
+    df = df.copy()
+
     df = cut_decimal_part(df,'CUISMP')
     df["CODINCIDENCEPADRE"] = df["CODINCIDENCEPADRE"].astype(str).str.strip().fillna('No disponible')
     df = handle_null_values(df)
@@ -58,5 +62,31 @@ def preprocess_corte_excel(df):
         .fillna("N/A")
         .astype(str)
     )
+
+    df['duration_diff_corte_sec'] = (df['FECHA Y HORA FIN'] - df['FECHA Y HORA INICIO'])
+    df['diff_corte_sec_hhmm'] = df['duration_diff_corte_sec'].apply(lambda x: f"{int(x.total_seconds() // 3600):02}:{int(x.total_seconds() % 3600 // 60):02d}")
+
+
+    def parse_hhmm_to_minutes(hhmm_str):
+        if pd.isna(hhmm_str):
+            return np.nan
+        try:
+            h,m = str(hhmm_str).split(':')
+            total_minutes = float(h) * 60 + float(m)
+            print(f"Converted {hhmm_str} to {total_minutes} seconds")
+            return total_minutes
+        except Exception as e: 
+            print(f"Error with {hhmm_str}: {e}")
+            return np.nan
+    
+    df['fin_inicio_hhmm_column_corte_to_minutes'] = df['FIN-INICIO (HH:MM)_trimed'].apply(parse_hhmm_to_minutes)
+
+    def hhmm_to_minutes(hhmm_str):
+        hh, mm = hhmm_str.split(":")
+        return int(hh) * 60 + int (mm)
+
+ 
+    df['duration_diff_corte_min'] = df['diff_corte_sec_hhmm'].apply(hhmm_to_minutes)
+
 
     return df
