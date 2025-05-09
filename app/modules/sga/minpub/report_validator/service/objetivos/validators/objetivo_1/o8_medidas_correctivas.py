@@ -23,6 +23,7 @@ def validation_medidas_correctivas(merged_df: pd.DataFrame) -> pd.DataFrame:
     """
 
     df = merged_df.copy()
+    df = df[df['masivo'] == 'No']
 
     df['mc_first_ok'] = True
     df['mc_last_ok'] = True
