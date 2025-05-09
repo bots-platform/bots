@@ -41,20 +41,23 @@ def validation_tipo_caso_cid_masivo_codincidencia_padre_determinacion_causa(merg
     df['tipo_caso_match'] = df['tipo_caso'] == df['TIPO CASO']
     df['cid_match'] = df['cid'] == df['CID']
     df['cod_incidencia_padre_match'] = df['codincidencepadre'] == df['CODINCIDENCEPADRE'] 
+    df['masivo_match'] = df['masivo'] == df['MASIVO'] 
 
 
     df['Validation_OK'] = (
         df['causa_match'] &
         df['tipo_caso_match'] &
         df['cid_match'] &
-        df['cod_incidencia_padre_match']
+        df['cod_incidencia_padre_match'] &
+        df['masivo_match']
     )
     
     df['fail_count'] =(
        (~df['causa_match']).astype(int) + 
        (~df['tipo_caso_match']).astype(int) + 
        (~df['cid_match']).astype(int) + 
-       (~df['cod_incidencia_padre_match']).astype(int) 
+       (~df['cod_incidencia_padre_match']).astype(int)+
+       (~df['masivo_match']).astype(int)
     ) 
 
     return df
@@ -76,7 +79,10 @@ def build_failure_messages_tipo_caso_cid_masivo_codincidencia_padre_determinacio
                      "\n con SGA: \n" + df['cid'].astype(str), "")+
            np.where(~df['cod_incidencia_padre_match'],
                      "\n  No coincide nro incidencia padre EXCEL-CORTE: \n" + df['CODINCIDENCEPADRE'].astype(str) +
-                       "con columna SGA codeincidencepadre: \n" +df['codincidencepadre'].astype(str), "")
+                       "con columna SGA codeincidencepadre: \n" +df['codincidencepadre'].astype(str), "") + 
+             np.where(~df['masivo_match'],
+                     "\n  No coincide MASIVO EXCEL-CORTE: \n" + df['MASIVO'].astype(str) +
+                       "con columna masivo SGA: \n" +df['masivo'].astype(str), "")
         )
     )
     df['mensaje'] = mensaje
