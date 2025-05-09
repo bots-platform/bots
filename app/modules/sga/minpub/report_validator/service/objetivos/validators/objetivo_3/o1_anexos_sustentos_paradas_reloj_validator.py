@@ -16,6 +16,7 @@ def validate_anexos_indisponibilidad_word( merged_df: pd.DataFrame) -> pd.DataFr
     """
 
     df = merged_df.copy()
+    df = df[df['TIPO REPORTE'] == 'RECLAMO' ]
 
     df = df[df['clock_stops_paragraph_header'] != "" ]
 
@@ -68,7 +69,7 @@ def build_failure_messages_validate_anexos_indisponibilidad_word(df: pd.DataFram
                      "\n es diferente a SGA PAUSA CLIENTE SIN OVERLAP :  \n" + df['clock_stops_paragraph_periodos'].astype(str) , "") +
 
               np.where(~df['indisponibilidad_total_match'],
-            "\n No coincide total horas sin acceso a la sede de WORD ANEXOS INDISPONIBILIDAD : \n\n " + df['indisponibilidad_total'].astype(str) +
+            "\n No coincide total horas sin acceso a la sede de WORD ANEXOS INDISPONIBILIDAD : \n " + df['indisponibilidad_total'].astype(str) +
              "\n es diferente a SGA PAUSA CLIENTE SIN OVERLAP :  \n" + df['clock_stops_paragraph_footer'].astype(str), "") 
 
         )
