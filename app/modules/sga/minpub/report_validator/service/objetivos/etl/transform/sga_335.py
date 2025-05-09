@@ -5,52 +5,90 @@ from app.modules.sga.minpub.report_validator.service.objetivos.utils.cleaning im
     handle_null_values, cut_decimal_part
 )
 
-def preprocess_335(df):
 
-    df['interrupcion_inicio'] = pd.to_datetime(df['interrupcion_inicio'], errors='coerce', dayfirst=True)
-    df['interrupcion_fin'] = pd.to_datetime(df['interrupcion_fin'], errors='coerce', dayfirst=True)
-    df['fecha_comunicacion_cliente'] = pd.to_datetime(df['fecha_comunicacion_cliente'], errors='coerce', dayfirst=True)
-    df['fecha_generacion'] = pd.to_datetime(df['fecha_generacion'], errors='coerce', dayfirst=True)
-    df['fg_padre'] = pd.to_datetime(df['fg_padre'], errors='coerce', dayfirst=True)
-    df['hora_sistema'] = pd.to_datetime(df['hora_sistema'], errors='coerce', dayfirst=True)
-    df["cid"] = df["cid"].astype(str).fillna("")
-    df['nro_incidencia'] = df['nro_incidencia'].astype(str)
+def preprocess_335(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Normaliza y prepara el DataFrame SGA-335:
+      1. Convierte columnas a datetime y strings limpias.
+      2. Rellena nulos y corta decimales donde toca.
+      3. Trunca fechas a minutos en bloque.
+      4. Calcula Expected_Inicio según 'masivo'.
+      5. Genera formatos legibles y duraciones en segundos, HH:MM y minutos.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        DataFrame crudo de SGA-335 con al menos las columnas:
+        ['interrupcion_inicio', 'interrupcion_fin', 'fecha_comunicacion_cliente',
+         'fecha_generacion', 'fg_padre', 'hora_sistema', 'cid', 'nro_incidencia',
+         'it_determinacion_de_la_causa', 'tipo_caso', 'codincidencepadre', 'masivo'].
+
+    Returns
+    -------
+    pandas.DataFrame
+        Copia enriquecida con columnas:
+        - fecha_*_truncated
+        - Expected_Inicio_truncated[_fm]
+        - interrupcion_fin_truncated_fm
+        - duration_diff_335, duration_diff_335_sec, diff_335_sec_hhmm,
+          duration_diff_335_min
+    """
+
+    df = df.copy()
+    dt_cols = [
+        'interrupcion_inicio', 'interrupcion_fin',
+        'fecha_comunicacion_cliente', 'fecha_generacion'
+    ]
+    df[dt_cols] = df[dt_cols].apply(pd.to_datetime, errors='coerce', dayfirst=True)
     df = handle_null_values(df)
-    df["it_determinacion_de_la_causa"] = df["it_determinacion_de_la_causa"].astype(str).str.strip().fillna('No disponible')
-    df["tipo_caso"] = df["tipo_caso"].astype(str).str.strip().fillna('No disponible')
-    df["cid"] = df["cid"].astype(str).str.strip().fillna('No disponible')
     df = cut_decimal_part(df, 'codincidencepadre')
-    df["codincidencepadre"] = df["codincidencepadre"].astype(str).str.strip().fillna('No disponible')
 
-    df['fecha_generacion_truncated']    = df['fecha_generacion'].dt.floor('T')
-    df['interrupcion_inicio_truncated'] = df['interrupcion_inicio'].dt.floor('T')
-    df['interrupcion_fin_truncated']    = df['interrupcion_fin'].dt.floor('T')
 
-    mask_masivo = df['masivo'] == "Si"
+    for col in ['cid', 'nro_incidencia', 'it_determinacion_de_la_causa', 'tipo_caso', 'codincidencepadre']:
+        df[col] = df[col].astype(str).str.strip().replace({'': 'No disponible'})
+    
+    trunc = df[['fecha_generacion', 'interrupcion_inicio', 'interrupcion_fin']].apply(
+        lambda s: s.dt.floor('min')
+    )
+    trunc.columns = [
+        'fecha_generacion_truncated',
+        'interrupcion_inicio_truncated',
+        'interrupcion_fin_truncated'
+    ]
+    df = pd.concat([df, trunc], axis=1)
+    
+    mask = df['masivo'].eq("Si")
     df['Expected_Inicio_truncated'] = np.where(
-        mask_masivo,
-        df['fecha_generacion_truncated'],
-        df['interrupcion_inicio_truncated']
+        mask, df['fecha_generacion_truncated'], df['interrupcion_inicio_truncated']
+    )
+    neg = mask & (df['interrupcion_fin_truncated'] < df['Expected_Inicio_truncated'])
+    df.loc[neg, 'Expected_Inicio_truncated'] = df.loc[neg, 'interrupcion_inicio_truncated']
+    
+    df = df.assign(
+        Expected_Inicio_truncated_fm = lambda d: d['Expected_Inicio_truncated']
+            .dt.strftime('%d/%m/%Y %H:%M').fillna("N/A"),
+        interrupcion_fin_truncated_fm = lambda d: d['interrupcion_fin_truncated']
+            .dt.strftime('%d/%m/%Y %H:%M').fillna("N/A")
     )
 
-    neg_mask = mask_masivo & (
-        df['interrupcion_fin_truncated'] - df['Expected_Inicio_truncated'] < pd.Timedelta(0)
+    df['duration_diff_335'] = (
+        df['interrupcion_fin_truncated'] - df['Expected_Inicio_truncated']
     )
-    df.loc[neg_mask, 'Expected_Inicio_truncated'] = df.loc[neg_mask, 'interrupcion_inicio_truncated']
-
-    df['Expected_Inicio_truncated_fm'] = (
-        df['Expected_Inicio_truncated']
-        .dt.strftime('%d/%m/%Y %H:%M')
-        .fillna("N/A")
-        .astype(str)
+    df = df.assign(
+        duration_diff_335_sec = lambda d: (
+            d['duration_diff_335'].dt.total_seconds().fillna(0).astype(int)
+        ),
+        diff_335_sec_hhmm = lambda d: (
+            d['duration_diff_335_sec'].floordiv(3600).astype(str).str.zfill(2)
+            + ":" +
+            d['duration_diff_335_sec'].mod(3600).floordiv(60).astype(str).str.zfill(2)
+        ),
+        duration_diff_335_min = lambda d: d['duration_diff_335_sec'].floordiv(60)
     )
-
-    df['interrupcion_fin_truncated_fm'] = (
-        df['interrupcion_fin_truncated']
-        .dt.strftime('%d/%m/%Y %H:%M')
-        .fillna("N/A")
-        .astype(str)
-    )
-
-
+    
     return df
+
+
+
+
+
