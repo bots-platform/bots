@@ -1,7 +1,7 @@
 import pandas as pd
+from fastapi import HTTPException
 
-
-def validate_required_columns_from_excel(path_corte_excel, required_columns, skipfooter=0):
+def validate_required_columns_from_excel(path_excel, required_columns, skipfooter=0):
     """
     Lee un Excel y valida que contenga las columnas requeridas, opcionalmente
     descartando las últimas `skipfooter` filas.
@@ -28,8 +28,7 @@ def validate_required_columns_from_excel(path_corte_excel, required_columns, ski
     try:
 
         df = pd.read_excel(
-            path_corte_excel,
-            dtype=str,
+            path_excel,
             skipfooter=skipfooter,
             engine="openpyxl"
         )
@@ -39,15 +38,27 @@ def validate_required_columns_from_excel(path_corte_excel, required_columns, ski
 
     df.columns = df.columns.str.strip()
 
+    missing = [c for c in required_columns if c not in df.columns]
+    if missing:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Faltan columnas requeridas: {missing}"
+        )
 
-    faltantes = [c for c in required_columns if c not in df.columns]
-    if faltantes:
-        raise ValueError(f"Error 400: Faltan columnas: {faltantes}")
+    df_clean = df[required_columns].copy()
 
 
-    df_clean = (
-        df[required_columns]
-        .apply(lambda col: col.str.replace("_x000D_", "", regex=False).str.strip())
-        .fillna("-")
+    text_cols = df_clean.select_dtypes(include="object").columns
+
+    df_clean[text_cols] = (
+        df_clean[text_cols]
+        .apply(lambda col: (
+            col
+            .str.replace('\r', ' ', regex=False)   
+            .str.replace('_x000D_', '', regex=False)
+            .str.strip()
+        ))
     )
+    df_clean[text_cols] = df_clean[text_cols].fillna("No disponible")
+
     return df_clean
