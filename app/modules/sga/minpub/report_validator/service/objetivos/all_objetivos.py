@@ -97,12 +97,10 @@ def all_objetivos(
     results = []
     
     # EXTRACT INVOQUE
-    df_corte_excel = pd.read_excel(path_corte_excel, skipfooter=2, engine="openpyxl")
-    
     df_sga_dinamico_380 = pd.read_excel(path_sga_dinamico_380)
     df_cid_cuismp_sharepoint = pd.read_excel(path_cid_cuismp_sharepoint)
 
-    #df_corte_excel = extract_corte_excel(path_corte_excel, skipfooter=2)
+    df_corte_excel = extract_corte_excel(path_corte_excel, skipfooter=2)
     df_sga_dinamico_335 =  extract_sga_335(path_sga_dinamico_335)
     df_word_datos_averias =  extract_averias_table(word_datos_file_path)
     df_word_telefonia_averias = extract_averias_table(word_telefonia_file_path)
