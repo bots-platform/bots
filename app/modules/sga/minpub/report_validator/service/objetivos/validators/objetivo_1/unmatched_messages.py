@@ -11,19 +11,6 @@ from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators 
 @log_exceptions
 def build_message_merge_sga_335_corte_excel_unmatch( df: pd.DataFrame) -> pd.DataFrame:
 
-    df['FECHA_Y_HORA_INICIO_fmt'] = (
-        df['FECHA Y HORA INICIO']
-        .dt.strftime('%d/%m/%Y %H:%M')
-        .fillna("N/A")
-        .astype(str)
-    )
-
-    df['FECHA_Y_HORA_FIN_fmt'] = (
-        df['FECHA Y HORA FIN']
-        .dt.strftime('%d/%m/%Y %H:%M')
-        .fillna("N/A")
-        .astype(str)
-    )
 
 
     mensaje = ( "Nro Incidencia " + df['nro_incidencia'] + " con FECHA Y HORA INICIO DE CORTE EXCEL " +
