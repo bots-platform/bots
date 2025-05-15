@@ -14,22 +14,6 @@ def validate_duracion_entero(df_merged: pd.DataFrame) -> pd.DataFrame:
     df = df_merged.copy()
 
 
-    pat = re.compile(
-        r'^(?:(?P<days>\d+)\s+day[s]?,\s*)?'  # "1 day, " o nada
-        r'(?P<hours>\d{1,2}):'               # horas antes del primer ':'
-    )
-
-    def extract_total_hours(x):
-        s = str(x).strip()
-        m = pat.match(s)
-        if not m:
-            return pd.NA  # o 0, según lo que quieras
-        days = int(m.group('days')) if m.group('days') else 0
-        hrs  = int(m.group('hours'))
-        return days * 24 + hrs
-
-    df['extracted_hour'] = df['TIEMPO (HH:MM)'].apply(extract_total_hours).astype(int)
-
     df['duracion_entero_ok'] = df['extracted_hour'] == df['Duracion entero']
 
 
