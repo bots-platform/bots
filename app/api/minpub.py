@@ -124,7 +124,7 @@ async def process_files(
    # required_cols = ["nro_incidencia","mensaje","TIPO REPORTE","objetivo"]
     try:
         # throws HTTPException(400) if any are missing
-        df_corte_excel = extract_corte_excel(excel_file_path, skipfooter=2)
+        extract_corte_excel(excel_file_path, skipfooter=2)
     except HTTPException as exc:
         # FastAPI will return a 400 with your detail
         raise exc
@@ -156,7 +156,11 @@ async def check_status(task_id: str):
 
     if not task_info:
          return {"task_id": task_id, "status": "not_found"}
-    return {"task_id": task_id, "status": task_info.get("status"), "result": task_info.get("result")}
+    return {"task_id": task_id,
+            "status": task_info.get["status"],
+            "result": task_info.get("result"),
+            "error": task_info.get("error"),
+            }    
 
    
 
