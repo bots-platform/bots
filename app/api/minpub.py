@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, Form, BackgroundTasks
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, BackgroundTasks
 
 from datetime import datetime
 from pathlib import Path
@@ -7,6 +7,9 @@ import asyncio
 import uuid
 from app.modules.sga.service_tecnico_operaciones import SGAService
 from app.modules.sga.minpub.report_validator.service.objetivos.all_objetivos import all_objetivos
+from app.modules.sga.minpub.report_validator.service.objetivos.etl.extract.corte_excel import extract_corte_excel
+
+extract_corte_excel
 
 import threading
 
@@ -116,6 +119,15 @@ async def process_files(
     excel_file_path = await save_file(excel_file, SAVE_DIR_EXTRACT_EXCEL)
     excel_file_cuismp_path = await save_file(excel_file_cuismp, CID_CUISMP_PATH)
     
+
+    # 2) do your required‐column check right away:
+   # required_cols = ["nro_incidencia","mensaje","TIPO REPORTE","objetivo"]
+    try:
+        # throws HTTPException(400) if any are missing
+        df_corte_excel = extract_corte_excel(excel_file_path, skipfooter=2)
+    except HTTPException as exc:
+        # FastAPI will return a 400 with your detail
+        raise exc
 
     task_id = str(uuid.uuid4()) 
     processing_tasks[task_id] = {"status":"queued", "result": None}
