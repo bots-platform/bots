@@ -77,6 +77,35 @@ def parse_fecha(fecha):
 
     
 class SGAService:
+    def is_available(self) -> bool:
+        """
+        Verifica si la aplicación SGA está disponible y lista para ser usada.
+        Returns:
+            bool: True si la aplicación está disponible, False en caso contrario
+        """
+        try:
+            # Intenta conectar a la aplicación SGA
+            app = Application(backend="uia").connect(title_re=".*SGA -")
+            navegacion_window = app.window(title_re=".*SGA -")
+            
+            # Verifica si la ventana está visible y maximizada
+            if not navegacion_window.is_visible():
+                return False
+                
+            # Verifica si hay alguna ventana de operaciones abierta
+            try:
+                operaciones_window = Desktop(backend="uia").window(title_re="SGA Operaciones.*")
+                if operaciones_window.exists() and operaciones_window.is_visible():
+                    return False
+            except:
+                pass  # Si no hay ventana de operaciones, es una buena señal
+                
+            return True
+            
+        except Exception as e:
+            logging.debug(f"SGA no está disponible: {e}")
+            return False
+
     def generate_dynamic_report(self,fecha_secuencia_inicio,fecha_secuencia_fin, indice_tabla_reporte_data_previa, indice_tabla_reporte_detalle) :
         path_excel_sga_sla_report = None
         path_excel_sga_report = None
