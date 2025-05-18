@@ -9,7 +9,6 @@ import unicodedata
 logger = get_sharepoint_HorarioGeneralATCORP_logger()
 
 import os
-from config import SHAREPOINT_PASSWORD, SHAREPOINT_USER
 from fastapi import HTTPException
 
 def guardar_excel_como():

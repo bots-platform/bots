@@ -6,7 +6,7 @@ from utils.waiting_download import wait_for_download
 from  ...utils.input_utils  import random_delay
 import time
 from datetime import datetime, timedelta
-from config import URL_NEW_CALL_CENTER
+from app.core.config import settings
 from utils.logger_config import get_newcallcenter_logger
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
@@ -25,6 +25,7 @@ def handle_download_dialog(driver):
         )
         download_icon.click()
         
+
         
         keep_button = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, "//button[text()='Keep']"))
@@ -54,7 +55,7 @@ def login_to_newcallcenter(driver, user, password):
     try:
         
         logger.info(f"Intentando login New Call Center")
-        driver.get(URL_NEW_CALL_CENTER)
+        driver.get(settings.URL_NEW_CALL_CENTER)
         random_delay(3, 5)  
         
         user_input = WebDriverWait(driver, 20).until(
