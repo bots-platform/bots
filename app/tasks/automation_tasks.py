@@ -7,8 +7,21 @@ from typing import Dict, Any
 import os
 
 # Thread locks for automation tools
-sga_lock = threading.Lock()
+sga_335_lock = threading.Lock()
+sga_380_lock = threading.Lock()
 selenium_lock = threading.Lock()
+
+def wait_for_sga_service(sga_service: SGAService, max_wait_time: int = 300) -> bool:
+    """
+    Wait for SGA service to be available, checking every 5 seconds.
+    Returns True if service became available, False if timeout reached.
+    """
+    start_time = time.time()
+    while time.time() - start_time < max_wait_time:
+        if sga_service.is_available():
+            return True
+        time.sleep(5)
+    return False
 
 @celery_app.task(queue="ui", bind=True, name="process_minpub")
 def process_minpub_task(self, 
@@ -22,8 +35,11 @@ def process_minpub_task(self,
         self.update_state(state='PROGRESS', meta={'status': 'Processing SGA data'})
         sga_service = SGAService()
 
-        with sga_lock:
-            # Generate SGA 335 report
+        # Generate SGA 335 report
+        with sga_335_lock:
+            if not wait_for_sga_service(sga_service):
+                raise Exception("Timeout waiting for SGA service to be available for report 335")
+            
             indice_tabla_reporte_data_previa = 13
             indice_tabla_reporte_detalle = 15
             sga_file_path_335 = sga_service.generate_dynamic_report(
@@ -33,9 +49,11 @@ def process_minpub_task(self,
                 indice_tabla_reporte_detalle
             )
 
-            time.sleep(7)
-
-            # Generate SGA 380 report
+        # Generate SGA 380 report
+        with sga_380_lock:
+            if not wait_for_sga_service(sga_service):
+                raise Exception("Timeout waiting for SGA service to be available for report 380")
+            
             indice_tabla_reporte_data_previa = 13
             indice_tabla_reporte_detalle = 18
             sga_file_path_380 = sga_service.generate_dynamic_report(
