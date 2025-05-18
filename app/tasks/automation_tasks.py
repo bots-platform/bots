@@ -1,3 +1,4 @@
+import time
 from app.core.celery_app import celery_app
 from app.modules.sga.service_tecnico_operaciones import SGAService
 from app.modules.sga.minpub.report_validator.service.objetivos.all_objetivos import all_objetivos
@@ -9,7 +10,7 @@ import os
 sga_lock = threading.Lock()
 selenium_lock = threading.Lock()
 
-@celery_app.task(bind=True, name="process_minpub")
+@celery_app.task(queue="ui", bind=True, name="process_minpub")
 def process_minpub_task(self, 
                        fecha_inicio: str,
                        fecha_fin: str,
@@ -31,6 +32,8 @@ def process_minpub_task(self,
                 indice_tabla_reporte_data_previa,
                 indice_tabla_reporte_detalle
             )
+
+            time.sleep(7)
 
             # Generate SGA 380 report
             indice_tabla_reporte_data_previa = 13
