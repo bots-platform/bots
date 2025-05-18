@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from app.modules.web_bots.browser.setup import setup_edge_driver
 from app.modules.web_bots.semaforo.scripts.semaforo_scraper import scrape_semaforo_page
-from config import SEMAFORO_USER, SEMAFORO_PASSWORD
+from app.core.config import settings
 import time
 from utils.logger_config import get_semaforo_logger
 import os
@@ -12,7 +12,7 @@ class SemaforoService:
     def descargarReporteWebScraping(self, fecha_inicio, fecha_fin):
         try:
             driver = None
-            if not SEMAFORO_USER or not SEMAFORO_PASSWORD:
+            if not settings.SEMAFORO_USER or not settings.SEMAFORO_PASSWORD:
                 logger.error("New Call Center credenciales no encontradas .env file")
                 return
             
@@ -24,7 +24,7 @@ class SemaforoService:
             try:        
                 logger.info('Empezando scraping de SEMAFORO')
                 driver = setup_edge_driver(download_directory=download_path)
-                path_semaforo_report = scrape_semaforo_page(driver, SEMAFORO_USER, SEMAFORO_PASSWORD, fecha_inicio, fecha_fin)
+                path_semaforo_report = scrape_semaforo_page(driver, settings.SEMAFORO_USER, settings.SEMAFORO_PASSWORD, fecha_inicio, fecha_fin)
                 logger.info(f"Resultado del scraping: {path_semaforo_report}")
                 return path_semaforo_report
 
