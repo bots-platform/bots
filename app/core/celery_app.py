@@ -19,10 +19,12 @@ celery_app.conf.update(
     task_time_limit=3600,  # 1 hour timeout
     worker_max_tasks_per_child=200,  # Restart worker after 200 tasks
     worker_prefetch_multiplier=1,  # Process one task at a time
+    task_reject_on_worker_lost=True,
 
 
     task_routes={
         "app.tasks.automation_tasks.process_minpub_task": {"queue": "ui"},
+        "app.tasks.automation_tasks.process_sga_report_task": {"queue": "ui"},
         # "app.tasks.automation_tasks.process_minpub_task": {"queue": "ui"},
         # "app.tasks.automation_tasks.process_minpub_task": {"queue": "ui"},
     }
