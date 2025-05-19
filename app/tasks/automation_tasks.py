@@ -24,7 +24,7 @@ def wait_for_sga_service(sga_service: SGAService, max_wait_time: int = 300) -> b
         time.sleep(5)
     return False
 
-@celery_app.task(queue="ui", bind=True, bind=True, ack_late=False, name="process_sga_report")
+@celery_app.task(queue="ui", bind=True, ack_late=False, task_reject_on_worker_lost=True, name="process_sga_report")
 def process_sga_report_task(self, 
                           fecha_inicio: str,
                           fecha_fin: str,
