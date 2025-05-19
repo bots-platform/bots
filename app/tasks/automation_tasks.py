@@ -23,7 +23,7 @@ def wait_for_sga_service(sga_service: SGAService, max_wait_time: int = 300) -> b
         time.sleep(5)
     return False
 
-@celery_app.task(queue="ui", bind=True, name="process_minpub")
+@celery_app.task(queue="ui", bind=True, ack_late=False, task_reject_on_worker_lost=True, name="process_minpub")
 def process_minpub_task(self, 
                        fecha_inicio: str,
                        fecha_fin: str,
