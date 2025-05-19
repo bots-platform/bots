@@ -73,7 +73,7 @@ async def check_status(task_id: str):
         response = {
             'task_id': task_id,
             'status': 'completed',
-            'result': task.result
+            'result': task.result["result"]
         }
     else:
         response = {
