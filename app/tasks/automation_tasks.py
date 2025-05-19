@@ -6,9 +6,10 @@ import threading
 from typing import Dict, Any
 import os
 
+# Global lock for SGA application to prevent concurrent access
+sga_global_lock = threading.Lock()
+
 # Thread locks for automation tools
-sga_335_lock = threading.Lock()
-sga_380_lock = threading.Lock()
 selenium_lock = threading.Lock()
 
 def wait_for_sga_service(sga_service: SGAService, max_wait_time: int = 300) -> bool:
@@ -23,6 +24,42 @@ def wait_for_sga_service(sga_service: SGAService, max_wait_time: int = 300) -> b
         time.sleep(5)
     return False
 
+@celery_app.task(queue="ui", bind=True, bind=True, ack_late=False, name="process_sga_report")
+def process_sga_report_task(self, 
+                          fecha_inicio: str,
+                          fecha_fin: str,
+                          indice_tabla_reporte_data_previa: int,
+                          indice_tabla_reporte_detalle: int,
+                          report_type: str) -> Dict[str, Any]:
+    try:
+        self.update_state(state='PROGRESS', meta={'status': 'Processing SGA report'})
+        sga_service = SGAService()
+
+        # Use global SGA lock to ensure only one process can access SGA at a time
+        with sga_global_lock:
+            if not wait_for_sga_service(sga_service):
+                raise Exception("Timeout waiting for SGA service to be available")
+            
+            # Generate SGA report
+            file_path = sga_service.generate_dynamic_report(
+                fecha_inicio,
+                fecha_fin,
+                indice_tabla_reporte_data_previa,
+                indice_tabla_reporte_detalle
+            )
+
+            if not os.path.exists(file_path):
+                raise Exception("Generated file not found")
+
+            return {
+                "status": "completed",
+                "file_path": file_path,
+                "report_type": report_type
+            }
+
+    except Exception as e:
+        return {"status": "failed", "error": str(e)}
+
 @celery_app.task(queue="ui", bind=True, ack_late=False, task_reject_on_worker_lost=True, name="process_minpub")
 def process_minpub_task(self, 
                        fecha_inicio: str,
@@ -34,9 +71,11 @@ def process_minpub_task(self,
     try:
         self.update_state(state='PROGRESS', meta={'status': 'Processing SGA data'})
         sga_service = SGAService()
+        sga_file_path_335 = None
+        sga_file_path_380 = None
 
         # Generate SGA 335 report
-        with sga_335_lock:
+        with sga_global_lock:
             if not wait_for_sga_service(sga_service):
                 raise Exception("Timeout waiting for SGA service to be available for report 335")
             
@@ -49,8 +88,11 @@ def process_minpub_task(self,
                 indice_tabla_reporte_detalle
             )
 
+            if not os.path.exists(sga_file_path_335):
+                raise Exception("Generated file for report 335 not found")
+
         # Generate SGA 380 report
-        with sga_380_lock:
+        with sga_global_lock:
             if not wait_for_sga_service(sga_service):
                 raise Exception("Timeout waiting for SGA service to be available for report 380")
             
@@ -62,6 +104,9 @@ def process_minpub_task(self,
                 indice_tabla_reporte_data_previa,
                 indice_tabla_reporte_detalle
             )
+
+            if not os.path.exists(sga_file_path_380):
+                raise Exception("Generated file for report 380 not found")
 
         self.update_state(state='PROGRESS', meta={'status': 'Processing objectives'})
         results = all_objetivos(
@@ -81,7 +126,7 @@ def process_minpub_task(self,
 @celery_app.task(bind=True, name="process_semaforo")
 def process_semaforo_task(self, params: Dict[str, Any]) -> Dict[str, Any]:
     try:
-        with selenium_lock:
+        with sga_global_lock:
             # Your Semaforo Selenium automation code here
             pass
     except Exception as e:
@@ -90,7 +135,7 @@ def process_semaforo_task(self, params: Dict[str, Any]) -> Dict[str, Any]:
 @celery_app.task(bind=True, name="process_newcallcenter")
 def process_newcallcenter_task(self, params: Dict[str, Any]) -> Dict[str, Any]:
     try:
-        with selenium_lock:
+        with sga_global_lock:
             # Your NewCallCenter Selenium automation code here
             pass
     except Exception as e:
@@ -99,7 +144,7 @@ def process_newcallcenter_task(self, params: Dict[str, Any]) -> Dict[str, Any]:
 @celery_app.task(bind=True, name="process_oplogin")
 def process_oplogin_task(self, params: Dict[str, Any]) -> Dict[str, Any]:
     try:
-        with selenium_lock:
+        with sga_global_lock:
             # Your OPLogin Selenium automation code here
             pass
     except Exception as e:
