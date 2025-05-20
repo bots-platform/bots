@@ -97,7 +97,7 @@ def build_failure_messages_validate_informe_tecnico_word(df: pd.DataFrame) -> pd
                      "\n es diferente a EXCEL-CORTE:  \n" + df['FECHA_Y_HORA_FIN_fmt'].astype(str), "") +
 
             np.where(~df['CUISMP_match'],
-                     "\n  No coincide CUISMP_word_telefonia de WORD informe técnico : \n" + df['CUISMP_word'].astype(str) +
+                     "\n  No coincide CUISMP de WORD informe técnico : \n" + df['CUISMP_word'].astype(str) +
                      "\n es diferente a CUISMP en EXCEL-CORTE: \n" + df['CUISMP_corte_excel'].astype(str), "") +
 
             np.where(~df['tipo_caso_match'],
