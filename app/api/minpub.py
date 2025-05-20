@@ -157,7 +157,7 @@ async def check_status(task_id: str):
     if not task_info:
          return {"task_id": task_id, "status": "not_found"}
     return {"task_id": task_id,
-            "status": task_info.get["status"],
+            "status": task_info.get("status"),
             "result": task_info.get("result"),
             "error": task_info.get("error"),
             }    
