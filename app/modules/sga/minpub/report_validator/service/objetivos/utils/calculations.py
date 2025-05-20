@@ -211,7 +211,7 @@ def has_repetition(text: str) -> bool:
         return False
     
     patterns = [
-        r'(?i)\b(inmediatamente)\b.*\b\1\b',
+        r'(?i)\b(Inmediatamente, claro revisó)\b.*\b\1\b',
         r'(?i)\b(A través de los Sistemas)\b.*\b\1\b',
     ]
     return any(re.search(p, text) for p in patterns )
