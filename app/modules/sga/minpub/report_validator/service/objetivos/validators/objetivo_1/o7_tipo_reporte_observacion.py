@@ -32,11 +32,8 @@ def validation_tipo_reporte_observacion(merged_df:pd.DataFrame)-> pd.DataFrame:
     valid_tipo_caso_reclamo = {"SIN SERVICIO", "ENLACE LENTO", "SIN SERVICIO-NO DA TONO", "OTROS CALIDAD"}
     
     pattern = re.compile(
-        r'(?i)^a través de los sistemas de monitoreo de (?-i:Claro), de manera proactiva se identificó'
+        r'(?i)^a través de los sistemas de monitoreo de (?:(?-i:Claro)|CLARO), de manera proactiva se identificó'
     )
-
-
-
 
 
     df['observacion_pattern_componente_tipo_reporte'] = ""
