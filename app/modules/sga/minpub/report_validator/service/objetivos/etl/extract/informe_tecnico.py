@@ -48,7 +48,7 @@ def extract_tecnico_reports_without_hours_last_dates(path_docx: str) -> pd.DataF
 
     pattern = (
         r'^(?:Fecha y Hora|Hora)(?:\s+de)?\s+'    # “Fecha y Hora” o “Hora”, con “ de” opcional
-        r'(Inicio|Fin):\s*'                      # “Inicio:” o “Fin:”
+        r'(Inicio|Fin)\s*'                      # “Inicio:” o “Fin:”
         r'(\d{1,2}/\d{1,2}/\d{4})'                # grupo(2) = fecha
         r'\s*(?:a las\s*)?'                      # “a las” opcional
         r'(\d{1,2}:\d{2})'                       # grupo(3) = hora
