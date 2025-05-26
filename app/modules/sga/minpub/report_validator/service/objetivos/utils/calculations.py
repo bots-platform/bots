@@ -312,7 +312,10 @@ def extract_date_range_body(text: str) -> Tuple[Optional[str], Optional[str]]:
         elif pos >= midpoint:
             end_date = full_date
 
-    return (start_date, end_date)
+    return (
+        start_date if start_date else "No disponible",
+        end_date if end_date else "No disponible"
+    )
 
 
 
