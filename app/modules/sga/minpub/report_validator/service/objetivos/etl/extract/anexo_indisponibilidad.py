@@ -38,6 +38,7 @@ def extract_indisponibilidad_anexos(path_docx: str) ->  Optional[pd.DataFrame]:
         re.IGNORECASE
     )
     total_hour_pattern   = re.compile(r"^\(Total de horas sin acceso a la sede:\s*(\d{1,3}:\d{2})\s*horas\)", re.IGNORECASE)
+    evidencia_pattern    = re.compile(r"EVIDENCIA RESPONSABILIDAD DE TERCEROS", re.IGNORECASE)
 
     _day_pad_start = re.compile(r"^(\d)(?=/)")
     _day_pad_end   = re.compile(r"(?<=hasta el día\s)(\d)(?=/)", re.IGNORECASE)
@@ -55,6 +56,9 @@ def extract_indisponibilidad_anexos(path_docx: str) ->  Optional[pd.DataFrame]:
     records: List[Dict] = []
 
     for idx, text in enumerate(paragraphs_list):
+
+        if evidencia_pattern.search(text):
+            break
         m_ticket = anexo_pattern_ticket.search(text)
         if not m_ticket:
             continue
@@ -64,10 +68,14 @@ def extract_indisponibilidad_anexos(path_docx: str) ->  Optional[pd.DataFrame]:
         periodos: List[str] = []
         footer   = ""
         total = ""
+        skip_ticket = False
 
 
         for line in paragraphs_list[idx + 1:]:
             if anexo_pattern_ticket.search(line):
+                break
+
+            if evidencia_pattern.search(line):
                 break
 
             if linea0_pat_pattern.match(line):
@@ -83,7 +91,6 @@ def extract_indisponibilidad_anexos(path_docx: str) ->  Optional[pd.DataFrame]:
             if m_total:
                 total = m_total.group(1)
                 break
-                
 
         records.append({
             "ticket": ticket,
