@@ -2,7 +2,6 @@
 from datetime import datetime
 import os
 from typing import List, Dict
-from fastapi import logger
 import pandas as pd
 
 from app.modules.sga.minpub.report_validator.service.objetivos.etl.extract.corte_excel import extract_corte_excel
@@ -248,7 +247,7 @@ def all_objetivos(
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     path_reporte_sga = os.path.join(output_dir, f'validator_report_{timestamp}.xlsx')
     df_grouped.to_excel(path_reporte_sga, index=False, engine='openpyxl')
-    logger.info(f"validator reporte guardado en: {path_reporte_sga}")
+    print(f"validator reporte guardado en: {path_reporte_sga}")
 
     return df_grouped.to_dict(orient='records')
 
