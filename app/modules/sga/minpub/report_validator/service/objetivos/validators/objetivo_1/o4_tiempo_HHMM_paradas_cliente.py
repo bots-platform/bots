@@ -35,10 +35,7 @@ def validation_tiempo_HHMM_paradas_cliente(df_merged: pd.DataFrame) -> pd.DataFr
         except Exception as e:
             return np.nan
         
-    df['TIEMPO (HH:MM)_trimed'] = df['TIEMPO (HH:MM)'].apply(
-        lambda x: str(x)[:5] if isinstance(x, str) and x.endswith(":00") else x
-    )
-    
+
     df['tiempo_corte_min'] = df['TIEMPO (HH:MM)_trimed'].apply(parse_hhmm_to_minutes)
 
     df['effective_time_335'] = df['diff_335_min'] - df['sum_paradas']
