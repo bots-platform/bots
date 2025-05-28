@@ -3,16 +3,19 @@ import re
 import pandas as pd
 import numpy as np
 
-_FIN_INICIO_PAT = re.compile(
-    r'^(?:(?P<days>\d+)\s+days?,\s*)?'
-    r'(?P<hours>\d+):(?P<minutes>\d{2})'
-    r'(?:[:]\d{2})?\.?$'
-)
 
 _FIN_DAYS_HOUR_PAT = re.compile(
     r'^(?:(?P<days>\d+)\s+day[s]?,\s*)?'  
-    r'(?P<hours>\d{1,2}):'   
+    r'(?P<hours>\d{1,2}):' 
 )
+
+_FIN_INICIO_PAT = re.compile(
+    r'^(?:(?P<days>\d+)\s+days?,\s*)?'   
+    r'(?P<hours>\d+):(?P<minutes>\d{2})'  
+    r'(?:[:]\d{2})?'                    
+    r'\.?$' 
+)
+
 
 def to_hhmm(s: any) -> pd._typing.Scalar:
     """
