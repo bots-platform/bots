@@ -42,8 +42,8 @@ async def save_file(uploaded_file: UploadFile, save_dir: str) -> str:
 
 def locked_generate_dynamic_report(sga_service, fecha_inicio, fecha_fin, indice_data, indice_detalle):
     with sga_lock:
+        print("[FastAPI] Automatización tomando control del mouse...")
         return sga_service.generate_dynamic_report(fecha_inicio, fecha_fin, indice_data, indice_detalle)
-    
 
 async def process_task(task_id:str, fecha_inicio, fecha_fin, word_datos_file_path, word_telefonia_file_path, excel_file_path, sharepoint_cid_cuismp_path):
       
@@ -119,14 +119,9 @@ async def process_files(
     excel_file_path = await save_file(excel_file, SAVE_DIR_EXTRACT_EXCEL)
     excel_file_cuismp_path = await save_file(excel_file_cuismp, CID_CUISMP_PATH)
     
-
-    # 2) do your required‐column check right away:
-   # required_cols = ["nro_incidencia","mensaje","TIPO REPORTE","objetivo"]
     try:
-        # throws HTTPException(400) if any are missing
         extract_corte_excel(excel_file_path, skipfooter=2)
     except HTTPException as exc:
-        # FastAPI will return a 400 with your detail
         raise exc
 
     task_id = str(uuid.uuid4()) 
