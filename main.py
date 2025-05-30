@@ -1,7 +1,9 @@
 import threading
 import time
-import pyautogui
 import random
+from pywinauto.keyboard import send_keys
+from pywinauto.mouse import click
+from pynput import mouse, keyboard
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,70 +15,50 @@ from app.api import (
 
 lock = threading.Lock()
 
+actividad_humana = {"mouse": False, "teclado": False}
 
-def mover_cuadrado(x0, y0, step):
-    pyautogui.moveTo(x0, y0)
-    time.sleep(0.1)
-    pyautogui.moveTo(x0 + step, y0)
-    time.sleep(0.1)
-    pyautogui.moveTo(x0 + step, y0 + step)
-    time.sleep(0.1)
-    pyautogui.moveTo(x0, y0 + step)
-    time.sleep(0.1)
-    pyautogui.moveTo(x0, y0)
+def on_mouse_move(x, y):
+    actividad_humana["mouse"] = True
 
-def mover_cruz(x0, y0, step):
-    pyautogui.moveTo(x0, y0)
-    time.sleep(0.1)
-    pyautogui.moveTo(x0 + step, y0)
-    time.sleep(0.1)
-    pyautogui.moveTo(x0, y0)
-    time.sleep(0.1)
-    pyautogui.moveTo(x0, y0 + step)
-    time.sleep(0.1)
-    pyautogui.moveTo(x0, y0)
+def on_key_press(key):
+    actividad_humana["teclado"] = True
 
-def mover_zigzag(x0, y0, step):
-    for i in range(3):
-        pyautogui.moveTo(x0 + i * step, y0 + (i % 2) * step)
-        time.sleep(0.1)
-
-def mover_diagonal(x0, y0, step):
-    for i in range(5):
-        pyautogui.moveTo(x0 + i * 10, y0 + i * 10)
-        time.sleep(0.1)
 
 def mantener_activo():
-    screen_width, screen_height = pyautogui.size()
-
-    x0 = int(screen_width * 0.1)
-    y0 = int(screen_height * 0.1)
-    step = 50
-
-    last_pos = pyautogui.position()
-    patrones = [mover_cuadrado, mover_cruz, mover_zigzag, mover_diagonal]
+    patrones = ["win_key", "click"]
 
     while True:
-        current_pos = pyautogui.position()
-
-        if current_pos != last_pos:
-            print("[mantener_activo] Usuario movió el mouse, no hago nada.")
+        if actividad_humana["mouse"] or actividad_humana["teclado"]:
+            print("[mantener_activo] Usuario está activo, no simulo nada.")
         else:
             if lock.acquire(blocking=False):
                 try:
-                    patron = random.choice(patrones)
-                    print(f"[mantener_activo] Ejecutando patrón aleatorio: {patron.__name__}")
-                    patron(x0, y0, step)
+                    accion = random.choice(patrones)
+                    if accion == "win_key":
+                        print("[mantener_activo] Presionando tecla Windows")
+                        send_keys("{VK_LWIN}")
+                    elif accion == "click":
+                        print("[mantener_activo] Clic en (5,5)")
+                        click(button='left', coords=(5, 5))
                 finally:
                     lock.release()
             else:
-                print("[mantener_activo] Mouse ocupado por una tarea crítica. Esperando...")
+                print("[mantener_activo] Dispositivo ocupado por API.")
 
-        last_pos = pyautogui.position()
+ 
+        actividad_humana["mouse"] = False
+        actividad_humana["teclado"] = False
+
         delay = random.randint(25, 40)
-        print(f"[mantener_activo] Esperando {delay} segundos antes del próximo movimiento.")
+        print(f"[mantener_activo] Esperando {delay} segundos...")
         time.sleep(delay)
 
+
+mouse_listener = mouse.Listener(on_move=on_mouse_move)
+keyboard_listener = keyboard.Listener(on_press=on_key_press)
+
+mouse_listener.start()
+keyboard_listener.start()
 
 threading.Thread(target=mantener_activo, daemon=True).start()
 
