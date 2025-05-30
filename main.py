@@ -13,7 +13,6 @@ from app.api import (
 lock = threading.Lock()
 
 def mantener_activo():
-  
     last_pos = pyautogui.position()
 
     while True:
@@ -25,8 +24,9 @@ def mantener_activo():
             if lock.acquire(blocking=False):
                 try:
                     print("[mantener_activo] Mouse libre y sin uso humano. Moviendo...")
-                    pyautogui.moveRel(10, 0, duration=0.1)
-                    pyautogui.moveRel(-10, 0, duration=0.1)
+                    pyautogui.moveTo(100, 100)
+                    time.sleep(0.1)
+                    pyautogui.moveTo(200, 100)
                 finally:
                     lock.release()
             else:
@@ -34,6 +34,7 @@ def mantener_activo():
 
         last_pos = current_pos
         time.sleep(30)
+
 
 threading.Thread(target=mantener_activo, daemon=True).start()
 
