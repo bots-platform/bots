@@ -13,19 +13,30 @@ from app.api import (
 lock = threading.Lock()
 
 def mantener_activo():
+  
+    last_pos = pyautogui.position()
+
     while True:
-        if lock.acquire(blocking=False):
-            try:
-                print("[mantener_activo] Mouse libre, moviendo...")
-                pyautogui.moveRel(1, 0, duration=0.1)
-                pyautogui.moveRel(-1, 0, duration=0.1)
-            finally:
-                lock.release()
+        current_pos = pyautogui.position()
+
+        if current_pos != last_pos:
+            print("[mantener_activo] Usuario movió el mouse, no hago nada.")
         else:
-            print("[mantener_activo] Mouse ocupado por API, esperando...")
+            if lock.acquire(blocking=False):
+                try:
+                    print("[mantener_activo] Mouse libre y sin uso humano. Moviendo...")
+                    pyautogui.moveRel(10, 0, duration=0.1)
+                    pyautogui.moveRel(-10, 0, duration=0.1)
+                finally:
+                    lock.release()
+            else:
+                print("[mantener_activo] Mouse ocupado por una tarea crítica. Esperando...")
+
+        last_pos = current_pos
         time.sleep(30)
 
 threading.Thread(target=mantener_activo, daemon=True).start()
+
 
 app = FastAPI()
 
