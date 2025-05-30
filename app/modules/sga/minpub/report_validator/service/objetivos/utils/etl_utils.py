@@ -3,6 +3,8 @@ import re
 import pandas as pd
 import numpy as np
 
+import unicodedata
+
 
 _FIN_DAYS_HOUR_PAT = re.compile(
     r'^(?:(?P<days>\d+)\s+day[s]?,\s*)?'  
@@ -64,6 +66,14 @@ def extract_total_hours(s: any) -> pd._typing.Scalar:
     hrs  = int(m.group('hours'))
     return days * 24 + hrs
 
+
+def normalize_text(text):
+    if pd.isna(text):
+        return ''
+    text = unicodedata.normalize("NFKD", str(text))   # Normaliza tildes y caracteres raros
+    text = text.replace('\r', ' ').replace('\n', ' ').replace('\xa0', ' ')
+    text = ' '.join(text.split())  # Elimina espacios dobles y deja uno solo
+    return text.strip()
 
 
 def get_dataframe_summary(df):
