@@ -1,3 +1,7 @@
+import threading
+import time
+import pyautogui
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api import (
@@ -6,6 +10,22 @@ from app.api import (
     minpub, pronatel
 )
 
+lock = threading.Lock()
+
+def mantener_activo():
+    while True:
+        if lock.acquire(blocking=False):
+            try:
+                print("[mantener_activo] Mouse libre, moviendo...")
+                pyautogui.moveRel(1, 0, duration=0.1)
+                pyautogui.moveRel(-1, 0, duration=0.1)
+            finally:
+                lock.release()
+        else:
+            print("[mantener_activo] Mouse ocupado por API, esperando...")
+        time.sleep(30)
+
+threading.Thread(target=mantener_activo, daemon=True).start()
 
 app = FastAPI()
 
