@@ -5,6 +5,7 @@ import numpy as np
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import ( 
     log_exceptions
 )
+from app.modules.sga.minpub.report_validator.service.objetivos.utils.etl_utils import normalize_text
 
 @log_exceptions
 def validate_informe_tecnico_word( merged_df: pd.DataFrame, componente_word: str) -> pd.DataFrame:
@@ -48,8 +49,13 @@ def validate_informe_tecnico_word( merged_df: pd.DataFrame, componente_word: str
     df['CUISMP_match'] = df['CUISMP_corte_excel'] == df['CUISMP_word']
     df['tipo_caso_match'] = df['TIPO CASO'] == df['Tipo Caso']
     df['observacion_match'] = df['OBSERVACIÓN'] == df['Observación']
-    df['dt_causa_match'] = df['DETERMINACIÓN DE LA CAUSA_corte_excel'] == df['DETERMINACIÓN DE LA CAUSA_word'] 
-    df['medidas_correctivas_match'] = df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS_corte_excel'] == df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS_word']
+    df['dt_causa_match'] = df['DETERMINACIÓN DE LA CAUSA_corte_excel'] == df['DETERMINACIÓN DE LA CAUSA_word']
+
+    df['medidas_correctivas_match'] = df.apply(
+        lambda row: normalize_text(row['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS_corte_excel']) ==
+                    normalize_text(row['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS_word']),
+        axis=1
+    )
 
     df['Validation_OK'] = (
         df['Fecha_hora_inicio_match'] &
