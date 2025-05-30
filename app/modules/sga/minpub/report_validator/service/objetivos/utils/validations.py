@@ -52,6 +52,7 @@ def validate_required_columns_from_excel(path_excel, required_columns, skipfoote
 
     df_clean[text_cols] = (
         df_clean[text_cols]
+        .astype(str)
         .apply(lambda col: (
             col
             .str.replace('\r', ' ', regex=False)   
