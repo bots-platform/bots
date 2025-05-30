@@ -1,6 +1,7 @@
 import threading
 import time
 import pyautogui
+import random
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,8 +13,48 @@ from app.api import (
 
 lock = threading.Lock()
 
+
+def mover_cuadrado(x0, y0, step):
+    pyautogui.moveTo(x0, y0)
+    time.sleep(0.1)
+    pyautogui.moveTo(x0 + step, y0)
+    time.sleep(0.1)
+    pyautogui.moveTo(x0 + step, y0 + step)
+    time.sleep(0.1)
+    pyautogui.moveTo(x0, y0 + step)
+    time.sleep(0.1)
+    pyautogui.moveTo(x0, y0)
+
+def mover_cruz(x0, y0, step):
+    pyautogui.moveTo(x0, y0)
+    time.sleep(0.1)
+    pyautogui.moveTo(x0 + step, y0)
+    time.sleep(0.1)
+    pyautogui.moveTo(x0, y0)
+    time.sleep(0.1)
+    pyautogui.moveTo(x0, y0 + step)
+    time.sleep(0.1)
+    pyautogui.moveTo(x0, y0)
+
+def mover_zigzag(x0, y0, step):
+    for i in range(3):
+        pyautogui.moveTo(x0 + i * step, y0 + (i % 2) * step)
+        time.sleep(0.1)
+
+def mover_diagonal(x0, y0, step):
+    for i in range(5):
+        pyautogui.moveTo(x0 + i * 10, y0 + i * 10)
+        time.sleep(0.1)
+
 def mantener_activo():
+    screen_width, screen_height = pyautogui.size()
+
+    x0 = int(screen_width * 0.1)
+    y0 = int(screen_height * 0.1)
+    step = 50
+
     last_pos = pyautogui.position()
+    patrones = [mover_cuadrado, mover_cruz, mover_zigzag, mover_diagonal]
 
     while True:
         current_pos = pyautogui.position()
@@ -23,17 +64,18 @@ def mantener_activo():
         else:
             if lock.acquire(blocking=False):
                 try:
-                    print("[mantener_activo] Mouse libre y sin uso humano. Moviendo...")
-                    pyautogui.moveTo(100, 100)
-                    time.sleep(0.1)
-                    pyautogui.moveTo(200, 100)
+                    patron = random.choice(patrones)
+                    print(f"[mantener_activo] Ejecutando patrón aleatorio: {patron.__name__}")
+                    patron(x0, y0, step)
                 finally:
                     lock.release()
             else:
                 print("[mantener_activo] Mouse ocupado por una tarea crítica. Esperando...")
 
-        last_pos = current_pos
-        time.sleep(30)
+        last_pos = pyautogui.position()
+        delay = random.randint(25, 40)
+        print(f"[mantener_activo] Esperando {delay} segundos antes del próximo movimiento.")
+        time.sleep(delay)
 
 
 threading.Thread(target=mantener_activo, daemon=True).start()
