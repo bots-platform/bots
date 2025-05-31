@@ -1,4 +1,5 @@
 import threading
+from app.shared.lock import global_lock
 import time
 import random
 from pywinauto.keyboard import send_keys
@@ -13,7 +14,7 @@ from app.api import (
     minpub, pronatel
 )
 
-lock = threading.Lock()
+lock = global_lock
 
 actividad_humana = {"mouse": False, "teclado": False}
 
