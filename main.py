@@ -26,7 +26,7 @@ def on_key_press(key):
 
 
 def mantener_activo():
-    patrones = ["win_key", "click"]
+    patrones = ["click_1", "click_2"]
 
     while True:
         if actividad_humana["mouse"] or actividad_humana["teclado"]:
@@ -35,12 +35,12 @@ def mantener_activo():
             if lock.acquire(blocking=False):
                 try:
                     accion = random.choice(patrones)
-                    if accion == "win_key":
-                        print("[mantener_activo] Presionando tecla Windows")
-                        send_keys("{VK_LWIN}")
-                    elif accion == "click":
-                        print("[mantener_activo] Clic en (5,5)")
-                        click(button='left', coords=(5, 5))
+                    if accion == "click_1":
+                        print("[mantener_activo] Clic en (35,10)")
+                        click(button='left', coords=(35, 10))
+                    elif accion == "click_2":
+                        print("[mantener_activo] Clic en (15,5)")
+                        click(button='left', coords=(15, 5))
                 finally:
                     lock.release()
             else:
