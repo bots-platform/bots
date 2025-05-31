@@ -3,11 +3,13 @@ from app.core.celery_app import celery_app
 from app.modules.sga.service_tecnico_operaciones import SGAService
 from app.modules.sga.minpub.report_validator.service.objetivos.all_objetivos import all_objetivos
 import threading
+from app.shared.lock import global_lock
 from typing import Dict, Any
 import os
 
 # Global lock for SGA application to prevent concurrent access
-sga_global_lock = threading.Lock()
+#sga_global_lock = threading.Lock()
+sga_global_lock = global_lock
 
 # Thread locks for automation tools
 selenium_lock = threading.Lock()
