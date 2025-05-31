@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form, BackgroundTasks
-
+from app.shared.lock import global_lock
 from datetime import datetime
 from pathlib import Path
 import os
@@ -26,7 +26,7 @@ router = APIRouter(prefix="/api/minpub", tags=["minpub"])
 
 processing_tasks = {}
  
-sga_lock = threading.Lock()
+sga_lock = global_lock
 
 async def save_file(uploaded_file: UploadFile, save_dir: str) -> str:
 
