@@ -8,10 +8,13 @@ from pynput import mouse, keyboard
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.database import engine
+from app import models
 from app.api import (
-    sga, oplogin, newCallCenter, semaforo, reporteCombinado,
-    sharepoint_Horario_mesa_atcorp, sharepoint_horario_general_atcorp,
-    minpub, pronatel
+    sga_router, oplogin_router, newCallCenter_router, semaforo_router,
+    reporteCombinado_router, sharepoint_horario_general_router,
+    sharepoint_horario_mesa_router, minpub_router, pronatel_router,
+    auth_router, users_router, permissions_router
 )
 
 lock = global_lock
@@ -63,26 +66,43 @@ keyboard_listener.start()
 
 threading.Thread(target=mantener_activo, daemon=True).start()
 
+# Create database tables
+models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI()
+app = FastAPI(
+    title="RPA Bots API",
+    description="API for RPA Bots Management System",
+    version="1.0.0"
+)
 
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # In production, replace with your frontend URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(sga.router)
-app.include_router(oplogin.router)
-app.include_router(newCallCenter.router)
-app.include_router(semaforo.router)
-app.include_router(reporteCombinado.router)
-app.include_router(sharepoint_horario_general_atcorp.router)
-app.include_router(sharepoint_Horario_mesa_atcorp.router)
-app.include_router(minpub.router)
-app.include_router(pronatel.router)
+# Include existing routers
+app.include_router(sga_router)
+app.include_router(oplogin_router)
+app.include_router(newCallCenter_router)
+app.include_router(semaforo_router)
+app.include_router(reporteCombinado_router)
+app.include_router(sharepoint_horario_general_router)
+app.include_router(sharepoint_horario_mesa_router)
+app.include_router(minpub_router)
+app.include_router(pronatel_router)
+
+# Include new authentication and user management routers
+app.include_router(auth_router)
+app.include_router(users_router)
+app.include_router(permissions_router)
+
+@app.get("/")
+async def root():
+    return {"message": "Welcome to RPA Bots API"}
 
 if __name__ == "__main__":
     import uvicorn
