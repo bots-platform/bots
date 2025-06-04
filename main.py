@@ -5,7 +5,6 @@ import random
 from pywinauto.keyboard import send_keys
 from pywinauto.mouse import click
 from pynput import mouse, keyboard
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api import (
@@ -13,6 +12,7 @@ from app.api import (
     sharepoint_Horario_mesa_atcorp, sharepoint_horario_general_atcorp,
     minpub, pronatel
 )
+from app.core.spark_session import SparkSessionManager
 
 lock = global_lock
 
@@ -73,6 +73,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Initialize Spark session
+spark = SparkSessionManager.get_spark_session()
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """
+    Clean up resources when the application shuts down.
+    """
+    SparkSessionManager.cleanup()
 
 app.include_router(sga.router)
 app.include_router(oplogin.router)
