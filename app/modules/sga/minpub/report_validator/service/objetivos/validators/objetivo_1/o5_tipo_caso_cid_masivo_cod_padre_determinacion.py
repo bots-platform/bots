@@ -66,7 +66,7 @@ def build_failure_messages_tipo_caso_cid_masivo_codincidencia_padre_determinacio
                      " \n No coincide Determinacion de la causa Excel-Corte: \n" +
                        df['DETERMINACIÓN DE LA CAUSA'].astype(str)+"\n con SGA Determinación de la causa: \n"+ df['causa_sga335_clean'],  "")+
             np.where(~df['tipo_caso_match'],
-                     "\n No coincide Tipo de Caso de CORTE-EXCEL: \n" + df['TIPO CASO'].astype(str) +"\n con SGA determinación de la causa: \n\n" + 
+                     "\n No coincide Tipo de Caso de CORTE-EXCEL: \n" + df['TIPO CASO'].astype(str) +"\n con EN SGA columna tipo caso : \n\n" + 
                      df['tipo_caso'].astype(str), "")+
             np.where(~df['cid_match'],
                      "\n No coincide cid  de CORTE-EXCEL : \n"+ df['CID'].astype(str) +
