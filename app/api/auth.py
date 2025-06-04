@@ -4,7 +4,8 @@ from sqlalchemy.orm import Session
 from datetime import timedelta
 from typing import List
 
-from ..models import models, schemas, auth, database
+# from ..models import models, schemas, auth, database
+from .. import models, schemas, auth, database
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
