@@ -6,7 +6,10 @@ from pywinauto.keyboard import send_keys
 from pywinauto.mouse import click
 from pynput import mouse, keyboard
 
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from app.init_db import init_db
+
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine
 from app import models
@@ -69,10 +72,17 @@ threading.Thread(target=mantener_activo, daemon=True).start()
 # Create database tables
 models.Base.metadata.create_all(bind=engine)
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    yield
+
 app = FastAPI(
     title="RPA Bots API",
     description="API for RPA Bots Management System",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # Configure CORS
@@ -84,7 +94,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include existing routers
+
 app.include_router(sga_router)
 app.include_router(oplogin_router)
 app.include_router(newCallCenter_router)
@@ -95,7 +105,6 @@ app.include_router(sharepoint_horario_mesa_router)
 app.include_router(minpub_router)
 app.include_router(pronatel_router)
 
-# Include new authentication and user management routers
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(permissions_router)
@@ -103,6 +112,7 @@ app.include_router(permissions_router)
 @app.get("/")
 async def root():
     return {"message": "Welcome to RPA Bots API"}
+
 
 if __name__ == "__main__":
     import uvicorn
