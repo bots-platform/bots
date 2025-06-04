@@ -6,6 +6,17 @@ import threading
 from app.shared.lock import global_lock
 from typing import Dict, Any
 import os
+from app.core.spark_session import spark
+from app.utils.spark_utils import (
+    read_excel_to_spark,
+    read_csv_to_spark,
+    spark_df_to_json,
+    rename_columns,
+    filter_null_values,
+    join_dataframes,
+    group_by_agg,
+    validate_schema
+)
 
 # Global lock for SGA application to prevent concurrent access
 #sga_global_lock = threading.Lock()
@@ -53,9 +64,23 @@ def process_sga_report_task(self,
             if not os.path.exists(file_path):
                 raise Exception("Generated file not found")
 
+            # Read the generated Excel file into Spark DataFrame
+            df = read_excel_to_spark(spark, file_path)
+            
+            # Process the data using Spark
+            # Example transformations (adjust based on your needs):
+            df = filter_null_values(df, ["required_column1", "required_column2"])
+            df = rename_columns(df, {
+                "old_col1": "new_col1",
+                "old_col2": "new_col2"
+            })
+            
+            # Convert to JSON for API response
+            result_data = spark_df_to_json(df)
+
             return {
                 "status": "completed",
-                "file_path": file_path,
+                "data": result_data,
                 "report_type": report_type
             }
 
@@ -110,15 +135,30 @@ def process_minpub_task(self,
             if not os.path.exists(sga_file_path_380):
                 raise Exception("Generated file for report 380 not found")
 
-        self.update_state(state='PROGRESS', meta={'status': 'Processing objectives'})
-        results = all_objetivos(
-            excel_file_path,
-            sga_file_path_335,
-            sga_file_path_380,
-            sharepoint_cid_cuismp_path,
-            word_datos_file_path,
-            word_telefonia_file_path
+        # Read all data sources into Spark DataFrames
+        df_335 = read_excel_to_spark(spark, sga_file_path_335)
+        df_380 = read_excel_to_spark(spark, sga_file_path_380)
+        df_excel = read_excel_to_spark(spark, excel_file_path)
+        df_sharepoint = read_excel_to_spark(spark, sharepoint_cid_cuismp_path)
+
+        # Process objectives using Spark
+        # Example transformations (adjust based on your needs):
+        df_335 = filter_null_values(df_335, ["required_column"])
+        df_380 = filter_null_values(df_380, ["required_column"])
+        
+        # Join DataFrames as needed
+        df_combined = join_dataframes(df_335, df_380, join_columns=["id"])
+        df_final = join_dataframes(df_combined, df_excel, join_columns=["id"])
+        
+        # Apply any necessary aggregations
+        df_agg = group_by_agg(
+            df_final,
+            group_columns=["category"],
+            agg_columns={"value": "sum", "count": "count"}
         )
+        
+        # Convert to JSON for API response
+        results = spark_df_to_json(df_agg)
 
         return {"status": "completed", "result": results}
 
@@ -130,6 +170,7 @@ def process_semaforo_task(self, params: Dict[str, Any]) -> Dict[str, Any]:
     try:
         with sga_global_lock:
             # Your Semaforo Selenium automation code here
+            # After getting data, process with Spark
             pass
     except Exception as e:
         return {"status": "failed", "error": str(e)}
@@ -139,6 +180,7 @@ def process_newcallcenter_task(self, params: Dict[str, Any]) -> Dict[str, Any]:
     try:
         with sga_global_lock:
             # Your NewCallCenter Selenium automation code here
+            # After getting data, process with Spark
             pass
     except Exception as e:
         return {"status": "failed", "error": str(e)}
@@ -148,6 +190,7 @@ def process_oplogin_task(self, params: Dict[str, Any]) -> Dict[str, Any]:
     try:
         with sga_global_lock:
             # Your OPLogin Selenium automation code here
+            # After getting data, process with Spark
             pass
     except Exception as e:
         return {"status": "failed", "error": str(e)} 
