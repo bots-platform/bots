@@ -171,7 +171,7 @@ def build_failure_messages_reporte_observacion(df: pd.DataFrame) -> pd.DataFrame
                     "") +
 
             np.where((df['TIPO REPORTE'] == 'PROACTIVO') & (~df['proactivo_tipo_caso_valid']),
-                     "\n\n EN EXCEL-CORTE PROACTIVO columna TIPO CASO : \n\n" + df['tipo_caso'].astype(str) + "\n\n debe terminar en 'MONITOREO'.",
+                     "\n\n EN SGA PROACTIVO columna tipo caso : \n\n" + df['tipo_caso'].astype(str) + "\n\n debe terminar en 'MONITOREO'.",
                     "") +
 
             np.where((df['TIPO REPORTE'] == 'PROACTIVO') & (~df['proactivo_medidas_correctivas_valid']),
