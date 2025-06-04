@@ -152,12 +152,12 @@ def build_failure_messages_reporte_observacion(df: pd.DataFrame) -> pd.DataFrame
         "Validation de TIPO REPORTE y OBSERVACION exitosa",
         (
             np.where((df['TIPO REPORTE'] == 'RECLAMO') & (~df['reclamo_tipo_caso_valid']),
-                     "\n\n EN EXCEL-CORTE  RECLAMO columna TIPO CASO:  \n\n" + df['tipo_caso'].astype(str) + 
+                     "\n\n EN SGA columna tipo_caso:  \n\n" + df['tipo_caso'].astype(str) + 
                      " \n\n no está en lista permitida : (SIN SERVICIO , ENLACE LENTO, SIN SERVICIO-NO DA TONO , OTROS CALIDAD).",
                     "") +
 
             np.where((df['TIPO REPORTE'] == 'RECLAMO') & (~df['reclamo_no_monitoreo']),
-                     "\n\n EN EXCEL-CORTE RECLAMO con columna TIPO CASO: \n\n " + df['tipo_caso'].astype(str) + "\n\n no debe terminar en 'MONITOREO'.",
+                     "\n\n EN SGA columna tipo_caso: \n\n " + df['tipo_caso'].astype(str) + "\n\n no debe terminar en 'MONITOREO'.",
                     "") +
 
             np.where((df['TIPO REPORTE'] == 'RECLAMO') & (~df['reclamo_medidas_correctivas_valid']),
@@ -171,7 +171,7 @@ def build_failure_messages_reporte_observacion(df: pd.DataFrame) -> pd.DataFrame
                     "") +
 
             np.where((df['TIPO REPORTE'] == 'PROACTIVO') & (~df['proactivo_tipo_caso_valid']),
-                     "\n\n EN EXCEL-CORTE PROACTIVO columna TIPO CASO : \n\n" + df['tipo_caso'].astype(str) + "\n\n debe terminar en 'MONITOREO'.",
+                     "\n\n EN SGA columna tipo_caso: \n\n" + df['tipo_caso'].astype(str) + "\n\n debe terminar en 'MONITOREO'.",
                     "") +
 
             np.where((df['TIPO REPORTE'] == 'PROACTIVO') & (~df['proactivo_medidas_correctivas_valid']),
