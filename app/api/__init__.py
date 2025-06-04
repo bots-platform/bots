@@ -10,7 +10,6 @@ from .pronatel import router as pronatel_router
 from .auth import router as auth_router
 from .users import router as users_router
 from .permissions import router as permissions_router
-
 __all__ = [
     "sga_router",
     "oplogin_router",
