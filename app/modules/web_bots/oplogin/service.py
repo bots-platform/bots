@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from app.modules.web_bots.browser.setup import setup_edge_driver
 from app.modules.web_bots.oplogin.scripts.oplogin_scraper import scrape_oplogin_page
-from config import OPLOGIN_USER, OPLOGIN_PASSWORD
+from app.core.config import settings
 import time
 from utils.logger_config import get_oplogin_logger
 import os
@@ -13,7 +13,7 @@ class OploginService:
     def descargarReporte(self):
         try:
             driver = None
-            if not OPLOGIN_USER or not OPLOGIN_PASSWORD:
+            if not settings.OPLOGIN_USER or not settings.OPLOGIN_PASSWORD:
                 logger.error("Oplogin credenciales no encontradas .env file")
                 return
             
@@ -24,7 +24,7 @@ class OploginService:
             try:
                 logger.info('Empezando scraping de Oplogin')
                 driver = setup_edge_driver(download_directory=download_path)
-                result = scrape_oplogin_page(driver, OPLOGIN_USER, OPLOGIN_PASSWORD)
+                result = scrape_oplogin_page(driver, settings.OPLOGIN_USER, settings.OPLOGIN_PASSWORD)
                 while True:
                     try:
                         driver.current_url

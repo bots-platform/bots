@@ -7,7 +7,7 @@ from selenium.webdriver.common.keys import Keys
 from  ...utils.input_utils  import random_delay
 import time
 from datetime import datetime, timedelta
-from config import URL_SEMAFORO
+from app.core.config import settings
 from utils.logger_config import get_semaforo_logger
 from utils.waiting_download import wait_for_download
 
@@ -46,7 +46,7 @@ def login_to_semaforo(driver, user, password):
 
     try:
         logger.info(f"Intentando login SEMAFORO")
-        driver.get(URL_SEMAFORO)
+        driver.get(settings.URL_SEMAFORO)
         random_delay(3, 5)  
         
         user_input = WebDriverWait(driver, 10).until(
