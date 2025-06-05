@@ -7,7 +7,7 @@ from selenium.webdriver.common.keys import Keys
 from  ....web_bots.utils.input_utils  import random_delay
 import time
 from datetime import datetime, timedelta
-from config import URL_OPLOGIN
+from app.core.config import settings
 from utils.logger_config import get_oplogin_logger
 import os
 
@@ -21,7 +21,7 @@ def login_to_oplogin(driver, user, password):
     try:
         
         logger.info(f"Intentando login OPLOGIN")
-        driver.get(URL_OPLOGIN)
+        driver.get(settings.URL_OPLOGIN)
         random_delay(3, 5)  
         
         user_input = WebDriverWait(driver, 10).until(
