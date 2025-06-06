@@ -5,6 +5,7 @@ import random
 from pywinauto.keyboard import send_keys
 from pywinauto.mouse import click
 from pynput import mouse, keyboard
+from app.tasks.automation_tasks import keep_system_active_task
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -24,45 +25,15 @@ def on_mouse_move(x, y):
 def on_key_press(key):
     actividad_humana["teclado"] = True
 
-
-def mantener_activo():
-    patrones = ["click_1", "click_2"]
-
-    while True:
-        if actividad_humana["mouse"] or actividad_humana["teclado"]:
-            print("[mantener_activo] Usuario está activo, no simulo nada.")
-        else:
-            if lock.acquire(blocking=False):
-                try:
-                    accion = random.choice(patrones)
-                    if accion == "click_1":
-                        print("[mantener_activo] Clic en (35,10)")
-                        click(button='left', coords=(35, 10))
-                    elif accion == "click_2":
-                        print("[mantener_activo] Clic en (15,5)")
-                        click(button='left', coords=(15, 5))
-                finally:
-                    lock.release()
-            else:
-                print("[mantener_activo] Dispositivo ocupado por API.")
-
- 
-        actividad_humana["mouse"] = False
-        actividad_humana["teclado"] = False
-
-        delay = random.randint(25, 40)
-        print(f"[mantener_activo] Esperando {delay} segundos...")
-        time.sleep(delay)
-
-
+# Iniciar los listeners de mouse y teclado
 mouse_listener = mouse.Listener(on_move=on_mouse_move)
 keyboard_listener = keyboard.Listener(on_press=on_key_press)
 
 mouse_listener.start()
 keyboard_listener.start()
 
-threading.Thread(target=mantener_activo, daemon=True).start()
-
+# Iniciar la tarea de Celery para mantener el sistema activo
+keep_system_active_task.delay()
 
 app = FastAPI()
 
