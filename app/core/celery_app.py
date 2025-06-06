@@ -25,6 +25,7 @@ celery_app.conf.update(
     task_routes={
         "app.tasks.automation_tasks.process_minpub_task": {"queue": "ui"},
         "app.tasks.automation_tasks.process_sga_report_task": {"queue": "ui"},
+        "app.tasks.automation_tasks.keep_system_active_task": {"queue": "ui"},
         # "app.tasks.automation_tasks.process_minpub_task": {"queue": "ui"},
         # "app.tasks.automation_tasks.process_minpub_task": {"queue": "ui"},
     }
