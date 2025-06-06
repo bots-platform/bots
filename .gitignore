@@ -7,5 +7,8 @@ __pycache__/
 .DS_Store
 *.pyc
 app.db
+.user.json
+permissions.json
+users.json
 
 
