@@ -6,6 +6,8 @@ import threading
 from app.shared.lock import global_lock
 from typing import Dict, Any
 import os
+import random
+from pynput.mouse import Button, Controller
 
 # Global lock for SGA application to prevent concurrent access
 #sga_global_lock = threading.Lock()
@@ -13,6 +15,12 @@ sga_global_lock = global_lock
 
 # Thread locks for automation tools
 selenium_lock = threading.Lock()
+
+# Simulación de actividad humana
+actividad_humana = {"mouse": False, "teclado": False}
+
+# Inicialización del controlador del mouse
+mouse_controller = Controller()
 
 def wait_for_sga_service(sga_service: SGAService, max_wait_time: int = 300) -> bool:
     """
@@ -150,4 +158,37 @@ def process_oplogin_task(self, params: Dict[str, Any]) -> Dict[str, Any]:
             # Your OPLogin Selenium automation code here
             pass
     except Exception as e:
-        return {"status": "failed", "error": str(e)} 
+        return {"status": "failed", "error": str(e)}
+
+@celery_app.task(queue="ui", bind=True, name="keep_system_active")
+def keep_system_active_task(self):
+    """
+    Tarea que mantiene el sistema activo simulando actividad del mouse.
+    Se ejecuta cada 25-40 segundos si no hay actividad humana.
+    """
+    patrones = ["click_1", "click_2"]
+    
+    if actividad_humana["mouse"] or actividad_humana["teclado"]:
+        print("[keep_system_active] Usuario está activo, no simulo nada.")
+    else:
+        if sga_global_lock.acquire(blocking=False):
+            try:
+                accion = random.choice(patrones)
+                if accion == "click_1":
+                    print("[keep_system_active] Clic en (35,10)")
+                    mouse_controller.click(Button.left, (35, 10))
+                elif accion == "click_2":
+                    print("[keep_system_active] Clic en (15,5)")
+                    mouse_controller.click(Button.left, (15, 5))
+            finally:
+                sga_global_lock.release()
+        else:
+            print("[keep_system_active] Dispositivo ocupado por API.")
+
+    actividad_humana["mouse"] = False
+    actividad_humana["teclado"] = False
+    
+    # Programar la siguiente ejecución
+    delay = random.randint(25, 40)
+    print(f"[keep_system_active] Programando siguiente ejecución en {delay} segundos...")
+    keep_system_active_task.apply_async(countdown=delay) 
