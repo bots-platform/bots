@@ -6,6 +6,11 @@ from pywinauto.keyboard import send_keys
 from pywinauto.mouse import click
 from pynput import mouse, keyboard
 from app.tasks.automation_tasks import keep_system_active_task
+import logging
+
+# Configurar logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,9 +26,11 @@ actividad_humana = {"mouse": False, "teclado": False}
 
 def on_mouse_move(x, y):
     actividad_humana["mouse"] = True
+    logger.info("Actividad de mouse detectada")
 
 def on_key_press(key):
     actividad_humana["teclado"] = True
+    logger.info("Actividad de teclado detectada")
 
 # Iniciar los listeners de mouse y teclado
 mouse_listener = mouse.Listener(on_move=on_mouse_move)
@@ -33,7 +40,9 @@ mouse_listener.start()
 keyboard_listener.start()
 
 # Iniciar la tarea de Celery para mantener el sistema activo
-keep_system_active_task.delay()
+logger.info("Iniciando tarea keep_system_active_task...")
+result = keep_system_active_task.delay()
+logger.info(f"Tarea keep_system_active_task iniciada con ID: {result.id}")
 
 app = FastAPI()
 
