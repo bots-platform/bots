@@ -25,7 +25,7 @@ docxtpl==0.19.1
 et-xmlfile==1.1.0
 exceptiongroup==1.2.2
 executing==2.2.0
-fastapi>=0.68.0
+fastapi==0.68.1
 fonttools==4.56.0
 frozenlist==1.5.0
 h11==0.14.0
@@ -57,7 +57,7 @@ propcache==0.2.0
 psutil==6.1.1
 pure_eval==0.2.3
 pycparser==2.22
-pydantic>=1.8.0
+pydantic==1.8.2
 pydantic_core==2.27.1
 Pygments==2.19.1
 pyparsing==3.2.3
@@ -89,7 +89,7 @@ trio-websocket==0.11.1
 typing_extensions==4.12.2
 tzdata==2024.2
 urllib3==2.2.3
-uvicorn>=0.15.0
+uvicorn==0.15.0
 wcwidth==0.2.13
 webdriver-manager==4.0.2
 websocket-client==1.8.0
@@ -98,3 +98,6 @@ xlrd==2.0.1
 yarl==1.18.0
 celery>=5.2.0
 pydantic-settings>=2.0.0
+sqlalchemy==1.4.23
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
