@@ -8,11 +8,11 @@ from pynput import mouse, keyboard
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from app.init_db import init_db
+
 
 from fastapi.middleware.cors import CORSMiddleware
-from app.database import engine
-from app import models
+
+
 from app.api import (
     sga_router, oplogin_router, newCallCenter_router, semaforo_router,
     reporteCombinado_router, sharepoint_horario_general_router,
@@ -69,20 +69,16 @@ keyboard_listener.start()
 
 threading.Thread(target=mantener_activo, daemon=True).start()
 
-# Create database tables
-models.Base.metadata.create_all(bind=engine)
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    init_db()
-    yield
+
+
 
 app = FastAPI(
     title="RPA Bots API",
     description="API for RPA Bots Management System",
     version="1.0.0",
-    lifespan=lifespan
+
 )
 
 # Configure CORS
