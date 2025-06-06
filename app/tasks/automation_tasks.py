@@ -7,7 +7,11 @@ from app.shared.lock import global_lock
 from typing import Dict, Any
 import os
 import random
-from pynput.mouse import Button, Controller
+from pywinauto.mouse import click
+import logging
+
+# Configurar logging
+logger = logging.getLogger(__name__)
 
 # Global lock for SGA application to prevent concurrent access
 #sga_global_lock = threading.Lock()
@@ -18,9 +22,6 @@ selenium_lock = threading.Lock()
 
 # Simulación de actividad humana
 actividad_humana = {"mouse": False, "teclado": False}
-
-# Inicialización del controlador del mouse
-mouse_controller = Controller()
 
 def wait_for_sga_service(sga_service: SGAService, max_wait_time: int = 300) -> bool:
     """
@@ -166,29 +167,32 @@ def keep_system_active_task(self):
     Tarea que mantiene el sistema activo simulando actividad del mouse.
     Se ejecuta cada 25-40 segundos si no hay actividad humana.
     """
+    logger.info("Ejecutando keep_system_active_task...")
     patrones = ["click_1", "click_2"]
     
     if actividad_humana["mouse"] or actividad_humana["teclado"]:
-        print("[keep_system_active] Usuario está activo, no simulo nada.")
+        logger.info("[keep_system_active] Usuario está activo, no simulo nada.")
     else:
+        logger.info("[keep_system_active] Intentando adquirir lock...")
         if sga_global_lock.acquire(blocking=False):
             try:
                 accion = random.choice(patrones)
                 if accion == "click_1":
-                    print("[keep_system_active] Clic en (35,10)")
-                    mouse_controller.click(Button.left, (35, 10))
+                    logger.info("[keep_system_active] Realizando clic en (35,10)")
+                    click(button='left', coords=(35, 10))
                 elif accion == "click_2":
-                    print("[keep_system_active] Clic en (15,5)")
-                    mouse_controller.click(Button.left, (15, 5))
+                    logger.info("[keep_system_active] Realizando clic en (15,5)")
+                    click(button='left', coords=(15, 5))
             finally:
+                logger.info("[keep_system_active] Liberando lock...")
                 sga_global_lock.release()
         else:
-            print("[keep_system_active] Dispositivo ocupado por API.")
+            logger.info("[keep_system_active] Dispositivo ocupado por API.")
 
     actividad_humana["mouse"] = False
     actividad_humana["teclado"] = False
     
     # Programar la siguiente ejecución
     delay = random.randint(25, 40)
-    print(f"[keep_system_active] Programando siguiente ejecución en {delay} segundos...")
+    logger.info(f"[keep_system_active] Programando siguiente ejecución en {delay} segundos...")
     keep_system_active_task.apply_async(countdown=delay) 
