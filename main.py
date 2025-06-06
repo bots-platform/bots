@@ -10,7 +10,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api import (
     sga, oplogin, newCallCenter, semaforo, reporteCombinado,
-    sharepoint_Horario_mesa_atcorp, sharepoint_horario_general_atcorp,
+    sharepoint_horario_mesa_atcorp, sharepoint_horario_general_atcorp,
     minpub, pronatel
 )
 
@@ -80,7 +80,7 @@ app.include_router(newCallCenter.router)
 app.include_router(semaforo.router)
 app.include_router(reporteCombinado.router)
 app.include_router(sharepoint_horario_general_atcorp.router)
-app.include_router(sharepoint_Horario_mesa_atcorp.router)
+app.include_router(sharepoint_horario_mesa_atcorp.router)
 app.include_router(minpub.router)
 app.include_router(pronatel.router)
 
