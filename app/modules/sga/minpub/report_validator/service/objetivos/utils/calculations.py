@@ -1,10 +1,12 @@
-
 from typing import List, Dict
-import pandas as pd
 import re
 from datetime import datetime, timedelta
 from docx import Document
 from typing import Tuple, Optional
+from pyspark.sql import functions as F
+from pyspark.sql.types import TimestampType, StringType
+from pyspark.sql.window import Window
+from pyspark.sql.functions import col, lit, when, max as spark_max
 
 # import language_tool_python
 # _tool_es = language_tool_python.LanguageTool('es')
@@ -46,14 +48,14 @@ def resolve_clock_stop_overlaps(clock_stops: List[Dict]) -> List[Dict]:
         sorted_stops = sorted(incident_stops, key=lambda x: x['start'])
 
         for i, stop in enumerate(sorted_stops):
-            if pd.isna(stop['end']):
-                if i < len(sorted_stops) - 1 and not pd.isna(sorted_stops[i+1]['start']):
+            if stop['end'] is None:
+                if i < len(sorted_stops) - 1 and sorted_stops[i+1]['start'] is not None:
                     stop['end'] = sorted_stops[i+1]['start']
                 else:
                     logger.warning(f"Removing stop with missing end date for nro_incidencia {nro_incidencia}")
                     continue
         
-        valid_stops = [stop for stop in sorted_stops if not pd.isna(stop['end'])]
+        valid_stops = [stop for stop in sorted_stops if stop['end'] is not None]
 
         if not valid_stops:
             continue
@@ -64,7 +66,7 @@ def resolve_clock_stop_overlaps(clock_stops: List[Dict]) -> List[Dict]:
             last_resolved = resolved_stops[-1]
 
             if current_stop['start'] <= last_resolved['end']:
-                last_resolved['end'] = max(last_resolved['end'], current_stop['end'])
+                last_resolved['end'] = spark_max(last_resolved['end'], current_stop['end'])
             else:
                 resolved_stops.append(current_stop)
 
@@ -74,37 +76,39 @@ def resolve_clock_stop_overlaps(clock_stops: List[Dict]) -> List[Dict]:
 
 @log_exceptions
 def calculate_total_clock_stop_minutes_by_incidencia(
-    nro_incidencia:str,
+    nro_incidencia: str,
     interruption_start: datetime,
     interruption_end: datetime,
-    df_sga_paradas: pd.DataFrame
+    df_sga_paradas
     ) -> float:
     """
     Calculate the total clock minutes for a ticket, considering constraints.
 
     Args:
         nro_incidencia: The ticket identifier
-        interrupcion_inicio: Start time of the interruption from REPORTE DINAMICO 335 
-        interrupcion_fin: End time of the interruption from REPORTE DINAMICO 335 
+        interruption_start: Start time of the interruption from REPORTE DINAMICO 335 
+        interruption_end: End time of the interruption from REPORTE DINAMICO 335 
+        df_sga_paradas: PySpark DataFrame containing the stops data
     
     Returns:
         Total clock stop minutes
     
     """   
-    df_sga_paradas['nro_incidencia'] = df_sga_paradas['nro_incidencia'].astype(str)
-    nro_incidencia_stops = df_sga_paradas[df_sga_paradas['nro_incidencia'] == nro_incidencia].copy()
+    # Convert nro_incidencia to string and filter
+    df_sga_paradas = df_sga_paradas.withColumn('nro_incidencia', F.col('nro_incidencia').cast(StringType()))
+    nro_incidencia_stops = df_sga_paradas.filter(F.col('nro_incidencia') == nro_incidencia)
 
-    if nro_incidencia_stops.empty:
+    if nro_incidencia_stops.count() == 0:
         logger.info(f"No clock stops found for incident {nro_incidencia}")
         return 0.0
     
+    # Convert to list of dictionaries for processing
     clock_stops = []
+    for row in nro_incidencia_stops.collect():
+        start_date = row.get('startdate')
+        end_date = row.get('enddate')
 
-    for _, stop in nro_incidencia_stops.iterrows():
-        start_date = stop.get('startdate')
-        end_date = stop.get('enddate')
-
-        if pd.isna(start_date):
+        if start_date is None:
             logger.warning(f"Skipping record with missing start date for incident {nro_incidencia}")
             continue
 
@@ -112,7 +116,7 @@ def calculate_total_clock_stop_minutes_by_incidencia(
             logger.info(f"Adjusting start time to interruption en for incident {nro_incidencia}")
             start_date = interruption_start
 
-        if not pd.isna(end_date):
+        if end_date is not None:
             if end_date > interruption_end:
                 logger.info(f"Adjusting end time to interruption en for incident {nro_incidencia}")
                 end_date = interruption_end
@@ -129,48 +133,50 @@ def calculate_total_clock_stop_minutes_by_incidencia(
                 'end': end_date,
                 'nro_incidencia': nro_incidencia
             })
+
     resolved_stops = resolve_clock_stop_overlaps(clock_stops)
 
     total_minutes = sum(
         (stop['end'] - stop['start']).total_seconds() / 60
         for stop in resolved_stops
-        if not pd.isna(stop['end']) and not pd.isna(stop['start'])
+        if stop['end'] is not None and stop['start'] is not None
     )
     return total_minutes
 
 @log_exceptions
 def calculate_total_clock_stop_by_incidencia(
-    nro_incidencia:str,
+    nro_incidencia: str,
     interruption_start: datetime,
     interruption_end: datetime,
-    df_sga_paradas: pd.DataFrame
-    ) -> float:
+    df_sga_paradas
+    ) -> List[Dict]:
     """
     Calculate the total clock stops for a ticket, considering constraints.
 
     Args:
         nro_incidencia: The ticket identifier
-        interrupcion_inicio: Start time of the interruption from REPORTE DINAMICO 335 
-        interrupcion_fin: End time of the interruption from REPORTE DINAMICO 335 
+        interruption_start: Start time of the interruption from REPORTE DINAMICO 335 
+        interruption_end: End time of the interruption from REPORTE DINAMICO 335 
+        df_sga_paradas: PySpark DataFrame containing the stops data
     
     Returns:
-        Total clock stop by tickets
-    
+        List of clock stops for the ticket
     """   
-    df_sga_paradas['nro_incidencia'] = df_sga_paradas['nro_incidencia'].astype(str)
-    nro_incidencia_stops = df_sga_paradas[df_sga_paradas['nro_incidencia'] == nro_incidencia].copy()
+    # Convert nro_incidencia to string and filter
+    df_sga_paradas = df_sga_paradas.withColumn('nro_incidencia', F.col('nro_incidencia').cast(StringType()))
+    nro_incidencia_stops = df_sga_paradas.filter(F.col('nro_incidencia') == nro_incidencia)
 
-    if nro_incidencia_stops.empty:
+    if nro_incidencia_stops.count() == 0:
         logger.info(f"No clock stops found for incident {nro_incidencia}")
-        return 0.0
+        return []
     
+    # Convert to list of dictionaries for processing
     clock_stops = []
+    for row in nro_incidencia_stops.collect():
+        start_date = row.get('startdate')
+        end_date = row.get('enddate')
 
-    for _, stop in nro_incidencia_stops.iterrows():
-        start_date = stop.get('startdate')
-        end_date = stop.get('enddate')
-
-        if pd.isna(start_date):
+        if start_date is None:
             logger.warning(f"Skipping record with missing start date for incident {nro_incidencia}")
             continue
 
@@ -178,7 +184,7 @@ def calculate_total_clock_stop_by_incidencia(
             logger.info(f"Adjusting start time to interruption en for incident {nro_incidencia}")
             start_date = interruption_start
 
-        if not pd.isna(end_date):
+        if end_date is not None:
             if end_date > interruption_end:
                 logger.info(f"Adjusting end time to interruption en for incident {nro_incidencia}")
                 end_date = interruption_end
@@ -195,8 +201,8 @@ def calculate_total_clock_stop_by_incidencia(
                 'end': end_date,
                 'nro_incidencia': nro_incidencia
             })
-    resolved_stops = resolve_clock_stop_overlaps(clock_stops)
 
+    resolved_stops = resolve_clock_stop_overlaps(clock_stops)
     return resolved_stops
 
 
@@ -214,7 +220,7 @@ def has_repetition(text: str) -> bool:
         r'(?i)\b(Inmediatamente, claro revisó)\b.*\b\1\b',
         r'(?i)\b(A través de los Sistemas)\b.*\b\1\b',
     ]
-    return any(re.search(p, text) for p in patterns )
+    return any(re.search(p, text) for p in patterns)
    
 
 # EXTRACT RANGE DATOS FECHA INICIO Y FIN FROM INDISPONIBILIDAD EXCEL Y SGA 
