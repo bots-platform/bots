@@ -57,10 +57,7 @@ def validation_cuismp_distrito_fiscal_medidas(merged_df: pd.DataFrame) -> pd.Dat
                                 (~df['DF_match']).astype(int) + \
                                 (~df['CUISMP_in_medias_tomadas']).astype(int)
 
-    return df  
-
-
-
+    return df
 
 @log_exceptions
 def build_failure_messages_cuismp_distrito_fiscal_medidas(df: pd.DataFrame) -> pd.DataFrame:
