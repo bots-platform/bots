@@ -6,7 +6,8 @@ from pyspark.sql.types import (
 )
 from pyspark.sql.functions import (
     col, when, lower, concat, lit, expr,
-    isnull, array_contains, array, struct
+    isnull, array_contains, array, struct,
+    regexp_extract, split, length
 )
 from utils.logger_config import get_sga_logger
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import (
@@ -20,6 +21,9 @@ def get_spark_session() -> SparkSession:
     return (SparkSession.builder
             .appName("CUISMPDistritoFiscalValidator")
             .config("spark.sql.execution.arrow.pyspark.enabled", "true")
+            .config("spark.sql.adaptive.enabled", "true")
+            .config("spark.sql.adaptive.coalescePartitions.enabled", "true")
+            .config("spark.sql.shuffle.partitions", "200")
             .getOrCreate())
 
 def create_empty_schema() -> StructType:
@@ -67,7 +71,8 @@ def validation_cuismp_distrito_fiscal_medidas(merged_df: Optional[DataFrame] = N
         if merged_df is None:
             return spark.createDataFrame([], schema=create_empty_schema())
         
-        df = merged_df
+        # Cache the input DataFrame for better performance
+        df = merged_df.cache()
         
         # Validar coincidencia de CUISMP
         df = df.withColumn(
@@ -107,8 +112,8 @@ def validation_cuismp_distrito_fiscal_medidas(merged_df: Optional[DataFrame] = N
             when(~col("CUISMP_in_medias_tomadas"), 1).otherwise(0)
         )
         
-        # Cache para mejor rendimiento
-        df.cache()
+        # Repartition for better performance
+        df = df.repartition(200)
         
         return df
         
@@ -145,6 +150,9 @@ def build_failure_messages_cuismp_distrito_fiscal_medidas(df: DataFrame) -> Data
     spark = get_spark_session()
     
     try:
+        # Cache the input DataFrame for better performance
+        df = df.cache()
+        
         # Construir mensajes de error
         df = df.withColumn(
             "mensaje",
@@ -194,6 +202,9 @@ def build_failure_messages_cuismp_distrito_fiscal_medidas(df: DataFrame) -> Data
             "TIPO REPORTE",
             "objetivo"
         )
+        
+        # Repartition for better performance
+        df_failures = df_failures.repartition(200)
         
         return df_failures
         
