@@ -1,106 +1,142 @@
-import pandas as pd
-import numpy as np
+from pyspark.sql import DataFrame
+from pyspark.sql import functions as F
 from typing import List, Dict
 from datetime import datetime
 
-
-from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import ( 
+from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import (
     log_exceptions
 )
 
 @log_exceptions
-def validation_fecha_inicio_fin(merged_df: pd.DataFrame) -> pd.DataFrame:
+def validation_fecha_inicio_fin(merged_df: DataFrame) -> DataFrame:
     """
-     Valida fechas de inicio y fin entre Corte Excel y Reporte Dinámico 335.
+    Validates start and end dates between Excel and Dynamic Report 335.
 
-    Comprueba que las columnas de Excel no estén vacías y que las fechas
-    coincidan con las esperadas según la lógica de negocio. Añade indicadores
-    de validación y cuenta el número de fallos.
+    Checks that Excel columns are not empty and that dates match the expected
+    values according to business logic. Adds validation indicators and counts
+    the number of failures.
 
     Parameters
     ----------
-    merged_df : pandas.DataFrame
-        DataFrame que contiene al menos las columnas:
-        - FECHA Y HORA INICIO (datetime)
-        - FECHA Y HORA FIN (datetime)
-        - Expected_Inicio_truncated (datetime)
-        - interrupcion_fin_truncated (datetime)
+    merged_df : pyspark.sql.DataFrame
+        DataFrame containing at least the columns:
+        - FECHA Y HORA INICIO (timestamp)
+        - FECHA Y HORA FIN (timestamp)
+        - Expected_Inicio_truncated (timestamp)
+        - interrupcion_fin_truncated (timestamp)
 
     Returns
     -------
-    pandas.DataFrame
-        Copia del DataFrame de entrada con estas columnas adicionales:
-        - NotEmpty (bool): True si ambas fechas de Excel no son nulas.
-        - Fecha_Inicio_match (bool): True si la fecha de inicio coincide.
-        - Fecha_Fin_match (bool): True si la fecha de fin coincide.
-        - Validation_OK (bool): True si todas las validaciones pasan.
-        - fail_count (int): Número de validaciones que fallaron (0–3).
+    pyspark.sql.DataFrame
+        DataFrame with these additional columns:
+        - NotEmpty (boolean): True if both Excel dates are not null
+        - Fecha_Inicio_match (boolean): True if start date matches
+        - Fecha_Fin_match (boolean): True if end date matches
+        - Validation_OK (boolean): True if all validations pass
+        - fail_count (integer): Number of failed validations (0-3)
     """
-    df = merged_df.copy()
+    # Cache the DataFrame since it will be used multiple times
+    df = merged_df.cache()
 
-    df['NotEmpty'] = df['FECHA Y HORA INICIO'].notna() & df['FECHA Y HORA FIN'].notna()
+    # Check if dates are not null
+    df = df.withColumn(
+        'NotEmpty',
+        F.col('FECHA Y HORA INICIO').isNotNull() & F.col('FECHA Y HORA FIN').isNotNull()
+    )
 
-    df['Fecha_Inicio_match'] = df['Expected_Inicio_truncated'] == df['FECHA Y HORA INICIO']
-    df['Fecha_Fin_match'] = df['interrupcion_fin_truncated'] == df['FECHA Y HORA FIN']
+    # Check if dates match
+    df = df.withColumn(
+        'Fecha_Inicio_match',
+        F.col('Expected_Inicio_truncated') == F.col('FECHA Y HORA INICIO')
+    ).withColumn(
+        'Fecha_Fin_match',
+        F.col('interrupcion_fin_truncated') == F.col('FECHA Y HORA FIN')
+    )
 
-    df['Validation_OK'] = df['NotEmpty'] & df['Fecha_Inicio_match'] & df['Fecha_Fin_match']
+    # Calculate overall validation status
+    df = df.withColumn(
+        'Validation_OK',
+        F.col('NotEmpty') & F.col('Fecha_Inicio_match') & F.col('Fecha_Fin_match')
+    )
 
-    df['fail_count'] = (~df['NotEmpty']).astype(int) + (~df['Fecha_Inicio_match']).astype(int) + (~df['Fecha_Fin_match']).astype(int)
+    # Count failures
+    df = df.withColumn(
+        'fail_count',
+        F.when(~F.col('NotEmpty'), 1).otherwise(0) +
+        F.when(~F.col('Fecha_Inicio_match'), 1).otherwise(0) +
+        F.when(~F.col('Fecha_Fin_match'), 1).otherwise(0)
+    )
 
     return df
 
 @log_exceptions
-def build_failure_messages_fechas_fin_inicio(df: pd.DataFrame) -> pd.DataFrame:
+def build_failure_messages_fechas_fin_inicio(df: DataFrame) -> DataFrame:
     """
-    Genera mensajes de error de validación de fechas y filtra los fallos.
+    Generates validation error messages and filters failures.
 
-    Parámetros
+    Parameters
     ----------
-    df : pandas.DataFrame
-        Debe contener:
-        - Flags de validación: Validation_OK, NotEmpty,
+    df : pyspark.sql.DataFrame
+        Must contain:
+        - Validation flags: Validation_OK, NotEmpty,
           Fecha_Inicio_match, Fecha_Fin_match, fail_count
-        - Fechas formateadas: Expected_Inicio_truncated_fm,
+        - Formatted dates: Expected_Inicio_truncated_fm,
           FECHA_Y_HORA_INICIO_fmt, interrupcion_fin_truncated_fm,
           FECHA_Y_HORA_FIN_fmt
-        - Identificadores: nro_incidencia, TIPO REPORTE
+        - Identifiers: nro_incidencia, TIPO REPORTE
 
-    Devuelve
+    Returns
     -------
-    pandas.DataFrame
-        Filtra filas con `fail_count > 0` y columnas:
+    pyspark.sql.DataFrame
+        Filters rows with fail_count > 0 and columns:
         - nro_incidencia
-        - mensaje (descripción de las fallas)
+        - mensaje (failure description)
         - TIPO REPORTE
-        - objetivo (constante "1.2")
+        - objetivo (constant "1.2")
     """
-
-    mensaje = np.where(
-        df['Validation_OK'],
-        "Validación de fechas exitosa",
-        (
-            np.where(~df['NotEmpty'],
-                     "\n Las columnas ‘FECHA Y HORA INICIO’ y/o ‘FECHA Y HORA FIN’ están vacías. ",
-                     "") +
-            np.where(~df['Fecha_Inicio_match'],
-                     "\n (interrupcion_inicio|fecha generacion) en SGA: \n" +
-                     df['Expected_Inicio_truncated_fm']+
-                     "\n no coincide con FECHA Y HORA INICIO CORTE-EXCEL: \n" +
-                    df['FECHA_Y_HORA_INICIO_fmt'],
-                     "") +
-            np.where(~df['Fecha_Fin_match'],
-                     "\n (interrupcion_fin) en SGA: \n" +
-                    df['interrupcion_fin_truncated_fm']+
-                     "\n no coincide con FECHA Y HORA FIN CORTE-EXCEL: \n" +
-                    df['FECHA_Y_HORA_FIN_fmt'] +
-                      "",
-                     "")
+    # Build error message using PySpark's concat and when functions
+    df = df.withColumn(
+        'mensaje',
+        F.when(
+            F.col('Validation_OK'),
+            F.lit("Validación de fechas exitosa")
+        ).otherwise(
+            F.concat(
+                F.when(
+                    ~F.col('NotEmpty'),
+                    F.lit("\n Las columnas 'FECHA Y HORA INICIO' y/o 'FECHA Y HORA FIN' están vacías. ")
+                ).otherwise(F.lit("")),
+                F.when(
+                    ~F.col('Fecha_Inicio_match'),
+                    F.concat(
+                        F.lit("\n (interrupcion_inicio|fecha generacion) en SGA: \n"),
+                        F.col('Expected_Inicio_truncated_fm'),
+                        F.lit("\n no coincide con FECHA Y HORA INICIO CORTE-EXCEL: \n"),
+                        F.col('FECHA_Y_HORA_INICIO_fmt')
+                    )
+                ).otherwise(F.lit("")),
+                F.when(
+                    ~F.col('Fecha_Fin_match'),
+                    F.concat(
+                        F.lit("\n (interrupcion_fin) en SGA: \n"),
+                        F.col('interrupcion_fin_truncated_fm'),
+                        F.lit("\n no coincide con FECHA Y HORA FIN CORTE-EXCEL: \n"),
+                        F.col('FECHA_Y_HORA_FIN_fmt')
+                    )
+                ).otherwise(F.lit(""))
+            )
         )
+    ).withColumn(
+        'objetivo',
+        F.lit("1.2")
     )
-    df['mensaje'] = mensaje
-    df['objetivo'] = "1.2"
 
-    df_failures = df[df['fail_count'] > 0]
-    return df_failures[['nro_incidencia', 'mensaje', 'TIPO REPORTE','objetivo']]
+    # Filter failures and select required columns
+    return df.filter(F.col('fail_count') > 0).select(
+        'nro_incidencia',
+        'mensaje',
+        'TIPO REPORTE',
+        'objetivo'
+    )
 
 
