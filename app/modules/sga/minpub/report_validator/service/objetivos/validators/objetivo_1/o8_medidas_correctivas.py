@@ -1,151 +1,113 @@
-import pandas as pd
-import numpy as np
+from pyspark.sql import DataFrame
+from pyspark.sql import functions as F
 from typing import List, Dict
 from datetime import datetime
-import re
 
-from app.modules.sga.minpub.report_validator.service.objetivos.utils.calculations import has_repetition
-from app.modules.sga.minpub.report_validator.service.objetivos.utils.calculations import extract_date_range_body
-from app.modules.sga.minpub.report_validator.service.objetivos.utils.calculations import extract_date_range_last
-
-# import language_tool_python
-# _tool_es = language_tool_python.LanguageTool('es')
-
-from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import ( 
+from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import (
     log_exceptions
 )
 
-def validation_medidas_correctivas(merged_df: pd.DataFrame) -> pd.DataFrame:
+@log_exceptions
+def validation_medidas_correctivas(df_merged: DataFrame) -> DataFrame:
     """
-    Validation the column medidas correctivas y o medidas tomadas, se debe obtener
-    the first and the last date from paragraph, excluding the two last lines if exists 
-    dates called fecha hora inicio and fecha hora fin
+    Validates the 'MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS' column in CORTE-EXCEL by checking:
+    - If the value is non-empty
+    - If the value matches the expected format based on TIPO REPORTE
+    
+    Parameters
+    ----------
+    df_merged : pyspark.sql.DataFrame
+        DataFrame containing at least the columns:
+        - MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS_trimed (string)
+        - TIPO REPORTE_trimed (string)
+
+    Returns
+    -------
+    pyspark.sql.DataFrame
+        DataFrame with these additional columns:
+        - non_empty_medidas (boolean): True if MEDIDAS CORRECTIVAS is not null
+        - match_medidas (boolean): True if MEDIDAS CORRECTIVAS matches expected format
+        - Validation_OK (boolean): True if all validations pass
+        - fail_count (integer): Number of failed validations (0-2)
     """
-
-    df = merged_df.copy()
-    df = df[df['masivo'] == 'No']
-
-    df['mc_first_ok'] = True
-    df['mc_last_ok'] = True
-    df['it_first_ok'] = True
-    df['it_last_ok'] = True
-    # df['ortografia_ok'] = True
-    df['no_repeticion_ok'] = True
-
-
-
-    date_range_mc_body = df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS'].apply(extract_date_range_body)
-    df[['first_dt_mc', 'last_dt_mc']] = pd.DataFrame(date_range_mc_body.tolist(), index=df.index)
-
-    date_range_it_body = df['it_medidas_tomadas'].apply(extract_date_range_body)
-    df[['first_dt_it', 'last_dt_it']] = pd.DataFrame(date_range_it_body.tolist(), index=df.index)
-
-    date_range_it_last = df['it_medidas_tomadas'].apply(extract_date_range_last)
-    df[['start_dt_last_it', 'end_dt_last_it']] = pd.DataFrame(date_range_it_last.tolist(), index=df.index)
-
+    # Cache the DataFrame since it will be used multiple times
+    df = df_merged.cache()
     
-    df['FECHA_Y_HORA_INICIO_fmt'] = (
-        df['FECHA Y HORA INICIO']
-        .dt.strftime('%d/%m/%Y %H:%M')
-        .fillna("N/A")
-        .astype(str)
+    # Check if column is non-empty
+    df = df.withColumn(
+        'non_empty_medidas',
+        F.col('MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS_trimed').isNotNull()
     )
 
-    df['FECHA_Y_HORA_FIN_fmt'] = (
-        df['FECHA Y HORA FIN']
-        .dt.strftime('%d/%m/%Y %H:%M')
-        .fillna("N/A")
-        .astype(str)
-    )
-    
-    df['mc_first_ok'] = (
-        df['first_dt_mc'] == df['FECHA_Y_HORA_INICIO_fmt']
-    )
-
-    df['mc_last_ok'] = (
-        df['last_dt_mc'] == df['FECHA_Y_HORA_FIN_fmt']
+    # Check if MEDIDAS CORRECTIVAS matches expected format based on TIPO REPORTE
+    df = df.withColumn(
+        'match_medidas',
+        (
+            (F.col('TIPO REPORTE_trimed') == F.lit('INCIDENTE')) & 
+            F.col('MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS_trimed').startswith('Se realizó la revisión del servicio') |
+            (F.col('TIPO REPORTE_trimed') == F.lit('INTERRUPCION')) & 
+            F.col('MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS_trimed').startswith('Se realizó la revisión del servicio')
+        )
     )
 
-    df['it_first_ok'] = (
-        df['first_dt_it'] == df['start_dt_last_it']
+    # Calculate overall validation status
+    df = df.withColumn(
+        'Validation_OK',
+        F.col('non_empty_medidas') &
+        F.col('match_medidas')
     )
 
-    df['it_last_ok'] = (
-        df['last_dt_it'] == df['end_dt_last_it']
-    )
-
-    # df['ortografia_ok'] = ~df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS'].apply(is_langtool_clean)
-    df['no_repeticion_ok'] = ~df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS'].apply(has_repetition)
-
- 
-    df['Validation_OK'] = (
-        df['mc_first_ok'] &
-        df['mc_last_ok'] &
-        df['it_first_ok'] &
-        df['it_last_ok'] &
-        # df['ortografia_ok'] &
-        df['no_repeticion_ok'] 
-    )
-
-    df['fail_count'] = ( 
-        (~df['mc_first_ok']).astype(int)+
-        (~df['mc_last_ok']).astype(int)+
-        (~df['it_first_ok']).astype(int)+
-        (~df['it_last_ok']).astype(int)+
-        # (~df['ortografia_ok']).astype(int)+ 
-        (~df['no_repeticion_ok']).astype(int)           
+    # Count failures
+    df = df.withColumn(
+        'fail_count',
+        F.when(~F.col('non_empty_medidas'), 1).otherwise(0) +
+        F.when(~F.col('match_medidas'), 1).otherwise(0)
     )
 
     return df
 
-
 @log_exceptions
-def build_failure_messages_medidas_correctivas(df:pd.DataFrame) -> pd.DataFrame:
+def build_failure_messages_medidas_correctivas(df: DataFrame) -> DataFrame:
     """
-    Build detailed error messages for medidas correctivas validation failures.
-
+    Builds a descriptive message for the 'MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS' validation.
+    Returns rows that fail any check (fail_count > 0) with columns:
+    -'nro_incidencia'
+    - 'mensaje'
+    - 'TIPO REPORTE'
+    - 'objetivo'
     """
-
-    if not isinstance(df, pd.DataFrame) or df.empty or 'Validation_OK' not in df.columns:
-        return pd.DataFrame(columns=['nro_incidencia', 'mensaje', 'TIPO REPORTE','objetivo'])
-    
-    mensajes = np.where(
-       df['Validation_OK'],
-       "Validación exitosa: MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS",
-       (
-                     np.where(~df['mc_first_ok'],
-                    " \n La primera fecha/hora  del parrafo (CUERPO) en columna MEDIDAS CORRECTIVAS - EXCEL: \n" + df['first_dt_mc'].astype(str) +
-                      "\n no coincide con la columna FECHA Y HORA INICIO DE EXCEL - CORTE : \n" + df['FECHA_Y_HORA_INICIO_fmt'].astype(str),
-                    "") +
-
-                      np.where(~df['mc_last_ok'],
-                    "\n  La última fecha/hora del parrafo (CUERPO) en columna MEDIDAS CORRECTIVAS - EXCEL: \n" + df['last_dt_mc'].astype(str) +
-                      "\n no coincide con la columna FECHA Y HORA FIN DE EXCEL - CORTE : \n" +
-                      df['FECHA_Y_HORA_FIN_fmt'].astype(str), 
-                    "") + 
-
-                      np.where(~df['it_first_ok'],
-                    "\n  La primera fecha/hora del parrafo (CUERPO) en it_medidas_tomadas SGA:  \n" + df['first_dt_it'].astype(str) +
-                      "\n no coincide con la Fecha y hora inicio de la penultima fila it_medidas_tomadas SGA : \n" + df['start_dt_last_it'].astype(str),
-                    "") +
-
-                     np.where(~df['it_last_ok'],
-                    "\n  La última fecha/hora del parrafo (CUERPO) en it_medidas_tomadas SGA : \n" + df['last_dt_it'].astype(str) +
-                      "\n no coincide con la Fecha y hora fin de la última fila SGA it_medidas_tomadas SGA: \n" +
-                      df['end_dt_last_it'].astype(str), 
-                    "") + 
-
-                    # np.where(~df['ortografia_ok'],
-                    # "  Errores ortográficos/gramaticales en el parrafo en MEDIDAS CORRECTIVAS",
-                    # "")  +
-
-                    np.where(~df['no_repeticion_ok'],
-                    "\n Hay palabras repetidas inmediatamente/a través en el parrafo en MEDIDAS CORRECTIVAS:",
-                    "") 
-       )
+    # Build error message using PySpark's concat and when functions
+    df = df.withColumn(
+        'mensaje',
+        F.when(
+            F.col('Validation_OK'),
+            F.lit("Validation de MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS exitosa")
+        ).otherwise(
+            F.concat(
+                F.when(
+                    ~F.col('non_empty_medidas'),
+                    F.lit("\n  MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS en CORTE-EXCEL es vacio. \n")
+                ).otherwise(F.lit("")),
+                F.when(
+                    ~F.col('match_medidas'),
+                    F.concat(
+                        F.lit("\n  MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS en CORTE-EXCEL: \n"),
+                        F.col('MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS_trimed'),
+                        F.lit("\n no coincide con el formato esperado para el TIPO REPORTE: \n"),
+                        F.col('TIPO REPORTE_trimed')
+                    )
+                ).otherwise(F.lit(""))
+            )
+        )
+    ).withColumn(
+        'objetivo',
+        F.lit("1.8")
     )
-    
-    df['mensaje'] = mensajes
-    df['objetivo'] = "1.8"
-    df_failures = df[df['fail_count'] > 0]
-    return df_failures[['nro_incidencia', 'mensaje', 'TIPO REPORTE','objetivo']]
+
+    # Filter failures and select required columns
+    return df.filter(F.col('fail_count') > 0).select(
+        'nro_incidencia',
+        'mensaje',
+        'TIPO REPORTE',
+        'objetivo'
+    )
