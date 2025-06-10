@@ -12,14 +12,12 @@ import logging
 from celery import shared_task
 from celery.utils.log import get_task_logger
 
-# Configurar logging
 logger = logging.getLogger(__name__)
 
-# Global lock for SGA application to prevent concurrent access
-#sga_global_lock = threading.Lock()
+
 sga_global_lock = global_lock
 
-# Thread locks for automation tools
+
 selenium_lock = threading.Lock()
 
 # Simulación de actividad humana
@@ -82,82 +80,64 @@ def process_minpub_task(self,
                        excel_file_path: str,
                        sharepoint_cid_cuismp_path: str) -> Dict[str, Any]:
     try:
-        # Update task state to show it's starting
-        self.update_state(
-            state='PROGRESS',
-            meta={
-                'message': 'Iniciando procesamiento',
-                'progress': 0
-            }
+        # 0% - Archivos recibidos
+        self.update_state(state='PROGRESS', meta={'message': 'Archivos recibidos, preparando procesamiento...', 'progress': 0})
+
+        sga_service = SGAService()
+        sga_file_path_335 = None
+        sga_file_path_380 = None
+
+        # 5% - Iniciando generación de reporte SGA 335
+        self.update_state(state='PROGRESS', meta={'message': 'Generando reporte SGA 335 (esto puede tardar varios minutos)...', 'progress': 5})
+        with sga_global_lock:
+            if not wait_for_sga_service(sga_service):
+                raise Exception("Timeout esperando SGA para reporte 335")
+            indice_tabla_reporte_data_previa = 13
+            indice_tabla_reporte_detalle = 15
+            sga_file_path_335 = sga_service.generate_dynamic_report(
+                fecha_inicio,
+                fecha_fin,
+                indice_tabla_reporte_data_previa,
+                indice_tabla_reporte_detalle
+            )
+            if not os.path.exists(sga_file_path_335):
+                raise Exception("No se encontró el archivo generado para reporte 335")
+        self.update_state(state='PROGRESS', meta={'message': 'Reporte SGA 335 generado', 'progress': 55})
+
+        # 55% - Iniciando generación de reporte SGA 380
+        self.update_state(state='PROGRESS', meta={'message': 'Generando reporte SGA 380 (esto puede tardar varios minutos)...', 'progress': 55})
+        with sga_global_lock:
+            if not wait_for_sga_service(sga_service):
+                raise Exception("Timeout esperando SGA para reporte 380")
+            indice_tabla_reporte_data_previa = 13
+            indice_tabla_reporte_detalle = 18
+            sga_file_path_380 = sga_service.generate_dynamic_report(
+                fecha_inicio,
+                fecha_fin,
+                indice_tabla_reporte_data_previa,
+                indice_tabla_reporte_detalle
+            )
+            if not os.path.exists(sga_file_path_380):
+                raise Exception("No se encontró el archivo generado para reporte 380")
+        self.update_state(state='PROGRESS', meta={'message': 'Reporte SGA 380 generado', 'progress': 95})
+
+        # 95% - Procesando objetivos
+        self.update_state(state='PROGRESS', meta={'message': 'Procesando objetivos y generando resultados...', 'progress': 95})
+        results = all_objetivos(
+            excel_file_path,
+            sga_file_path_335,
+            sga_file_path_380,
+            sharepoint_cid_cuismp_path,
+            word_datos_file_path,
+            word_telefonia_file_path
         )
 
-        # Step 1: Process Word Datos file
-        self.update_state(
-            state='PROGRESS',
-            meta={
-                'message': 'Procesando archivo Word Datos',
-                'progress': 20
-            }
-        )
-        # Your word datos processing code here
-        time.sleep(2)  # Simulate processing
+        # 100% - Finalizado
+        self.update_state(state='PROGRESS', meta={'message': 'Procesamiento finalizado', 'progress': 100})
 
-        # Step 2: Process Word Telefonia file
-        self.update_state(
-            state='PROGRESS',
-            meta={
-                'message': 'Procesando archivo Word Telefonia',
-                'progress': 40
-            }
-        )
-        # Your word telefonia processing code here
-        time.sleep(2)  # Simulate processing
-
-        # Step 3: Process Excel file
-        self.update_state(
-            state='PROGRESS',
-            meta={
-                'message': 'Procesando archivo Excel',
-                'progress': 60
-            }
-        )
-        # Your excel processing code here
-        time.sleep(2)  # Simulate processing
-
-        # Step 4: Process CUISMP file
-        self.update_state(
-            state='PROGRESS',
-            meta={
-                'message': 'Procesando archivo CUISMP',
-                'progress': 80
-            }
-        )
-        # Your CUISMP processing code here
-        time.sleep(2)  # Simulate processing
-
-        # Step 5: Final processing and validation
-        self.update_state(
-            state='PROGRESS',
-            meta={
-                'message': 'Finalizando procesamiento',
-                'progress': 90
-            }
-        )
-        # Your final processing code here
-        time.sleep(2)  # Simulate processing
-
-        # Return the result
-        return {
-            "status": "completed",
-            "result": [
-                # Your processed data here
-                {"nro_incidencia": "123", "TIPO REPORTE": "RECLAMO", "ESTADO": "Pendiente"},
-                # ... more results
-            ]
-        }
+        return {"status": "completed", "result": results}
 
     except Exception as e:
-        logger.error(f"Error in process_minpub_task: {str(e)}")
         return {"status": "failed", "error": str(e)}
 
 @celery_app.task(bind=True, name="process_semaforo")
