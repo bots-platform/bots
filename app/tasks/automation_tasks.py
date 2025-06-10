@@ -43,17 +43,15 @@ def process_sga_report_task(self,
                           indice_tabla_reporte_detalle: int,
                           report_type: str) -> Dict[str, Any]:
     try:
-        # 0% - Preparando generación de reporte
+     
         self.update_state(state='PROGRESS', meta={'message': 'Preparando generación de reporte...', 'progress': 0})
         sga_service = SGAService()
 
-        # 5% - Esperando acceso a SGA
         self.update_state(state='PROGRESS', meta={'message': 'Esperando acceso a SGA...', 'progress': 5})
         with sga_global_lock:
             if not wait_for_sga_service(sga_service):
                 raise Exception("Timeout esperando SGA para generar reporte")
 
-            # 10% - Generando reporte SGA
             self.update_state(state='PROGRESS', meta={'message': 'Generando reporte SGA (esto puede tardar varios minutos)...', 'progress': 10})
             file_path = sga_service.generate_dynamic_report(
                 fecha_inicio,
@@ -62,12 +60,10 @@ def process_sga_report_task(self,
                 indice_tabla_reporte_detalle
             )
 
-            # 95% - Validando archivo generado
             self.update_state(state='PROGRESS', meta={'message': 'Validando archivo generado...', 'progress': 95})
             if not os.path.exists(file_path):
                 raise Exception("No se encontró el archivo generado")
 
-        # 100% - Finalizado
         self.update_state(state='PROGRESS', meta={'message': 'Reporte generado exitosamente', 'progress': 100})
         return {
             "status": "completed",
@@ -87,14 +83,12 @@ def process_minpub_task(self,
                        excel_file_path: str,
                        sharepoint_cid_cuismp_path: str) -> Dict[str, Any]:
     try:
-        # 0% - Archivos recibidos
         self.update_state(state='PROGRESS', meta={'message': 'Archivos recibidos, preparando procesamiento...', 'progress': 0})
 
         sga_service = SGAService()
         sga_file_path_335 = None
         sga_file_path_380 = None
 
-        # 5% - Iniciando generación de reporte SGA 335
         self.update_state(state='PROGRESS', meta={'message': 'Generando reporte SGA 335 (esto puede tardar varios minutos)...', 'progress': 5})
         with sga_global_lock:
             if not wait_for_sga_service(sga_service):
@@ -111,7 +105,7 @@ def process_minpub_task(self,
                 raise Exception("No se encontró el archivo generado para reporte 335")
         self.update_state(state='PROGRESS', meta={'message': 'Reporte SGA 335 generado', 'progress': 55})
 
-        # 55% - Iniciando generación de reporte SGA 380
+    
         self.update_state(state='PROGRESS', meta={'message': 'Generando reporte SGA 380 (esto puede tardar varios minutos)...', 'progress': 55})
         with sga_global_lock:
             if not wait_for_sga_service(sga_service):
@@ -128,7 +122,6 @@ def process_minpub_task(self,
                 raise Exception("No se encontró el archivo generado para reporte 380")
         self.update_state(state='PROGRESS', meta={'message': 'Reporte SGA 380 generado', 'progress': 95})
 
-        # 95% - Procesando objetivos
         self.update_state(state='PROGRESS', meta={'message': 'Procesando objetivos y generando resultados...', 'progress': 95})
         results = all_objetivos(
             excel_file_path,
@@ -139,7 +132,6 @@ def process_minpub_task(self,
             word_telefonia_file_path
         )
 
-        # 100% - Finalizado
         self.update_state(state='PROGRESS', meta={'message': 'Procesamiento finalizado', 'progress': 100})
 
         return {"status": "completed", "result": results}
