@@ -43,15 +43,18 @@ def process_sga_report_task(self,
                           indice_tabla_reporte_detalle: int,
                           report_type: str) -> Dict[str, Any]:
     try:
-        self.update_state(state='PROGRESS', meta={'status': 'Processing SGA report'})
+        # 0% - Preparando generación de reporte
+        self.update_state(state='PROGRESS', meta={'message': 'Preparando generación de reporte...', 'progress': 0})
         sga_service = SGAService()
 
-        # Use global SGA lock to ensure only one process can access SGA at a time
+        # 5% - Esperando acceso a SGA
+        self.update_state(state='PROGRESS', meta={'message': 'Esperando acceso a SGA...', 'progress': 5})
         with sga_global_lock:
             if not wait_for_sga_service(sga_service):
-                raise Exception("Timeout waiting for SGA service to be available")
-            
-            # Generate SGA report
+                raise Exception("Timeout esperando SGA para generar reporte")
+
+            # 10% - Generando reporte SGA
+            self.update_state(state='PROGRESS', meta={'message': 'Generando reporte SGA (esto puede tardar varios minutos)...', 'progress': 10})
             file_path = sga_service.generate_dynamic_report(
                 fecha_inicio,
                 fecha_fin,
@@ -59,14 +62,18 @@ def process_sga_report_task(self,
                 indice_tabla_reporte_detalle
             )
 
+            # 95% - Validando archivo generado
+            self.update_state(state='PROGRESS', meta={'message': 'Validando archivo generado...', 'progress': 95})
             if not os.path.exists(file_path):
-                raise Exception("Generated file not found")
+                raise Exception("No se encontró el archivo generado")
 
-            return {
-                "status": "completed",
-                "file_path": file_path,
-                "report_type": report_type
-            }
+        # 100% - Finalizado
+        self.update_state(state='PROGRESS', meta={'message': 'Reporte generado exitosamente', 'progress': 100})
+        return {
+            "status": "completed",
+            "file_path": file_path,
+            "report_type": report_type
+        }
 
     except Exception as e:
         return {"status": "failed", "error": str(e)}
