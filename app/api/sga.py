@@ -1,6 +1,6 @@
 from pydantic import ValidationError
 from app.modules.sga.models import FechaSecuenciaRequest
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, WebSocket
 import os
 from fastapi.responses import FileResponse
 from ..modules.sga.service_tecnico_operaciones import SGAService
@@ -9,6 +9,7 @@ from app.shared.lock import global_lock  # usa el lock global
 
 from app.tasks.automation_tasks import process_sga_report_task
 from pathlib import Path
+from app.api.websocket import websocket_endpoint
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 SAVE_DIR_SGA_REPORTS = BASE_DIR / "media" / "sga" / "reports"
@@ -98,5 +99,9 @@ async def download_report(task_id: str):
 @router.post("/reporte-envio-alerta", include_in_schema=False)
 def generate_send_alert():
     return send_alert()
+
+@router.websocket("/ws/task/{task_id}")
+async def websocket_task_status(websocket: WebSocket, task_id: str):
+    await websocket_endpoint(websocket, task_id)
 
 
