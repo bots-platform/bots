@@ -1,9 +1,10 @@
-from fastapi import APIRouter, UploadFile, File, Form
+from fastapi import APIRouter, UploadFile, File, Form, WebSocket
 from datetime import datetime
 from pathlib import Path
 import os
 import uuid
 from app.tasks.automation_tasks import process_minpub_task
+from app.api.websocket import websocket_endpoint
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 SAVE_DIR_EXTRACT_WORD_DATOS = BASE_DIR / "media" / "minpub" / "validator_report" / "extract" / "word_datos"
@@ -83,6 +84,10 @@ async def check_status(task_id: str):
         }
     
     return response
+
+@router.websocket("/ws/task/{task_id}")
+async def websocket_task_status(websocket: WebSocket, task_id: str):
+    await websocket_endpoint(websocket, task_id)
 
    
 
