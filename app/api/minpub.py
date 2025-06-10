@@ -3,6 +3,7 @@ from datetime import datetime
 from pathlib import Path
 import os
 import uuid
+from app.modules.sga.minpub.report_validator.service.objetivos import all_objetivos
 from app.tasks.automation_tasks import process_minpub_task
 from app.api.websocket import websocket_endpoint
 
@@ -11,6 +12,7 @@ SAVE_DIR_EXTRACT_WORD_DATOS = BASE_DIR / "media" / "minpub" / "validator_report"
 SAVE_DIR_EXTRACT_WORD_TELEFONIA = BASE_DIR / "media" / "minpub" / "validator_report" / "extract" / "word_telefonia"
 SAVE_DIR_EXTRACT_EXCEL = BASE_DIR / "media" / "minpub" / "validator_report" / "extract" / "excel"
 SAVE_DIR_EXTRACT_SGA_335 = BASE_DIR / "media" / "minpub" / "validator_report" / "extract" / "sga_335" 
+SAVE_DIR_EXTRACT_SGA_380 = BASE_DIR / "media" / "minpub" / "validator_report" / "extract" / "pausa_cliente"
 CID_CUISMP_PATH = BASE_DIR / "media" / "minpub" / "validator_report" / "extract" / "sharepoint_cid_cuismp"
 
 router = APIRouter(prefix="/api/minpub", tags=["minpub"])
@@ -34,14 +36,12 @@ async def process_files(
     fecha_inicio: str = Form(...),
     fecha_fin: str = Form(...),
 ):
-    """Starts Celery task processing and returns a task ID for polling."""
-    
+  
     word_datos_file_path = await save_file(word_file_datos, SAVE_DIR_EXTRACT_WORD_DATOS)
     word_telefonia_file_path = await save_file(word_file_telefonia, SAVE_DIR_EXTRACT_WORD_TELEFONIA)
     excel_file_path = await save_file(excel_file, SAVE_DIR_EXTRACT_EXCEL)
     excel_file_cuismp_path = await save_file(excel_file_cuismp, CID_CUISMP_PATH)
 
-    # Start Celery task
     task = process_minpub_task.delay(
         fecha_inicio=fecha_inicio,
         fecha_fin=fecha_fin,
@@ -88,6 +88,36 @@ async def check_status(task_id: str):
 @router.websocket("/ws/task/{task_id}")
 async def websocket_task_status(websocket: WebSocket, task_id: str):
     await websocket_endpoint(websocket, task_id)
+
+@router.post("/process-manual/")
+async def process_v2(
+    word_file_datos: UploadFile = File(...),
+    word_file_telefonia: UploadFile = File(...),
+    excel_file: UploadFile = File(...),
+    excel_file_cuismp: UploadFile = File(...),
+    excel_sga_minpub: UploadFile = File(...),        
+    excel_sga_pausa_cliente: UploadFile = File(...), 
+
+):
+   
+    word_datos_file_path = await save_file(word_file_datos, SAVE_DIR_EXTRACT_WORD_DATOS)
+    word_telefonia_file_path = await save_file(word_file_telefonia, SAVE_DIR_EXTRACT_WORD_TELEFONIA)
+    excel_file_path = await save_file(excel_file, SAVE_DIR_EXTRACT_EXCEL)
+    excel_file_cuismp_path = await save_file(excel_file_cuismp, CID_CUISMP_PATH)
+    excel_sga_minpub_path = await save_file(excel_sga_minpub, SAVE_DIR_EXTRACT_SGA_335)
+    excel_sga_pausa_cliente_path = await save_file(excel_sga_pausa_cliente, SAVE_DIR_EXTRACT_SGA_380)
+
+ 
+    result = all_objetivos(
+        excel_file_path,
+        excel_sga_minpub_path,      
+        excel_sga_pausa_cliente_path,  
+        excel_file_cuismp_path,
+        word_datos_file_path,
+        word_telefonia_file_path
+    )
+
+    return {"status": "completed", "result": result}
 
    
 
