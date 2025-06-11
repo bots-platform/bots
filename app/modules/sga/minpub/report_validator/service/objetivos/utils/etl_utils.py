@@ -1,10 +1,8 @@
-
 import re
-import pandas as pd
-import numpy as np
-
 import unicodedata
-
+from pyspark.sql import functions as F
+from pyspark.sql.types import StringType, IntegerType, DoubleType
+from pyspark.sql.functions import col, lit, when, regexp_extract, length, split
 
 _FIN_DAYS_HOUR_PAT = re.compile(
     r'^(?:(?P<days>\d+)\s+day[s]?,\s*)?'  
@@ -18,16 +16,15 @@ _FIN_INICIO_PAT = re.compile(
     r'\.?$' 
 )
 
-
-def to_hhmm(s: any) -> pd._typing.Scalar:
+def to_hhmm(s: any) -> str:
     """
     Parse strings like "1 day, 03:45:23" or "03:12" into "HH:MM".
-    Returns pd.NA on no‐match.
+    Returns None on no‐match.
     """
     text = str(s).strip()
     m = _FIN_INICIO_PAT.match(text)
     if not m:
-        return pd.NA
+        return None
     days = int(m.group('days')) if m.group('days') else 0
     hrs  = int(m.group('hours'))
     mins = int(m.group('minutes'))
@@ -36,15 +33,15 @@ def to_hhmm(s: any) -> pd._typing.Scalar:
 
 def parse_hhmm_to_minutes(hhmm: str) -> float:
     """
-    Given "HH:MM", returns total minutes as float. pd.NA or unparsable → np.nan.
+    Given "HH:MM", returns total minutes as float. None or unparsable → None.
     """
-    if pd.isna(hhmm):
-        return np.nan
+    if hhmm is None:
+        return None
     try:
         h, m = str(hhmm).split(':')
         return float(h) * 60 + float(m)
     except Exception:
-        return np.nan
+        return None
 
 def hhmm_to_minutes(hhmm: str) -> int:
     """
@@ -53,32 +50,33 @@ def hhmm_to_minutes(hhmm: str) -> int:
     h, m = hhmm.split(':')
     return int(h) * 60 + int(m)
 
-def extract_total_hours(s: any) -> pd._typing.Scalar:
+def extract_total_hours(s: any) -> int:
     """
     From strings like "2 days, 05:23:12" or "07:45", returns total hours as int.
-    pd.NA or unparsable → pd.NA.
+    None or unparsable → None.
     """
     text = str(s).strip()
     m = _FIN_DAYS_HOUR_PAT.match(text)
     if not m:
-        return pd.NA
+        return None
     days = int(m.group('days')) if m.group('days') else 0
     hrs  = int(m.group('hours'))
     return days * 24 + hrs
 
-
 def normalize_text(text):
-    if pd.isna(text):
+    """
+    Normalize text by removing special characters, extra spaces, etc.
+    """
+    if text is None:
         return ''
     text = unicodedata.normalize("NFKD", str(text))   # Normaliza tildes y caracteres raros
     text = text.replace('\r', ' ').replace('\n', ' ').replace('\xa0', ' ')
     text = ' '.join(text.split())  # Elimina espacios dobles y deja uno solo
     return text.strip()
 
-
 def get_dataframe_summary(df):
     """
-    Returns a summary DataFrame for the given DataFrame.
+    Returns a summary DataFrame for the given PySpark DataFrame.
     
     The summary includes:
       - Data Type
@@ -87,16 +85,36 @@ def get_dataframe_summary(df):
       - Null Percentage
       - Unique Values count
     """
-    pd.set_option('display.max_rows', None)
-    pd.set_option('display.max_columns', None)
-    pd.set_option('display.width', 1000)
+    # Get schema information
+    schema = df.schema
     
-    summary_df = pd.DataFrame({
-        'Data Type': df.dtypes,
-        'Non Null Count': df.count(),
-        'Null Count': df.isna().sum(),
-        'Null Percentage': (df.isna().sum() / len(df) * 100).round(2),
-        'Unique Values': [df[col].nunique() for col in df.columns],
-    })
+    # Calculate counts
+    total_rows = df.count()
+    null_counts = {field.name: df.filter(F.col(field.name).isNull()).count() 
+                  for field in schema}
+    
+    # Calculate unique values
+    unique_counts = {field.name: df.select(field.name).distinct().count() 
+                    for field in schema}
+    
+    # Create summary data
+    summary_data = []
+    for field in schema:
+        null_count = null_counts[field.name]
+        null_percentage = (null_count / total_rows * 100) if total_rows > 0 else 0
+        
+        summary_data.append({
+            'Column': field.name,
+            'Data Type': str(field.dataType),
+            'Non Null Count': total_rows - null_count,
+            'Null Count': null_count,
+            'Null Percentage': round(null_percentage, 2),
+            'Unique Values': unique_counts[field.name]
+        })
+    
+    # Convert to DataFrame
+    from pyspark.sql import SparkSession
+    spark = SparkSession.builder.getOrCreate()
+    summary_df = spark.createDataFrame(summary_data)
     
     return summary_df
