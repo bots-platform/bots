@@ -1,85 +1,123 @@
-
-import pandas as pd
-import numpy as np
+from pyspark.sql import DataFrame
+from pyspark.sql import functions as F
 from typing import List, Dict
 from datetime import datetime
-import language_tool_python
-import re
 
-from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import ( 
+from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import (
     log_exceptions
 )
 
-def validate_duracion_entero(df_merged: pd.DataFrame) -> pd.DataFrame:
-    df = df_merged.copy()
+@log_exceptions
+def validation_duracion_entero(df_merged: DataFrame) -> DataFrame:
+    """
+    Validates the 'DURACIÓN ENTERO' column in CORTE-EXCEL by checking:
+    - If the value matches the extracted hour from TIEMPO (HH:MM)
+    - If the value's grouping matches the expected grouping based on duration ranges
+    
+    Parameters
+    ----------
+    df_merged : pyspark.sql.DataFrame
+        DataFrame containing at least the columns:
+        - Duracion entero (string/int)
+        - extracted_hour (string/int)
+        - Agrupación entero (string)
 
-
-    df['duracion_entero_ok'] = df['extracted_hour'] == df['Duracion entero']
-
-
-    conditions = [
-        df['Duracion entero'] == 0,
-        df['Duracion entero'].isin([1, 2,3 ]),
-        df['Duracion entero'].isin([4, 5, 6, 7]),
-        df['Duracion entero'].between(8, 23),
-    ]
-
-    choises = [
-        'Menor a 1h',
-        'Entre 1h a 4h',
-        'Entre 4h a 8h',
-        'Entre 8h a 24h',
-    ]
-
-    df['agrupacion_expected'] = np.select(conditions, choises, default='Mayor a 24h') 
-
-    df['agrupacion_entero_ok'] = (
-        df['Agrupación entero'].str.strip()
-        == df['agrupacion_expected'].astype(str)
+    Returns
+    -------
+    pyspark.sql.DataFrame
+        DataFrame with these additional columns:
+        - duracion_entero_ok (boolean): True if Duracion entero matches extracted_hour
+        - agrupacion_expected (string): Expected grouping based on duration
+        - agrupacion_entero_ok (boolean): True if Agrupación entero matches expected
+        - Validation_OK (boolean): True if all validations pass
+        - fail_count (integer): Number of failed validations
+    """
+    # Cache the DataFrame since it will be used multiple times
+    df = df_merged.cache()
+    
+    # Check if Duracion entero matches extracted_hour
+    df = df.withColumn(
+        'duracion_entero_ok',
+        F.col('extracted_hour') == F.col('Duracion entero')
     )
 
-    df['Validation_OK'] = df['duracion_entero_ok'] & df['agrupacion_entero_ok']
-    df['fail_count']   = (~df['Validation_OK']).astype(int)
+    # Define the expected grouping based on duration ranges
+    df = df.withColumn(
+        'agrupacion_expected',
+        F.when(F.col('Duracion entero') == 0, F.lit('Menor a 1h'))
+        .when(F.col('Duracion entero').isin([1, 2, 3]), F.lit('Entre 1h a 4h'))
+        .when(F.col('Duracion entero').isin([4, 5, 6, 7]), F.lit('Entre 4h a 8h'))
+        .when(F.col('Duracion entero').between(8, 23), F.lit('Entre 8h a 24h'))
+        .otherwise(F.lit('Mayor a 24h'))
+    )
+
+    # Check if Agrupación entero matches the expected grouping
+    df = df.withColumn(
+        'agrupacion_entero_ok',
+        F.trim(F.col('Agrupación entero')) == F.col('agrupacion_expected')
+    )
+
+    # Calculate overall validation status
+    df = df.withColumn(
+        'Validation_OK',
+        F.col('duracion_entero_ok') & F.col('agrupacion_entero_ok')
+    )
+
+    # Count failures
+    df = df.withColumn(
+        'fail_count',
+        F.when(~F.col('Validation_OK'), 1).otherwise(0)
+    )
 
     return df
 
-
 @log_exceptions
-def build_failure_messages_duracion_entero(df: pd.DataFrame) -> pd.DataFrame:
+def build_failure_messages_duracion_entero(df: DataFrame) -> DataFrame:
     """
-    For rows where fail_count > 0, build a descriptive 'mensaje' and 
-    assign an 'objetivo' code.
-    Returns columns ['nro_incidencia', 'mensaje', 'TIPO REPORTE','objetivo'].
+    Builds a descriptive message for the 'DURACIÓN ENTERO' validation.
+    Returns rows that fail any check (fail_count > 0) with columns:
+    -'nro_incidencia'
+    - 'mensaje'
+    - 'TIPO REPORTE'
+    - 'objetivo'
     """
-    if df is None or df.empty or 'Validation_OK' not in df.columns:
-        return pd.DataFrame(columns=['nro_incidencia', 'mensaje', 'TIPO REPORTE','objetivo'])
-
-    mensajes = np.where(
-        df['Validation_OK'],
-        "Validación exitosa: DURACION ENTERO y Agrupacion entero",
-        np.where(
-            ~df['duracion_entero_ok'],
-            "\n Duración entero EXCEL-CORTE: \n" 
-            + df['Duracion entero'].astype(str) 
-            + "\n es diferente a hora extraída de TIEMPO (HH:MM) en EXCEL-CORTE: \n" 
-            + df['extracted_hour'].astype(str),
-            ""
+    # Build error message using PySpark's concat and when functions
+    df = df.withColumn(
+        'mensaje',
+        F.when(
+            F.col('Validation_OK'),
+            F.lit("Validación exitosa: DURACION ENTERO y Agrupacion entero")
+        ).otherwise(
+            F.concat(
+                F.when(
+                    ~F.col('duracion_entero_ok'),
+                    F.concat(
+                        F.lit("\n Duración entero EXCEL-CORTE: \n"),
+                        F.col('Duracion entero').cast('string'),
+                        F.lit("\n es diferente a hora extraída de TIEMPO (HH:MM) en EXCEL-CORTE: \n"),
+                        F.col('extracted_hour').cast('string')
+                    )
+                ).otherwise(F.lit("")),
+                F.when(
+                    ~F.col('agrupacion_entero_ok'),
+                    F.concat(
+                        F.lit("\n Es incorrecto Agrupación entero en CORTE-EXCEL: \n"),
+                        F.col('Agrupación entero'),
+                        F.lit("\n debe ser: \n"),
+                        F.col('agrupacion_expected')
+                    )
+                ).otherwise(F.lit(""))
+            )
         )
-        + np.where(
-            ~df['agrupacion_entero_ok'],
-            "\n Es incorrecto Agrupación entero en CORTE-EXCEL: \n"
-            + df['Agrupación entero'].astype(str)
-            + "\n debe ser: \n"
-            + df['agrupacion_expected'],
-            ""
-        )
+    ).withColumn(
+        'objetivo',
+        F.lit("1.10")
     )
 
-    df['mensaje']  = mensajes
-    df['objetivo'] =  "1.10"
-    df_failures = df[df['fail_count'] > 0]
-    return df_failures[['nro_incidencia', 'mensaje', 'TIPO REPORTE','objetivo']]
-
-
-
-
+    # Filter failures and select required columns
+    return df.filter(F.col('fail_count') > 0).select(
+        'nro_incidencia',
+        'mensaje',
+        'TIPO REPORTE',
+        'objetivo'
+    )
