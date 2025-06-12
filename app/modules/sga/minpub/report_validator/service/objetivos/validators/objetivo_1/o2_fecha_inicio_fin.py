@@ -3,6 +3,7 @@ from pyspark.sql import functions as F
 from typing import List, Dict
 from datetime import datetime
 
+from app.core.spark_manager import spark_manager
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import (
     log_exceptions
 )
@@ -35,39 +36,35 @@ def validation_fecha_inicio_fin(merged_df: DataFrame) -> DataFrame:
         - Validation_OK (boolean): True if all validations pass
         - fail_count (integer): Number of failed validations (0-3)
     """
-    # Cache the DataFrame since it will be used multiple times
-    df = merged_df.cache()
+    with spark_manager.get_session():
+        df = merged_df.cache()
 
-    # Check if dates are not null
-    df = df.withColumn(
-        'NotEmpty',
-        F.col('FECHA Y HORA INICIO').isNotNull() & F.col('FECHA Y HORA FIN').isNotNull()
-    )
+        df = df.withColumn(
+            'NotEmpty',
+            F.col('FECHA Y HORA INICIO').isNotNull() & F.col('FECHA Y HORA FIN').isNotNull()
+        )
 
-    # Check if dates match
-    df = df.withColumn(
-        'Fecha_Inicio_match',
-        F.col('Expected_Inicio_truncated') == F.col('FECHA Y HORA INICIO')
-    ).withColumn(
-        'Fecha_Fin_match',
-        F.col('interrupcion_fin_truncated') == F.col('FECHA Y HORA FIN')
-    )
+        df = df.withColumn(
+            'Fecha_Inicio_match',
+            F.col('Expected_Inicio_truncated') == F.col('FECHA Y HORA INICIO')
+        ).withColumn(
+            'Fecha_Fin_match',
+            F.col('interrupcion_fin_truncated') == F.col('FECHA Y HORA FIN')
+        )
 
-    # Calculate overall validation status
-    df = df.withColumn(
-        'Validation_OK',
-        F.col('NotEmpty') & F.col('Fecha_Inicio_match') & F.col('Fecha_Fin_match')
-    )
+        df = df.withColumn(
+            'Validation_OK',
+            F.col('NotEmpty') & F.col('Fecha_Inicio_match') & F.col('Fecha_Fin_match')
+        )
 
-    # Count failures
-    df = df.withColumn(
-        'fail_count',
-        F.when(~F.col('NotEmpty'), 1).otherwise(0) +
-        F.when(~F.col('Fecha_Inicio_match'), 1).otherwise(0) +
-        F.when(~F.col('Fecha_Fin_match'), 1).otherwise(0)
-    )
+        df = df.withColumn(
+            'fail_count',
+            F.when(~F.col('NotEmpty'), 1).otherwise(0) +
+            F.when(~F.col('Fecha_Inicio_match'), 1).otherwise(0) +
+            F.when(~F.col('Fecha_Fin_match'), 1).otherwise(0)
+        )
 
-    return df
+        return df
 
 @log_exceptions
 def build_failure_messages_fechas_fin_inicio(df: DataFrame) -> DataFrame:
@@ -94,48 +91,47 @@ def build_failure_messages_fechas_fin_inicio(df: DataFrame) -> DataFrame:
         - TIPO REPORTE
         - objetivo (constant "1.2")
     """
-    # Build error message using PySpark's concat and when functions
-    df = df.withColumn(
-        'mensaje',
-        F.when(
-            F.col('Validation_OK'),
-            F.lit("Validación de fechas exitosa")
-        ).otherwise(
-            F.concat(
-                F.when(
-                    ~F.col('NotEmpty'),
-                    F.lit("\n Las columnas 'FECHA Y HORA INICIO' y/o 'FECHA Y HORA FIN' están vacías. ")
-                ).otherwise(F.lit("")),
-                F.when(
-                    ~F.col('Fecha_Inicio_match'),
-                    F.concat(
-                        F.lit("\n (interrupcion_inicio|fecha generacion) en SGA: \n"),
-                        F.col('Expected_Inicio_truncated_fm'),
-                        F.lit("\n no coincide con FECHA Y HORA INICIO CORTE-EXCEL: \n"),
-                        F.col('FECHA_Y_HORA_INICIO_fmt')
-                    )
-                ).otherwise(F.lit("")),
-                F.when(
-                    ~F.col('Fecha_Fin_match'),
-                    F.concat(
-                        F.lit("\n (interrupcion_fin) en SGA: \n"),
-                        F.col('interrupcion_fin_truncated_fm'),
-                        F.lit("\n no coincide con FECHA Y HORA FIN CORTE-EXCEL: \n"),
-                        F.col('FECHA_Y_HORA_FIN_fmt')
-                    )
-                ).otherwise(F.lit(""))
+    with spark_manager.get_session():
+        df = df.withColumn(
+            'mensaje',
+            F.when(
+                F.col('Validation_OK'),
+                F.lit("Validación de fechas exitosa")
+            ).otherwise(
+                F.concat(
+                    F.when(
+                        ~F.col('NotEmpty'),
+                        F.lit("\n Las columnas 'FECHA Y HORA INICIO' y/o 'FECHA Y HORA FIN' están vacías. ")
+                    ).otherwise(F.lit("")),
+                    F.when(
+                        ~F.col('Fecha_Inicio_match'),
+                        F.concat(
+                            F.lit("\n (interrupcion_inicio|fecha generacion) en SGA: \n"),
+                            F.col('Expected_Inicio_truncated_fm'),
+                            F.lit("\n no coincide con FECHA Y HORA INICIO CORTE-EXCEL: \n"),
+                            F.col('FECHA_Y_HORA_INICIO_fmt')
+                        )
+                    ).otherwise(F.lit("")),
+                    F.when(
+                        ~F.col('Fecha_Fin_match'),
+                        F.concat(
+                            F.lit("\n (interrupcion_fin) en SGA: \n"),
+                            F.col('interrupcion_fin_truncated_fm'),
+                            F.lit("\n no coincide con FECHA Y HORA FIN CORTE-EXCEL: \n"),
+                            F.col('FECHA_Y_HORA_FIN_fmt')
+                        )
+                    ).otherwise(F.lit(""))
+                )
             )
+        ).withColumn(
+            'objetivo',
+            F.lit("1.2")
         )
-    ).withColumn(
-        'objetivo',
-        F.lit("1.2")
-    )
 
-    # Filter failures and select required columns
-    return df.filter(F.col('fail_count') > 0).select(
-        'nro_incidencia',
-        'mensaje',
-        'TIPO REPORTE',
-        'objetivo'
-    )
+        return df.filter(F.col('fail_count') > 0).select(
+            'nro_incidencia',
+            'mensaje',
+            'TIPO REPORTE',
+            'objetivo'
+        )
 
