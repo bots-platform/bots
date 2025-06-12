@@ -1,8 +1,9 @@
 from typing import List
 from fastapi import HTTPException
-from pyspark.sql import SparkSession, DataFrame
+from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.types import StringType
+from app.core.spark_manager import spark_manager
 
 def validate_required_columns_from_excel(path_excel: str, required_columns: List[str], skipfooter: int = 0) -> DataFrame:
     """
@@ -28,55 +29,54 @@ def validate_required_columns_from_excel(path_excel: str, required_columns: List
     ValueError
         If the file cannot be read or columns are missing.
     """
-    try:
-        # Create SparkSession if not exists
-        spark = SparkSession.builder.getOrCreate()
-        
-        # Read Excel file using Spark's Excel reader
-        df = spark.read.format("com.crealytics.spark.excel") \
-            .option("header", "true") \
-            .option("skipFooter", str(skipfooter)) \
-            .load(path_excel)
-            
-    except Exception as e:
-        raise ValueError(f"Error 400: No se pudo leer el Excel: {e}")
+    with spark_manager.get_session():
+        spark = spark_manager.get_spark()
+        try:
+            # Read Excel file using Spark's Excel reader
+            df = spark.read.format("com.crealytics.spark.excel") \
+                .option("header", "true") \
+                .option("skipFooter", str(skipfooter)) \
+                .load(path_excel)
+                
+        except Exception as e:
+            raise ValueError(f"Error 400: No se pudo leer el Excel: {e}")
 
-    # Clean column names
-    df = df.select([F.col(c).alias(c.strip()) for c in df.columns])
+        # Clean column names
+        df = df.select([F.col(c).alias(c.strip()) for c in df.columns])
 
-    # Check for missing columns
-    missing = [c for c in required_columns if c not in df.columns]
-    if missing:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Faltan columnas requeridas: {missing}"
-        )
-
-    # Select only required columns
-    df_clean = df.select(required_columns)
-
-    # Get string columns
-    string_cols = [field.name for field in df_clean.schema.fields 
-                  if isinstance(field.dataType, StringType)]
-
-    # Clean text columns
-    for col_name in string_cols:
-        df_clean = df_clean.withColumn(
-            col_name,
-            F.regexp_replace(
-                F.regexp_replace(
-                    F.trim(F.col(col_name).cast(StringType())),
-                    '\r', ' '
-                ),
-                '_x000D_', ''
+        # Check for missing columns
+        missing = [c for c in required_columns if c not in df.columns]
+        if missing:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Faltan columnas requeridas: {missing}"
             )
-        )
 
-    # Fill null values in string columns
-    for col_name in string_cols:
-        df_clean = df_clean.withColumn(
-            col_name,
-            F.coalesce(F.col(col_name), F.lit("No disponible"))
-        )
+        # Select only required columns
+        df_clean = df.select(required_columns)
 
-    return df_clean
+        # Get string columns
+        string_cols = [field.name for field in df_clean.schema.fields 
+                    if isinstance(field.dataType, StringType)]
+
+        # Clean text columns
+        for col_name in string_cols:
+            df_clean = df_clean.withColumn(
+                col_name,
+                F.regexp_replace(
+                    F.regexp_replace(
+                        F.trim(F.col(col_name).cast(StringType())),
+                        '\r', ' '
+                    ),
+                    '_x000D_', ''
+                )
+            )
+
+        # Fill null values in string columns
+        for col_name in string_cols:
+            df_clean = df_clean.withColumn(
+                col_name,
+                F.coalesce(F.col(col_name), F.lit("No disponible"))
+            )
+
+        return df_clean
