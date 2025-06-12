@@ -5,6 +5,7 @@ from datetime import datetime
 
 import re
 
+from app.core.spark_manager import spark_manager
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import (
     log_exceptions
 )
@@ -31,41 +32,37 @@ def validation_responsable(df_merged: DataFrame) -> DataFrame:
         - Validation_OK (boolean): True if all validations pass
         - fail_count (integer): Number of failed validations (0-2)
     """
-    # Cache the DataFrame since it will be used multiple times
-    df = df_merged.cache()
-    
-    # Check if column is non-empty
-    df = df.withColumn(
-        'non_empty_responsable',
-        F.col('RESPONSABLE_trimed').isNotNull()
-    )
+    with spark_manager.get_session():
+        df = df_merged.cache()
+        
+        df = df.withColumn(
+            'non_empty_responsable',
+            F.col('RESPONSABLE_trimed').isNotNull()
+        )
 
-    # Check if RESPONSABLE matches expected values
-    df = df.withColumn(
-        'match_responsable',
-        F.col('RESPONSABLE_trimed').isin([
-            'SOPORTE TÉCNICO',
-            'SOPORTE TECNICO',
-            'SOPORTE TÉCNICO - CLARO',
-            'SOPORTE TECNICO - CLARO'
-        ])
-    )
+        df = df.withColumn(
+            'match_responsable',
+            F.col('RESPONSABLE_trimed').isin([
+                'SOPORTE TÉCNICO',
+                'SOPORTE TECNICO',
+                'SOPORTE TÉCNICO - CLARO',
+                'SOPORTE TECNICO - CLARO'
+            ])
+        )
 
-    # Calculate overall validation status
-    df = df.withColumn(
-        'Validation_OK',
-        F.col('non_empty_responsable') &
-        F.col('match_responsable')
-    )
+        df = df.withColumn(
+            'Validation_OK',
+            F.col('non_empty_responsable') &
+            F.col('match_responsable')
+        )
 
-    # Count failures
-    df = df.withColumn(
-        'fail_count',
-        F.when(~F.col('non_empty_responsable'), 1).otherwise(0) +
-        F.when(~F.col('match_responsable'), 1).otherwise(0)
-    )
+        df = df.withColumn(
+            'fail_count',
+            F.when(~F.col('non_empty_responsable'), 1).otherwise(0) +
+            F.when(~F.col('match_responsable'), 1).otherwise(0)
+        )
 
-    return df
+        return df
 
 @log_exceptions
 def build_failure_messages_responsable(df: DataFrame) -> DataFrame:
@@ -77,38 +74,37 @@ def build_failure_messages_responsable(df: DataFrame) -> DataFrame:
     - 'TIPO REPORTE'
     - 'objetivo'
     """
-    # Build error message using PySpark's concat and when functions
-    df = df.withColumn(
-        'mensaje',
-        F.when(
-            F.col('Validation_OK'),
-            F.lit("Validation de RESPONSABLE exitosa")
-        ).otherwise(
-            F.concat(
-                F.when(
-                    ~F.col('non_empty_responsable'),
-                    F.lit("\n  RESPONSABLE en CORTE-EXCEL es vacio. \n")
-                ).otherwise(F.lit("")),
-                F.when(
-                    ~F.col('match_responsable'),
-                    F.concat(
-                        F.lit("\n  RESPONSABLE en CORTE-EXCEL: \n"),
-                        F.col('RESPONSABLE_trimed'),
-                        F.lit("\n no coincide con los valores permitidos: \n"),
-                        F.lit("SOPORTE TÉCNICO, SOPORTE TECNICO, SOPORTE TÉCNICO - CLARO, SOPORTE TECNICO - CLARO")
-                    )
-                ).otherwise(F.lit(""))
+    with spark_manager.get_session():
+        df = df.withColumn(
+            'mensaje',
+            F.when(
+                F.col('Validation_OK'),
+                F.lit("Validation de RESPONSABLE exitosa")
+            ).otherwise(
+                F.concat(
+                    F.when(
+                        ~F.col('non_empty_responsable'),
+                        F.lit("\n  RESPONSABLE en CORTE-EXCEL es vacio. \n")
+                    ).otherwise(F.lit("")),
+                    F.when(
+                        ~F.col('match_responsable'),
+                        F.concat(
+                            F.lit("\n  RESPONSABLE en CORTE-EXCEL: \n"),
+                            F.col('RESPONSABLE_trimed'),
+                            F.lit("\n no coincide con los valores permitidos: \n"),
+                            F.lit("SOPORTE TÉCNICO, SOPORTE TECNICO, SOPORTE TÉCNICO - CLARO, SOPORTE TECNICO - CLARO")
+                        )
+                    ).otherwise(F.lit(""))
+                )
             )
+        ).withColumn(
+            'objetivo',
+            F.lit("1.9")
         )
-    ).withColumn(
-        'objetivo',
-        F.lit("1.9")
-    )
 
-    # Filter failures and select required columns
-    return df.filter(F.col('fail_count') > 0).select(
-        'nro_incidencia',
-        'mensaje',
-        'TIPO REPORTE',
-        'objetivo'
-    )
+        return df.filter(F.col('fail_count') > 0).select(
+            'nro_incidencia',
+            'mensaje',
+            'TIPO REPORTE',
+            'objetivo'
+        )
