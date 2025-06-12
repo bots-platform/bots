@@ -76,6 +76,8 @@ class SparkManager:
                 
                 # Local mode
                 .master("local[*]")
+                .config("spark.jars.packages", "com.crealytics:spark-excel_2.12:3.3.1_0.18.7")
+                .config("spark.driver.extraClassPath", "com.crealytics:spark-excel_2.12:3.3.1_0.18.7")
                 .getOrCreate())
 
     def stop(self):
