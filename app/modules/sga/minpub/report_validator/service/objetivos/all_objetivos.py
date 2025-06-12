@@ -105,8 +105,10 @@ def all_objetivos(
       A list of dictionaries (one per incident that fails at least one validation)
       across all objectives.
     """
-    spark = spark_manager.get_session()  # Get the session directly
     try:
+        # Get Spark session
+        spark = spark_manager.get_session()
+        
         # Read Excel files using pandas
         df_sga_dinamico_380_pd = pd.read_excel(path_sga_dinamico_380)
         # Convert pandas DataFrame to Spark DataFrame
