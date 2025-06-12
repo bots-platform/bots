@@ -3,6 +3,7 @@ from pyspark.sql import functions as F
 from typing import List, Dict
 from datetime import datetime
 
+from app.core.spark_manager import spark_manager
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import (
     log_exceptions
 )
@@ -32,44 +33,39 @@ def validation_duracion_entero(df_merged: DataFrame) -> DataFrame:
         - Validation_OK (boolean): True if all validations pass
         - fail_count (integer): Number of failed validations
     """
-    # Cache the DataFrame since it will be used multiple times
-    df = df_merged.cache()
-    
-    # Check if Duracion entero matches extracted_hour
-    df = df.withColumn(
-        'duracion_entero_ok',
-        F.col('extracted_hour') == F.col('Duracion entero')
-    )
+    with spark_manager.get_session():
+        df = df_merged.cache()
+        
+        df = df.withColumn(
+            'duracion_entero_ok',
+            F.col('extracted_hour') == F.col('Duracion entero')
+        )
 
-    # Define the expected grouping based on duration ranges
-    df = df.withColumn(
-        'agrupacion_expected',
-        F.when(F.col('Duracion entero') == 0, F.lit('Menor a 1h'))
-        .when(F.col('Duracion entero').isin([1, 2, 3]), F.lit('Entre 1h a 4h'))
-        .when(F.col('Duracion entero').isin([4, 5, 6, 7]), F.lit('Entre 4h a 8h'))
-        .when(F.col('Duracion entero').between(8, 23), F.lit('Entre 8h a 24h'))
-        .otherwise(F.lit('Mayor a 24h'))
-    )
+        df = df.withColumn(
+            'agrupacion_expected',
+            F.when(F.col('Duracion entero') == 0, F.lit('Menor a 1h'))
+            .when(F.col('Duracion entero').isin([1, 2, 3]), F.lit('Entre 1h a 4h'))
+            .when(F.col('Duracion entero').isin([4, 5, 6, 7]), F.lit('Entre 4h a 8h'))
+            .when(F.col('Duracion entero').between(8, 23), F.lit('Entre 8h a 24h'))
+            .otherwise(F.lit('Mayor a 24h'))
+        )
 
-    # Check if Agrupación entero matches the expected grouping
-    df = df.withColumn(
-        'agrupacion_entero_ok',
-        F.trim(F.col('Agrupación entero')) == F.col('agrupacion_expected')
-    )
+        df = df.withColumn(
+            'agrupacion_entero_ok',
+            F.trim(F.col('Agrupación entero')) == F.col('agrupacion_expected')
+        )
 
-    # Calculate overall validation status
-    df = df.withColumn(
-        'Validation_OK',
-        F.col('duracion_entero_ok') & F.col('agrupacion_entero_ok')
-    )
+        df = df.withColumn(
+            'Validation_OK',
+            F.col('duracion_entero_ok') & F.col('agrupacion_entero_ok')
+        )
 
-    # Count failures
-    df = df.withColumn(
-        'fail_count',
-        F.when(~F.col('Validation_OK'), 1).otherwise(0)
-    )
+        df = df.withColumn(
+            'fail_count',
+            F.when(~F.col('Validation_OK'), 1).otherwise(0)
+        )
 
-    return df
+        return df
 
 @log_exceptions
 def build_failure_messages_duracion_entero(df: DataFrame) -> DataFrame:
@@ -81,43 +77,42 @@ def build_failure_messages_duracion_entero(df: DataFrame) -> DataFrame:
     - 'TIPO REPORTE'
     - 'objetivo'
     """
-    # Build error message using PySpark's concat and when functions
-    df = df.withColumn(
-        'mensaje',
-        F.when(
-            F.col('Validation_OK'),
-            F.lit("Validación exitosa: DURACION ENTERO y Agrupacion entero")
-        ).otherwise(
-            F.concat(
-                F.when(
-                    ~F.col('duracion_entero_ok'),
-                    F.concat(
-                        F.lit("\n Duración entero EXCEL-CORTE: \n"),
-                        F.col('Duracion entero').cast('string'),
-                        F.lit("\n es diferente a hora extraída de TIEMPO (HH:MM) en EXCEL-CORTE: \n"),
-                        F.col('extracted_hour').cast('string')
-                    )
-                ).otherwise(F.lit("")),
-                F.when(
-                    ~F.col('agrupacion_entero_ok'),
-                    F.concat(
-                        F.lit("\n Es incorrecto Agrupación entero en CORTE-EXCEL: \n"),
-                        F.col('Agrupación entero'),
-                        F.lit("\n debe ser: \n"),
-                        F.col('agrupacion_expected')
-                    )
-                ).otherwise(F.lit(""))
+    with spark_manager.get_session():
+        df = df.withColumn(
+            'mensaje',
+            F.when(
+                F.col('Validation_OK'),
+                F.lit("Validación exitosa: DURACION ENTERO y Agrupacion entero")
+            ).otherwise(
+                F.concat(
+                    F.when(
+                        ~F.col('duracion_entero_ok'),
+                        F.concat(
+                            F.lit("\n Duración entero EXCEL-CORTE: \n"),
+                            F.col('Duracion entero').cast('string'),
+                            F.lit("\n es diferente a hora extraída de TIEMPO (HH:MM) en EXCEL-CORTE: \n"),
+                            F.col('extracted_hour').cast('string')
+                        )
+                    ).otherwise(F.lit("")),
+                    F.when(
+                        ~F.col('agrupacion_entero_ok'),
+                        F.concat(
+                            F.lit("\n Es incorrecto Agrupación entero en CORTE-EXCEL: \n"),
+                            F.col('Agrupación entero'),
+                            F.lit("\n debe ser: \n"),
+                            F.col('agrupacion_expected')
+                        )
+                    ).otherwise(F.lit(""))
+                )
             )
+        ).withColumn(
+            'objetivo',
+            F.lit("1.10")
         )
-    ).withColumn(
-        'objetivo',
-        F.lit("1.10")
-    )
 
-    # Filter failures and select required columns
-    return df.filter(F.col('fail_count') > 0).select(
-        'nro_incidencia',
-        'mensaje',
-        'TIPO REPORTE',
-        'objetivo'
-    )
+        return df.filter(F.col('fail_count') > 0).select(
+            'nro_incidencia',
+            'mensaje',
+            'TIPO REPORTE',
+            'objetivo'
+        )
