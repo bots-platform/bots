@@ -1,20 +1,11 @@
 from typing import List, Dict, Optional
-from pyspark.sql import SparkSession, DataFrame
+from pyspark.sql import DataFrame
 from pyspark.sql.types import StructType, StructField, StringType
 from docx import Document
 import re
 
+from app.core.spark_manager import spark_manager
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import log_exceptions
-
-def get_spark_session() -> SparkSession:
-    """
-    Creates and returns a SparkSession with optimized configurations.
-    """
-    return (SparkSession.builder
-            .appName("IndisponibilidadProcessor")
-            .config("spark.sql.legacy.timeParserPolicy", "LEGACY")
-            .config("spark.sql.execution.arrow.pyspark.enabled", "true")
-            .getOrCreate())
 
 def create_schema() -> StructType:
     """
@@ -137,17 +128,13 @@ def extract_indisponibilidad_anexos(path_docx: str) -> Optional[DataFrame]:
         return None
 
     # Create SparkSession and convert records to DataFrame
-    spark = get_spark_session()
-    try:
-        # Convert records to DataFrame using the defined schema
-        df = spark.createDataFrame(records, schema=create_schema())
-        
-        # Cache the DataFrame for better performance if it will be used multiple times
-        df.cache()
-        
-        return df
-    except Exception as e:
-        spark.stop()
-        raise Exception(f"Error processing Word document: {str(e)}")
-    finally:
-        spark.stop() 
+    with spark_manager.get_session():
+        spark = spark_manager.get_spark()
+        try:
+            # Convert records to DataFrame using the defined schema
+            df = spark.createDataFrame(records, schema=create_schema())
+            # Cache the DataFrame for better performance if it will be used multiple times
+            df.cache()
+            return df
+        except Exception as e:
+            raise Exception(f"Error processing Word document: {str(e)}") 
