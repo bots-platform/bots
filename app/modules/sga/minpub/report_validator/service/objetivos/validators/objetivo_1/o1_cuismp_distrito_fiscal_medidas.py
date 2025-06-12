@@ -1,5 +1,5 @@
 from typing import Optional
-from pyspark.sql import SparkSession, DataFrame
+from pyspark.sql import DataFrame
 from pyspark.sql.types import (
     StructType, StructField, StringType, BooleanType,
     IntegerType
@@ -10,21 +10,10 @@ from pyspark.sql.functions import (
     regexp_extract, split, length
 )
 from utils.logger_config import get_sga_logger
+from app.core.spark_manager import spark_manager
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import (
     log_exceptions
 )
-
-def get_spark_session() -> SparkSession:
-    """
-    Creates and returns a SparkSession with optimized configurations.
-    """
-    return (SparkSession.builder
-            .appName("CUISMPDistritoFiscalValidator")
-            .config("spark.sql.execution.arrow.pyspark.enabled", "true")
-            .config("spark.sql.adaptive.enabled", "true")
-            .config("spark.sql.adaptive.coalescePartitions.enabled", "true")
-            .config("spark.sql.shuffle.partitions", "200")
-            .getOrCreate())
 
 def create_empty_schema() -> StructType:
     """
@@ -65,28 +54,22 @@ def validation_cuismp_distrito_fiscal_medidas(merged_df: Optional[DataFrame] = N
         - Validation_OK
         - fail_count
     """
-    spark = get_spark_session()
-    
-    try:
+    with spark_manager.get_session():
         if merged_df is None:
-            return spark.createDataFrame([], schema=create_empty_schema())
+            return spark_manager.get_session().createDataFrame([], schema=create_empty_schema())
         
-        # Cache the input DataFrame for better performance
         df = merged_df.cache()
         
-        # Validar coincidencia de CUISMP
         df = df.withColumn(
             "CUISMP_match",
             col("CUISMP_sga_dinamico_335_excel_matched") == col("CUISMP_sharepoint_cid_cuismp")
         )
         
-        # Validar coincidencia de Distrito Fiscal
         df = df.withColumn(
             "DF_match",
             lower(col("DF").cast("string")) == lower(col("Distrito Fiscal").cast("string"))
         )
         
-        # Validar presencia de CUISMP en medidas
         medidas_col = "MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS"
         df = df.withColumn(
             "CUISMP_in_medias_tomadas",
@@ -98,13 +81,11 @@ def validation_cuismp_distrito_fiscal_medidas(merged_df: Optional[DataFrame] = N
             )
         )
         
-        # Calcular validación general
         df = df.withColumn(
             "Validation_OK",
             col("CUISMP_match") & col("DF_match") & col("CUISMP_in_medias_tomadas")
         )
         
-        # Calcular contador de fallos
         df = df.withColumn(
             "fail_count",
             when(~col("CUISMP_match"), 1).otherwise(0) +
@@ -112,16 +93,7 @@ def validation_cuismp_distrito_fiscal_medidas(merged_df: Optional[DataFrame] = N
             when(~col("CUISMP_in_medias_tomadas"), 1).otherwise(0)
         )
         
-        # Repartition for better performance
-        df = df.repartition(200)
-        
         return df
-        
-    except Exception as e:
-        spark.stop()
-        raise Exception(f"Error en validación CUISMP Distrito Fiscal: {str(e)}")
-    finally:
-        spark.stop()
 
 @log_exceptions
 def build_failure_messages_cuismp_distrito_fiscal_medidas(df: DataFrame) -> DataFrame:
@@ -147,13 +119,11 @@ def build_failure_messages_cuismp_distrito_fiscal_medidas(df: DataFrame) -> Data
         DataFrame filtrado con filas donde `fail_count > 0` y columnas:
         ['nro_incidencia', 'mensaje', 'TIPO REPORTE', 'objetivo'].
     """
-    spark = get_spark_session()
-    
-    try:
-        # Cache the input DataFrame for better performance
+    with spark_manager.get_session():
+        # Cache for better performance in distributed environment
+        # Important when the DataFrame is used in multiple operations
         df = df.cache()
         
-        # Construir mensajes de error
         df = df.withColumn(
             "mensaje",
             when(
@@ -191,10 +161,9 @@ def build_failure_messages_cuismp_distrito_fiscal_medidas(df: DataFrame) -> Data
             )
         )
         
-        # Añadir objetivo
         df = df.withColumn("objetivo", lit("1.1"))
         
-        # Filtrar fallos y seleccionar columnas
+        # Filter failures and select required columns
         df_failures = df.filter(col("fail_count") > 0)
         df_failures = df_failures.select(
             "nro_incidencia",
@@ -203,14 +172,6 @@ def build_failure_messages_cuismp_distrito_fiscal_medidas(df: DataFrame) -> Data
             "objetivo"
         )
         
-        # Repartition for better performance
-        df_failures = df_failures.repartition(200)
         
         return df_failures
-        
-    except Exception as e:
-        spark.stop()
-        raise Exception(f"Error generando mensajes de fallo: {str(e)}")
-    finally:
-        spark.stop()
 
