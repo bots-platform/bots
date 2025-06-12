@@ -1,18 +1,9 @@
 from typing import List
-from pyspark.sql import SparkSession, DataFrame
+from pyspark.sql import DataFrame
 from pyspark.sql.types import StructType, StructField, StringType, TimestampType, DoubleType
+from app.core.spark_manager import spark_manager
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import log_exceptions
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.validations import validate_required_columns_from_excel
-
-def get_spark_session() -> SparkSession:
-    """
-    Creates and returns a SparkSession with optimized configurations.
-    """
-    return (SparkSession.builder
-            .appName("CorteExcelProcessor")
-            .config("spark.sql.legacy.timeParserPolicy", "LEGACY")
-            .config("spark.sql.execution.arrow.pyspark.enabled", "true")
-            .getOrCreate())
 
 def create_schema() -> StructType:
     """
@@ -66,32 +57,26 @@ def extract_corte_excel(path_corte_excel: str, skipfooter: int) -> DataFrame:
         'TIPO DE INCIDENCIA', 'TIEMPO INTERRUPCION', 'INDISPONIBILIDAD'
     ]
 
-    # Create SparkSession
-    spark = get_spark_session()
-    
-    try:
-        # Read Excel file with optimized configurations
-        df = (spark.read
-              .format("com.crealytics.spark.excel")
-              .option("header", "true")
-              .option("inferSchema", "false")
-              .option("skipfooter", str(skipfooter))
-              .option("maxRowsInMemory", "1000")
-              .option("treatEmptyValuesAsNulls", "true")
-              .schema(create_schema())
-              .load(path_corte_excel))
-        
-        # Validate required columns
-        validate_required_columns_from_excel(path_corte_excel, required_columns, skipfooter)
-        
-        # Cache the DataFrame for better performance if it will be used multiple times
-        df.cache()
-        
-        return df
-        
-    except Exception as e:
-        spark.stop()
-        raise Exception(f"Error processing Excel file: {str(e)}")
-    finally:
-        # Clean up resources
-        spark.stop() 
+    with spark_manager.get_session():
+        spark = spark_manager.get_spark()
+        try:
+            # Read Excel file with optimized configurations
+            df = (spark.read
+                  .format("com.crealytics.spark.excel")
+                  .option("header", "true")
+                  .option("inferSchema", "false")
+                  .option("skipfooter", str(skipfooter))
+                  .option("maxRowsInMemory", "1000")
+                  .option("treatEmptyValuesAsNulls", "true")
+                  .schema(create_schema())
+                  .load(path_corte_excel))
+            
+            # Validate required columns
+            validate_required_columns_from_excel(path_corte_excel, required_columns, skipfooter)
+            
+            # Cache the DataFrame for better performance if it will be used multiple times
+            df.cache()
+            
+            return df
+        except Exception as e:
+            raise Exception(f"Error processing Excel file: {str(e)}") 
