@@ -3,15 +3,7 @@ from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.types import StructType, StructField, StringType, TimestampType
 from pyspark.sql.functions import col, to_timestamp
 
-def get_spark_session() -> SparkSession:
-    """
-    Creates and returns a SparkSession with optimized configurations.
-    """
-    return (SparkSession.builder
-            .appName("AveriasProcessor")
-            .config("spark.sql.legacy.timeParserPolicy", "LEGACY")
-            .config("spark.sql.execution.arrow.pyspark.enabled", "true")
-            .getOrCreate())
+from app.modules.sga.minpub.report_validator.service.objetivos.utils.spark_manager import spark_manager
 
 def create_empty_schema() -> StructType:
     """
@@ -34,30 +26,26 @@ def preprocess_df_word_averias(df: Optional[DataFrame] = None) -> DataFrame:
     Returns:
         DataFrame: Preprocessed DataFrame with standardized columns and data types
     """
-    spark = get_spark_session()
-    
-    try:
-        if df is None:
-            # Create empty DataFrame with the defined schema
-            return spark.createDataFrame([], schema=create_empty_schema())
-        
-        # Rename columns and cast types
-        df = (df
-              .withColumnRenamed("Número de ticket", "nro_incidencia")
-              .withColumnRenamed("Tiempo\nTotal (HH:MM)", "Tiempo Total (HH:MM)")
-              .withColumn("nro_incidencia", col("nro_incidencia").cast("string"))
-              .withColumn("Fecha y Hora Inicio", 
-                         to_timestamp(col("Fecha y Hora Inicio"), "dd/MM/yyyy HH:mm"))
-              .withColumn("Fecha y Hora Fin", 
-                         to_timestamp(col("Fecha y Hora Fin"), "dd/MM/yyyy HH:mm")))
-        
-        # Cache the DataFrame for better performance if it will be used multiple times
-        df.cache()
-        
-        return df
-        
-    except Exception as e:
-        spark.stop()
-        raise Exception(f"Error preprocessing averias DataFrame: {str(e)}")
-    finally:
-        spark.stop()
+    with spark_manager.get_session_context() as spark:
+        try:
+            if df is None:
+                return spark.createDataFrame([], schema=create_empty_schema())
+            
+            df = (df
+                  .withColumnRenamed("Número de ticket", "nro_incidencia")
+                  .withColumnRenamed("Tiempo\nTotal (HH:MM)", "Tiempo Total (HH:MM)")
+                  .withColumn("nro_incidencia", col("nro_incidencia").cast("string"))
+                  .withColumn("Fecha y Hora Inicio", 
+                             to_timestamp(col("Fecha y Hora Inicio"), "dd/MM/yyyy HH:mm"))
+                  .withColumn("Fecha y Hora Fin", 
+                             to_timestamp(col("Fecha y Hora Fin"), "dd/MM/yyyy HH:mm")))
+            
+            df.cache()
+            
+            return df
+            
+        except Exception as e:
+            raise Exception(f"Error preprocessing averias DataFrame: {str(e)}")
+        finally:
+            if df is not None and df.is_cached:
+                df.unpersist()
