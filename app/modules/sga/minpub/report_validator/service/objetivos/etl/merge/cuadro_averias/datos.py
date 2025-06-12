@@ -1,35 +1,31 @@
 from typing import List, Dict
-import pandas as pd
-from datetime import datetime, timedelta
-
-from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import ( 
+from pyspark.sql import DataFrame
+from app.core.spark_manager import spark_manager
+from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import (
     log_exceptions
 )
 
 @log_exceptions
 def merge_word_datos_averias_corte_excel(
-        df_word_datos_averias: pd.DataFrame,
-        df_corte_excel: pd.DataFrame,
-        match_type:str
-    ) -> pd.DataFrame:
-        """
-        Common merge function for Objective 2.
+        df_word_datos_averias: DataFrame,
+        df_corte_excel: DataFrame,
+        match_type: str
+    ) -> DataFrame:
+    """
+    Common merge function for Objective 2 using PySpark.
 
-        Merges:
-          - corte-excel  with word_telefonia on 'nro_incidencia'
+    Merges:
+      - corte-excel with word_telefonia on 'nro_incidencia'
 
-        Returns a merged DataFrame with common columns needed.
-        """
-        df_merge_word_datos_corte_excel = pd.merge(
-        df_word_datos_averias,
-        df_corte_excel,
-        on='nro_incidencia',
-        how='left',
-        indicator=True,
-        suffixes=('_word_datos_averias', '_corte_excel')
+    Returns a merged DataFrame with common columns needed.
+    """
+    with spark_manager.get_session():
+        df_merge_word_datos_corte_excel = df_word_datos_averias.join(
+            df_corte_excel,
+            on='nro_incidencia',
+            how='left'
         )
-    
-        matched_rows = df_merge_word_datos_corte_excel[df_merge_word_datos_corte_excel['_merge'] == match_type]
-        return matched_rows
+ 
+        return df_merge_word_datos_corte_excel
 
     
