@@ -1,6 +1,7 @@
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
+from app.core.spark_manager import spark_manager
 from app.modules.sga.minpub.report_validator.service.objetivos.validators.objetivo_2.o1_averias_word_validator import (
     validate_averias_word, build_failure_messages_validate_averias_word
 )
@@ -26,49 +27,50 @@ def run_objetivo_2(
     
     Returns a DataFrame with the failure details for Objective 2.
     """
-    # Validate averias word for datos
-    df_validate_averias_word_datos = validate_averias_word(
-        df_matched_word_datos_averias_corte_excel, 
-        componente_word='COMPONENTE II'
-    )
-    df_failures_message_validate_averias_word_datos = build_failure_messages_validate_averias_word(
-        df_validate_averias_word_datos
-    )
+    with spark_manager.get_session():
+        # Validate averias word for datos
+        df_validate_averias_word_datos = validate_averias_word(
+            df_matched_word_datos_averias_corte_excel, 
+            componente_word='COMPONENTE II'
+        )
+        df_failures_message_validate_averias_word_datos = build_failure_messages_validate_averias_word(
+            df_validate_averias_word_datos
+        )
 
-    # Validate averias word for telefonia
-    df_validate_averias_word_telefonia = validate_averias_word(
-        df_matched_word_telefonia_averias_corte_excel, 
-        componente_word='COMPONENTE IV'
-    )
-    df_failures_message_validate_averias_word_telefono = build_failure_messages_validate_averias_word(
-        df_validate_averias_word_telefonia
-    )
+        # Validate averias word for telefonia
+        df_validate_averias_word_telefonia = validate_averias_word(
+            df_matched_word_telefonia_averias_corte_excel, 
+            componente_word='COMPONENTE IV'
+        )
+        df_failures_message_validate_averias_word_telefono = build_failure_messages_validate_averias_word(
+            df_validate_averias_word_telefonia
+        )
 
-    # Validate informe tecnico word for datos
-    df_validate_informe_tecnico_word_datos = validate_informe_tecnico_word(
-        df_matched_word_datos_informe_tecnico_corte_excel, 
-        componente_word='COMPONENTE II'
-    )
-    df_failures_message_validate_informe_tecnico_word_datos = build_failure_messages_validate_informe_tecnico_word(
-        df_validate_informe_tecnico_word_datos
-    )
+        # Validate informe tecnico word for datos
+        df_validate_informe_tecnico_word_datos = validate_informe_tecnico_word(
+            df_matched_word_datos_informe_tecnico_corte_excel, 
+            componente_word='COMPONENTE II'
+        )
+        df_failures_message_validate_informe_tecnico_word_datos = build_failure_messages_validate_informe_tecnico_word(
+            df_validate_informe_tecnico_word_datos
+        )
 
-    # Validate informe tecnico word for telefonia
-    df_validate_informe_tecnico_word_telefonia = validate_informe_tecnico_word(
-        df_matched_word_telefonia_informe_tecnico_corte_excel, 
-        componente_word='COMPONENTE IV'
-    )
-    df_failures_message_validate_informe_tecnico_word_telefono = build_failure_messages_validate_informe_tecnico_word(
-        df_validate_informe_tecnico_word_telefonia
-    )
+        # Validate informe tecnico word for telefonia
+        df_validate_informe_tecnico_word_telefonia = validate_informe_tecnico_word(
+            df_matched_word_telefonia_informe_tecnico_corte_excel, 
+            componente_word='COMPONENTE IV'
+        )
+        df_failures_message_validate_informe_tecnico_word_telefono = build_failure_messages_validate_informe_tecnico_word(
+            df_validate_informe_tecnico_word_telefonia
+        )
 
-    # Union all failure DataFrames
-    df_failures = df_failures_message_validate_averias_word_datos.unionAll(
-        df_failures_message_validate_averias_word_telefono
-    ).unionAll(
-        df_failures_message_validate_informe_tecnico_word_datos
-    ).unionAll(
-        df_failures_message_validate_informe_tecnico_word_telefono
-    )
+        # Union all failure DataFrames
+        df_failures = df_failures_message_validate_averias_word_datos.unionAll(
+            df_failures_message_validate_averias_word_telefono
+        ).unionAll(
+            df_failures_message_validate_informe_tecnico_word_datos
+        ).unionAll(
+            df_failures_message_validate_informe_tecnico_word_telefono
+        )
 
-    return df_failures
+        return df_failures
