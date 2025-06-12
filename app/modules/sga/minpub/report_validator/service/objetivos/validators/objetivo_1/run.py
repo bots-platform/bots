@@ -26,8 +26,8 @@ from app.modules.sga.minpub.report_validator.service.objetivos.validators.objeti
 )
 
 from app.modules.sga.minpub.report_validator.service.objetivos.validators.objetivo_1.o5_tipo_caso_cid_masivo_cod_padre_determinacion import (
-    validation_tipo_caso_cid_masivo_codincidencia_padre_determinacion_causa,
-    build_failure_messages_tipo_caso_cid_masivo_codincidencia_padre_determinacion_causa
+    validation_tipo_caso_cid_masivo_cod_padre_determinacion,
+    build_failure_messages_tipo_caso_cid_masivo_cod_padre_determinacion
 )
 
 from app.modules.sga.minpub.report_validator.service.objetivos.validators.objetivo_1.o6_averia_tipificacion_problema import (
@@ -37,7 +37,7 @@ from app.modules.sga.minpub.report_validator.service.objetivos.validators.objeti
 
 from app.modules.sga.minpub.report_validator.service.objetivos.validators.objetivo_1.o7_tipo_reporte_observacion import (
     validation_tipo_reporte_observacion,
-    build_failure_messages_reporte_observacion
+    build_failure_messages_tipo_reporte_observacion
 )
 
 from app.modules.sga.minpub.report_validator.service.objetivos.validators.objetivo_1.o8_medidas_correctivas import (
@@ -46,17 +46,17 @@ from app.modules.sga.minpub.report_validator.service.objetivos.validators.objeti
 )
 
 from app.modules.sga.minpub.report_validator.service.objetivos.validators.objetivo_1.o9_responsable_validator import (
-    validate_responsable,
+    validation_responsable,
     build_failure_messages_responsable
 )
 
 from app.modules.sga.minpub.report_validator.service.objetivos.validators.objetivo_1.o10_duracion_entero_validator import (
-    validate_duracion_entero,
+    validation_duracion_entero,
     build_failure_messages_duracion_entero
 )
 
 from app.modules.sga.minpub.report_validator.service.objetivos.validators.objetivo_1.o11_indisponibilidad_validator import (
-    validate_indisponibilidad,
+    validation_indisponibilidad,
     build_failure_messages_indisponibilidad
 )
 
@@ -95,25 +95,25 @@ def run_objetivo_1(
     df_validation_tiempo_HHMM = validation_tiempo_HHMM_paradas_cliente(df_matched_corte_sga335_sharepoint_cuismp_sga380)
     df_failure_messages_tiempo_HHMM_paradas_cliente = buid_failure_messages_tiempo_HHMM_paradas_cliente(df_validation_tiempo_HHMM)
 
-    df_tipo_caso_cid_masivo_codincidencia_padre_determinacion_causa = validation_tipo_caso_cid_masivo_codincidencia_padre_determinacion_causa(df_matched_corte_sga335_sharepoint_cuismp_sga380)
-    df_failure_messages_df_tipo_caso_cid_masivo_codincidencia_padre_determinacion_causa = build_failure_messages_tipo_caso_cid_masivo_codincidencia_padre_determinacion_causa(df_tipo_caso_cid_masivo_codincidencia_padre_determinacion_causa)
+    df_tipo_caso_cid_masivo_codincidencia_padre_determinacion_causa = validation_tipo_caso_cid_masivo_cod_padre_determinacion(df_matched_corte_sga335_sharepoint_cuismp_sga380)
+    df_failure_messages_df_tipo_caso_cid_masivo_codincidencia_padre_determinacion_causa = build_failure_messages_tipo_caso_cid_masivo_cod_padre_determinacion(df_tipo_caso_cid_masivo_codincidencia_padre_determinacion_causa)
 
     df_validation_averia_tipificacion_problema = validation_averia_tipificacion_problema(df_matched_corte_sga335_sharepoint_cuismp_sga380)
     df_failure_messages_validation_averia_tipificacion_problema = build_failure_messages_averia_tipificacion_problema(df_validation_averia_tipificacion_problema)
 
     df_validation_tipo_reporte_observacion = validation_tipo_reporte_observacion(df_matched_corte_sga335_sharepoint_cuismp_sga380)
-    df_failure_message_validation_tipo_reporte_observacion = build_failure_messages_reporte_observacion(df_validation_tipo_reporte_observacion)
+    df_failure_message_validation_tipo_reporte_observacion = build_failure_messages_tipo_reporte_observacion(df_validation_tipo_reporte_observacion)
 
     df_validation_medidas_correctivas = validation_medidas_correctivas(df_matched_corte_sga335_sharepoint_cuismp_sga380)
     df_build_message_validation_medidas_correctivas = build_failure_messages_medidas_correctivas(df_validation_medidas_correctivas)
     
-    df_validation_responsable = validate_responsable(df_matched_corte_sga335_sharepoint_cuismp_sga380)
+    df_validation_responsable = validation_responsable(df_matched_corte_sga335_sharepoint_cuismp_sga380)
     df_build_message_validation_responsable = build_failure_messages_responsable(df_validation_responsable)
 
-    df_validation_duracion_entero = validate_duracion_entero(df_matched_corte_sga335_sharepoint_cuismp_sga380)
+    df_validation_duracion_entero = validation_duracion_entero(df_matched_corte_sga335_sharepoint_cuismp_sga380)
     df_build_message_validation_duracion_entero = build_failure_messages_duracion_entero(df_validation_duracion_entero)
 
-    df_validation_indisponibilidad = validate_indisponibilidad(df_matched_corte_sga335_sharepoint_cuismp_sga380)
+    df_validation_indisponibilidad = validation_indisponibilidad(df_matched_corte_sga335_sharepoint_cuismp_sga380)
     df_build_message_validation_indisponibilidad = build_failure_messages_indisponibilidad(df_validation_indisponibilidad)
 
     # Union all failure DataFrames
