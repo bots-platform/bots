@@ -3,6 +3,7 @@ from pyspark.sql import functions as F
 from typing import List, Dict
 from datetime import datetime
 
+from app.core.spark_manager import spark_manager
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import ( 
     log_exceptions
 )
@@ -26,23 +27,21 @@ def build_message_merge_sga_335_corte_excel_unmatch(df: DataFrame) -> DataFrame:
             - TIPO REPORTE
             - objetivo (set to "1.0")
     """
-    # Build the error message using PySpark's concat function
-    df = df.withColumn(
-        "mensaje",
-        F.concat(
-            F.lit("Nro Incidencia "),
-            F.col("nro_incidencia"),
-            F.lit(" con FECHA Y HORA INICIO DE CORTE EXCEL "),
-            F.col("FECHA_Y_HORA_INICIO_fmt"),
-            F.lit(" y FECHA HORA FIN DE CORTE EXCEL  "),
-            F.col("FECHA_Y_HORA_FIN_fmt"),
-            F.lit(" no se encuentra en el reporte dinamico SGA - 335 para el rango de fecha de este corte \n")
+    with spark_manager.get_session():
+        df = df.withColumn(
+            "mensaje",
+            F.concat(
+                F.lit("Nro Incidencia "),
+                F.col("nro_incidencia"),
+                F.lit(" con FECHA Y HORA INICIO DE CORTE EXCEL "),
+                F.col("FECHA_Y_HORA_INICIO_fmt"),
+                F.lit(" y FECHA HORA FIN DE CORTE EXCEL  "),
+                F.col("FECHA_Y_HORA_FIN_fmt"),
+                F.lit(" no se encuentra en el reporte dinamico SGA - 335 para el rango de fecha de este corte \n")
+            )
         )
-    )
-    
-    # Add objetivo column
-    df = df.withColumn("objetivo", F.lit("1.0"))
-    
-    # Select required columns
-    return df.select("nro_incidencia", "mensaje", "TIPO REPORTE", "objetivo")
+        
+        df = df.withColumn("objetivo", F.lit("1.0"))
+        
+        return df.select("nro_incidencia", "mensaje", "TIPO REPORTE", "objetivo")
 
