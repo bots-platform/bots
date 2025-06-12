@@ -108,11 +108,15 @@ def all_objetivos(
     with spark_manager.get_session_context() as spark:
         try:
             # Read Excel files using pandas
-            df_sga_dinamico_380 = pd.read_excel(path_sga_dinamico_380)
+            df_sga_dinamico_380_pd = pd.read_excel(path_sga_dinamico_380)
             # Convert pandas DataFrame to Spark DataFrame
-            df_sga_dinamico_380 = spark.createDataFrame(df_sga_dinamico_380)
+            df_sga_dinamico_380 = spark.createDataFrame(df_sga_dinamico_380_pd)
             
-            # EXTRACT INVOQUE
+            # Read other Excel files
+            df_cid_cuismp_sharepoint_pd = pd.read_excel(path_cid_cuismp_sharepoint)
+            df_cid_cuismp_sharepoint = spark.createDataFrame(df_cid_cuismp_sharepoint_pd)
+            
+            df_corte_excel = extract_corte_excel(path_corte_excel, skipfooter=0)
             df_sga_dinamico_335 = extract_sga_335(path_sga_dinamico_335)
             df_word_datos_averias = extract_averias_table(word_datos_file_path)
             df_word_telefonia_averias = extract_averias_table(word_telefonia_file_path)
@@ -145,8 +149,8 @@ def all_objetivos(
 
             df_sga_dinamico_335 = preprocess_335(df_sga_dinamico_335)
             df_sga_dinamico_380 = preprocess_380(df_sga_dinamico_380)
-            df_corte_excel = extract_corte_excel(path_corte_excel, skipfooter=0)
-            df_cid_cuismp_sharepoint = preprocess_df_cid_cuismp_sharepoint(path_cid_cuismp_sharepoint)
+            df_corte_excel = preprocess_corte_excel(df_corte_excel)
+            df_cid_cuismp_sharepoint = preprocess_df_cid_cuismp_sharepoint(df_cid_cuismp_sharepoint)
 
             # Cache frequently used DataFrames
             df_corte_excel.cache()
