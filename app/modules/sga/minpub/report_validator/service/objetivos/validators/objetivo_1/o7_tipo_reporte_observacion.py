@@ -3,6 +3,7 @@ from pyspark.sql import functions as F
 from typing import List, Dict
 from datetime import datetime
 
+from app.core.spark_manager import spark_manager
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import (
     log_exceptions
 )
@@ -32,39 +33,35 @@ def validation_tipo_reporte_observacion(df_merged: DataFrame) -> DataFrame:
         - Validation_OK (boolean): True if all validations pass
         - fail_count (integer): Number of failed validations (0-3)
     """
-    # Cache the DataFrame since it will be used multiple times
-    df = df_merged.cache()
-    
-    # Check if columns are non-empty
-    df = df.withColumn('non_empty_tipo_reporte', F.col('TIPO REPORTE_trimed').isNotNull()) \
-          .withColumn('non_empty_observacion', F.col('OBSERVACION_trimed').isNotNull())
+    with spark_manager.get_session():
+        df = df_merged.cache()
+        
+        df = df.withColumn('non_empty_tipo_reporte', F.col('TIPO REPORTE_trimed').isNotNull()) \
+              .withColumn('non_empty_observacion', F.col('OBSERVACION_trimed').isNotNull())
 
-    # Check if TIPO REPORTE matches expected value based on OBSERVACION
-    df = df.withColumn(
-        'match_tipo_reporte',
-        (
-            (F.col('TIPO REPORTE_trimed') == F.lit('INCIDENTE')) & (F.col('OBSERVACION_trimed') == F.lit('INCIDENTE')) |
-            (F.col('TIPO REPORTE_trimed') == F.lit('INTERRUPCION')) & (F.col('OBSERVACION_trimed') == F.lit('INTERRUPCION'))
+        df = df.withColumn(
+            'match_tipo_reporte',
+            (
+                (F.col('TIPO REPORTE_trimed') == F.lit('INCIDENTE')) & (F.col('OBSERVACION_trimed') == F.lit('INCIDENTE')) |
+                (F.col('TIPO REPORTE_trimed') == F.lit('INTERRUPCION')) & (F.col('OBSERVACION_trimed') == F.lit('INTERRUPCION'))
+            )
         )
-    )
 
-    # Calculate overall validation status
-    df = df.withColumn(
-        'Validation_OK',
-        F.col('non_empty_tipo_reporte') &
-        F.col('non_empty_observacion') &
-        F.col('match_tipo_reporte')
-    )
+        df = df.withColumn(
+            'Validation_OK',
+            F.col('non_empty_tipo_reporte') &
+            F.col('non_empty_observacion') &
+            F.col('match_tipo_reporte')
+        )
 
-    # Count failures
-    df = df.withColumn(
-        'fail_count',
-        F.when(~F.col('non_empty_tipo_reporte'), 1).otherwise(0) +
-        F.when(~F.col('non_empty_observacion'), 1).otherwise(0) +
-        F.when(~F.col('match_tipo_reporte'), 1).otherwise(0)
-    )
+        df = df.withColumn(
+            'fail_count',
+            F.when(~F.col('non_empty_tipo_reporte'), 1).otherwise(0) +
+            F.when(~F.col('non_empty_observacion'), 1).otherwise(0) +
+            F.when(~F.col('match_tipo_reporte'), 1).otherwise(0)
+        )
 
-    return df
+        return df
 
 @log_exceptions
 def build_failure_messages_tipo_reporte_observacion(df: DataFrame) -> DataFrame:
@@ -76,43 +73,42 @@ def build_failure_messages_tipo_reporte_observacion(df: DataFrame) -> DataFrame:
     - 'TIPO REPORTE'
     - 'objetivo'
     """
-    # Build error message using PySpark's concat and when functions
-    df = df.withColumn(
-        'mensaje',
-        F.when(
-            F.col('Validation_OK'),
-            F.lit("Validation de TIPO REPORTE y OBSERVACION exitosa")
-        ).otherwise(
-            F.concat(
-                F.when(
-                    ~F.col('non_empty_tipo_reporte'),
-                    F.lit("\n  TIPO REPORTE en CORTE-EXCEL es vacio. \n")
-                ).otherwise(F.lit("")),
-                F.when(
-                    ~F.col('non_empty_observacion'),
-                    F.lit("\n  OBSERVACION en CORTE-EXCEL es vacio. \n")
-                ).otherwise(F.lit("")),
-                F.when(
-                    ~F.col('match_tipo_reporte'),
-                    F.concat(
-                        F.lit("\n  TIPO REPORTE en CORTE-EXCEL: \n"),
-                        F.col('TIPO REPORTE_trimed'),
-                        F.lit("\n no coincide con el valor esperado basado en OBSERVACION: \n"),
-                        F.col('OBSERVACION_trimed')
-                    )
-                ).otherwise(F.lit(""))
+    with spark_manager.get_session():
+        df = df.withColumn(
+            'mensaje',
+            F.when(
+                F.col('Validation_OK'),
+                F.lit("Validation de TIPO REPORTE y OBSERVACION exitosa")
+            ).otherwise(
+                F.concat(
+                    F.when(
+                        ~F.col('non_empty_tipo_reporte'),
+                        F.lit("\n  TIPO REPORTE en CORTE-EXCEL es vacio. \n")
+                    ).otherwise(F.lit("")),
+                    F.when(
+                        ~F.col('non_empty_observacion'),
+                        F.lit("\n  OBSERVACION en CORTE-EXCEL es vacio. \n")
+                    ).otherwise(F.lit("")),
+                    F.when(
+                        ~F.col('match_tipo_reporte'),
+                        F.concat(
+                            F.lit("\n  TIPO REPORTE en CORTE-EXCEL: \n"),
+                            F.col('TIPO REPORTE_trimed'),
+                            F.lit("\n no coincide con el valor esperado basado en OBSERVACION: \n"),
+                            F.col('OBSERVACION_trimed')
+                        )
+                    ).otherwise(F.lit(""))
+                )
             )
+        ).withColumn(
+            'objetivo',
+            F.lit("1.7")
         )
-    ).withColumn(
-        'objetivo',
-        F.lit("1.7")
-    )
 
-    # Filter failures and select required columns
-    return df.filter(F.col('fail_count') > 0).select(
-        'nro_incidencia',
-        'mensaje',
-        'TIPO REPORTE',
-        'objetivo'
-    )
+        return df.filter(F.col('fail_count') > 0).select(
+            'nro_incidencia',
+            'mensaje',
+            'TIPO REPORTE',
+            'objetivo'
+        )
   
