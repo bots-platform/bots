@@ -58,7 +58,7 @@ def extract_corte_excel(path_corte_excel: str, skipfooter: int) -> DataFrame:
     ]
 
     with spark_manager.get_session():
-        spark = spark_manager.get_spark()
+        spark = spark_manager.get_session()
         try:
             # Read Excel file with optimized configurations
             df = (spark.read

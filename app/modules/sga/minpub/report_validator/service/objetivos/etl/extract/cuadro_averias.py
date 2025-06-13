@@ -71,7 +71,7 @@ def extract_averias_table(path_docx: str) -> DataFrame:
     doc = Document(path_docx)
     
     with spark_manager.get_session():
-        spark = spark_manager.get_spark()
+        spark = spark_manager.get_session()
         try:
             all_dfs: List[DataFrame] = []
             

@@ -30,7 +30,7 @@ def validate_required_columns_from_excel(path_excel: str, required_columns: List
         If the file cannot be read or columns are missing.
     """
     with spark_manager.get_session():
-        spark = spark_manager.get_spark()
+        spark = spark_manager.get_session()
         try:
             # Read Excel file using Spark's Excel reader
             df = spark.read.format("com.crealytics.spark.excel") \

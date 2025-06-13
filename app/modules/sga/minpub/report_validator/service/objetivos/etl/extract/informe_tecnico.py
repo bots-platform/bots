@@ -98,80 +98,79 @@ def extract_tecnico_reports_without_hours_last_dates(path_docx: str) -> DataFram
     headings = extract_report_blocks(paragraphs)
     records: List[Dict] = []
     
-    with spark_manager.get_session():
-        spark = spark_manager.get_spark()
-        try:
-            for head, nxt in zip(headings, headings[1:]):
-                start, end = head["index"], nxt["index"]
-                block_lines = paragraphs[start:end]
-                block_text = "\n".join(block_lines)
-                
-                row: Dict[str, str] = {
-                    "nro_incidencia": head["nro_incidencia"],
-                    "CUISMP": "",
-                    "Tipo Caso": "",
-                    "Observación": "",
-                    "DETERMINACIÓN DE LA CAUSA": "",
-                    "MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS": "",
-                    "Fecha y hora inicio": "",
-                    "Fecha y hora fin": "",
-                }
-                
-                # Process determination of cause
-                cause_idx = next(
-                    (i for i, line in enumerate(block_lines)
-                     if re.match(r"Determinaci[oó]n\s+de\s+la\s+causa\s*:?\s*$",
-                                line, re.IGNORECASE)),
-                    None
-                )
-                if cause_idx is not None:
-                    for j in range(cause_idx + 1, len(block_lines)):
-                        text = block_lines[j].strip()
-                        if text:
-                            row["DETERMINACIÓN DE LA CAUSA"] = text
-                            break
-                
-                # Process common patterns
-                for key, pat in common_patterns.items():
-                    m = pat.search(block_text)
-                    if m:
-                        row[key] = m.group(1).strip()
-                
-                # Process measures section
-                med_idx = None
-                for i, line in enumerate(block_lines):
-                    if medidas_title_pat.match(line):
-                        med_idx = i
+    spark = spark_manager.get_session()
+    try:
+        for head, nxt in zip(headings, headings[1:]):
+            start, end = head["index"], nxt["index"]
+            block_lines = paragraphs[start:end]
+            block_text = "\n".join(block_lines)
+            
+            row: Dict[str, str] = {
+                "nro_incidencia": head["nro_incidencia"],
+                "CUISMP": "",
+                "Tipo Caso": "",
+                "Observación": "",
+                "DETERMINACIÓN DE LA CAUSA": "",
+                "MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS": "",
+                "Fecha y hora inicio": "",
+                "Fecha y hora fin": "",
+            }
+            
+            # Process determination of cause
+            cause_idx = next(
+                (i for i, line in enumerate(block_lines)
+                 if re.match(r"Determinaci[oó]n\s+de\s+la\s+causa\s*:?\s*$",
+                            line, re.IGNORECASE)),
+                None
+            )
+            if cause_idx is not None:
+                for j in range(cause_idx + 1, len(block_lines)):
+                    text = block_lines[j].strip()
+                    if text:
+                        row["DETERMINACIÓN DE LA CAUSA"] = text
                         break
-                        
-                if med_idx is not None:
-                    meds = []
-                    for sub in block_lines[med_idx+1:]:
-                        if not sub:
-                            continue
-                        if sub.lower().startswith("detalle de solicitudes") or sub.lower().startswith("solicitudes"):
-                            break
-                        
-                        mi = rx.match(sub)
-                        if mi:
-                            if mi.group(1).lower() == "inicio":
-                                row["Fecha y hora inicio"] = f"{mi.group(2)} {mi.group(3)}"
-                            elif mi.group(1).lower() == "fin":
-                                row["Fecha y hora fin"] = f"{mi.group(2)} {mi.group(3)}"
-                            continue
-                        
-                        meds.append(sub)
+            
+            # Process common patterns
+            for key, pat in common_patterns.items():
+                m = pat.search(block_text)
+                if m:
+                    row[key] = m.group(1).strip()
+            
+            # Process measures section
+            med_idx = None
+            for i, line in enumerate(block_lines):
+                if medidas_title_pat.match(line):
+                    med_idx = i
+                    break
                     
-                    row["MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS"] = " ".join(meds).strip()
+            if med_idx is not None:
+                meds = []
+                for sub in block_lines[med_idx+1:]:
+                    if not sub:
+                        continue
+                    if sub.lower().startswith("detalle de solicitudes") or sub.lower().startswith("solicitudes"):
+                        break
+                    
+                    mi = rx.match(sub)
+                    if mi:
+                        if mi.group(1).lower() == "inicio":
+                            row["Fecha y hora inicio"] = f"{mi.group(2)} {mi.group(3)}"
+                        elif mi.group(1).lower() == "fin":
+                            row["Fecha y hora fin"] = f"{mi.group(2)} {mi.group(3)}"
+                        continue
+                    
+                    meds.append(sub)
                 
-                records.append(row)
+                row["MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS"] = " ".join(meds).strip()
             
-            # Create DataFrame with the defined schema
-            df = spark.createDataFrame(records, schema=create_schema())
-            
-            # Cache the DataFrame for better performance if it will be used multiple times
-            df.cache()
-            
-            return df
-        except Exception as e:
-            raise Exception(f"Error processing Word document: {str(e)}")
+            records.append(row)
+        
+        # Create DataFrame with the defined schema
+        df = spark.createDataFrame(records, schema=create_schema())
+        
+        # Cache the DataFrame for better performance if it will be used multiple times
+        df.cache()
+        
+        return df
+    except Exception as e:
+        raise Exception(f"Error processing Word document: {str(e)}")

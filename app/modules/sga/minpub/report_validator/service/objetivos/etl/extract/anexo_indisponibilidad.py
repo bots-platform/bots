@@ -128,13 +128,12 @@ def extract_indisponibilidad_anexos(path_docx: str) -> Optional[DataFrame]:
         return None
 
     # Create SparkSession and convert records to DataFrame
-    with spark_manager.get_session():
-        spark = spark_manager.get_spark()
-        try:
-            # Convert records to DataFrame using the defined schema
-            df = spark.createDataFrame(records, schema=create_schema())
-            # Cache the DataFrame for better performance if it will be used multiple times
-            df.cache()
-            return df
-        except Exception as e:
-            raise Exception(f"Error processing Word document: {str(e)}") 
+    spark = spark_manager.get_session()
+    try:
+        # Convert records to DataFrame using the defined schema
+        df = spark.createDataFrame(records, schema=create_schema())
+        # Cache the DataFrame for better performance if it will be used multiple times
+        df.cache()
+        return df
+    except Exception as e:
+        raise Exception(f"Error processing Word document: {str(e)}") 

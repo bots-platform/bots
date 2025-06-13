@@ -61,7 +61,7 @@ def extract_sga_335(path_sga_dinamico_335: str) -> DataFrame:
     ]
 
     with spark_manager.get_session():
-        spark = spark_manager.get_spark()
+        spark = spark_manager.get_session()
         try:
             # Read Excel file with optimized configurations
             df = (spark.read
