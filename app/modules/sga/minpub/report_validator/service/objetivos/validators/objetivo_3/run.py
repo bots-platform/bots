@@ -21,7 +21,7 @@ def run_objetivo_3(
     
     Returns a DataFrame with the failure details for Objective 3.
     """
-    with spark_manager.get_session():
+    with spark_manager.get_session_context() as spark:
         # Validate anexos indisponibilidad for datos
         df_validate_anexos_indisponibilidad_word_datos = validate_anexos_indisponibilidad_word(
             df_matched_word_datos_anexo_indisponibilidad_df_merged_sga

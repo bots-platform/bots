@@ -2,6 +2,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from typing import List, Dict
 from datetime import datetime
+import pandas as pd
 
 from app.core.spark_manager import spark_manager
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import (
@@ -9,7 +10,7 @@ from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators 
 )
 
 @log_exceptions
-def validation_tiempo_HHMM_paradas_cliente(df_merged: DataFrame) -> DataFrame:
+def validation_tiempo_HHMM_paradas_cliente(df_merged: DataFrame) -> pd.DataFrame:
     """
     Validates the 'TIEMPO (HH:MM)' column in CORTE-EXCEL by comparing:
     - (interruppcion_fin - interrupcion) - sum(paradas)
@@ -27,7 +28,7 @@ def validation_tiempo_HHMM_paradas_cliente(df_merged: DataFrame) -> DataFrame:
 
     Returns
     -------
-    pyspark.sql.DataFrame
+    pandas.DataFrame
         DataFrame with these additional columns:
         - diff_335_min (double): Time difference in minutes
         - tiempo_corte_min (double): Parsed time from HH:MM format
@@ -40,7 +41,7 @@ def validation_tiempo_HHMM_paradas_cliente(df_merged: DataFrame) -> DataFrame:
         - Validation_OK (boolean): True if all validations pass
         - fail_count (integer): Number of failed validations (0-4)
     """
-    with spark_manager.get_session():
+    with spark_manager.get_session_context() as spark:
         df = df_merged.cache()
         
         df = df.withColumn(
@@ -101,10 +102,11 @@ def validation_tiempo_HHMM_paradas_cliente(df_merged: DataFrame) -> DataFrame:
             F.when(~F.col('match_corte'), 1).otherwise(0)
         )
 
-        return df
+        pdf = df.toPandas()
+        return pdf
 
 @log_exceptions
-def buid_failure_messages_tiempo_HHMM_paradas_cliente(df: DataFrame) -> DataFrame:
+def buid_failure_messages_tiempo_HHMM_paradas_cliente(df: DataFrame) -> pd.DataFrame:
     """
     Builds a descriptive message for the 'TIEMPO (HH:MM)' validation.
     Returns rows that fail any check (fail_count > 0) with columns:
@@ -113,7 +115,7 @@ def buid_failure_messages_tiempo_HHMM_paradas_cliente(df: DataFrame) -> DataFram
     - 'TIPO REPORTE'
     - 'objetivo'
     """
-    with spark_manager.get_session():
+    with spark_manager.get_session_context() as spark:
         df = df.withColumn(
             'mensaje',
             F.when(
@@ -148,10 +150,11 @@ def buid_failure_messages_tiempo_HHMM_paradas_cliente(df: DataFrame) -> DataFram
             'objetivo',
             F.lit("1.4")
         )
-
-        return df.filter(F.col('fail_count') > 0).select(
+        df_failures = df.filter(F.col('fail_count') > 0).select(
             'nro_incidencia',
             'mensaje',
             'TIPO REPORTE',
             'objetivo'
         )
+        pdf = df_failures.toPandas()
+        return pdf

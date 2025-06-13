@@ -2,6 +2,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from typing import List, Dict
 from datetime import datetime
+import pandas as pd
 
 from app.core.spark_manager import spark_manager
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import (
@@ -9,7 +10,7 @@ from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators 
 )
 
 @log_exceptions
-def validation_fecha_inicio_fin(merged_df: DataFrame) -> DataFrame:
+def validation_fecha_inicio_fin(merged_df: DataFrame) -> pd.DataFrame:
     """
     Validates start and end dates between Excel and Dynamic Report 335.
 
@@ -28,7 +29,7 @@ def validation_fecha_inicio_fin(merged_df: DataFrame) -> DataFrame:
 
     Returns
     -------
-    pyspark.sql.DataFrame
+    pandas.DataFrame
         DataFrame with these additional columns:
         - NotEmpty (boolean): True if both Excel dates are not null
         - Fecha_Inicio_match (boolean): True if start date matches
@@ -36,7 +37,7 @@ def validation_fecha_inicio_fin(merged_df: DataFrame) -> DataFrame:
         - Validation_OK (boolean): True if all validations pass
         - fail_count (integer): Number of failed validations (0-3)
     """
-    with spark_manager.get_session():
+    with spark_manager.get_session_context() as spark:
         df = merged_df.cache()
 
         df = df.withColumn(
@@ -64,10 +65,11 @@ def validation_fecha_inicio_fin(merged_df: DataFrame) -> DataFrame:
             F.when(~F.col('Fecha_Fin_match'), 1).otherwise(0)
         )
 
-        return df
+        pdf = df.toPandas()
+        return pdf
 
 @log_exceptions
-def build_failure_messages_fechas_fin_inicio(df: DataFrame) -> DataFrame:
+def build_failure_messages_fechas_fin_inicio(df: DataFrame) -> pd.DataFrame:
     """
     Generates validation error messages and filters failures.
 
@@ -84,14 +86,14 @@ def build_failure_messages_fechas_fin_inicio(df: DataFrame) -> DataFrame:
 
     Returns
     -------
-    pyspark.sql.DataFrame
+    pandas.DataFrame
         Filters rows with fail_count > 0 and columns:
         - nro_incidencia
         - mensaje (failure description)
         - TIPO REPORTE
         - objetivo (constant "1.2")
     """
-    with spark_manager.get_session():
+    with spark_manager.get_session_context() as spark:
         df = df.withColumn(
             'mensaje',
             F.when(
@@ -128,10 +130,12 @@ def build_failure_messages_fechas_fin_inicio(df: DataFrame) -> DataFrame:
             F.lit("1.2")
         )
 
-        return df.filter(F.col('fail_count') > 0).select(
+        df_failures = df.filter(F.col('fail_count') > 0).select(
             'nro_incidencia',
             'mensaje',
             'TIPO REPORTE',
             'objetivo'
         )
+        pdf = df_failures.toPandas()
+        return pdf
 

@@ -60,8 +60,7 @@ def extract_sga_335(path_sga_dinamico_335: str) -> DataFrame:
         'codincidencepadre'
     ]
 
-    with spark_manager.get_session():
-        spark = spark_manager.get_session()
+    with spark_manager.get_session_context() as spark:
         try:
             # Read Excel file with optimized configurations
             df = (spark.read

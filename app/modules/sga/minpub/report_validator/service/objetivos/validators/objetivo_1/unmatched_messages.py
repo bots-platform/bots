@@ -2,6 +2,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from typing import List, Dict
 from datetime import datetime
+import pandas as pd
 
 from app.core.spark_manager import spark_manager
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import ( 
@@ -9,7 +10,7 @@ from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators 
 )
 
 @log_exceptions
-def build_message_merge_sga_335_corte_excel_unmatch(df: DataFrame) -> DataFrame:
+def build_message_merge_sga_335_corte_excel_unmatch(df: DataFrame) -> pd.DataFrame:
     """
     Builds a message for unmatched records between SGA-335 and Excel report.
     
@@ -27,7 +28,7 @@ def build_message_merge_sga_335_corte_excel_unmatch(df: DataFrame) -> DataFrame:
             - TIPO REPORTE
             - objetivo (set to "1.0")
     """
-    with spark_manager.get_session():
+    with spark_manager.get_session_context() as spark:
         df = df.withColumn(
             "mensaje",
             F.concat(
@@ -43,5 +44,7 @@ def build_message_merge_sga_335_corte_excel_unmatch(df: DataFrame) -> DataFrame:
         
         df = df.withColumn("objetivo", F.lit("1.0"))
         
-        return df.select("nro_incidencia", "mensaje", "TIPO REPORTE", "objetivo")
+        df_result = df.select("nro_incidencia", "mensaje", "TIPO REPORTE", "objetivo")
+        pdf = df_result.toPandas()
+        return pdf
 

@@ -2,6 +2,7 @@ from typing import List, Dict, Optional
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.types import StructType, StructField, StringType, TimestampType
 from pyspark.sql.functions import col, when, lit, coalesce
+import pandas as pd
 
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import log_exceptions
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.spark_manager import spark_manager
@@ -11,7 +12,7 @@ def merge_word_telefonia_averias_corte_excel(
         df_word_telefonia_averias: DataFrame,
         df_corte_excel: DataFrame,
         match_type: str
-    ) -> DataFrame:
+    ) -> pd.DataFrame:
         """
         Common merge function for Objective 2 using PySpark.
 
@@ -63,7 +64,8 @@ def merge_word_telefonia_averias_corte_excel(
                 else:
                     raise ValueError(f"Invalid match_type: {match_type}")
 
-                return matched_rows
+                pdf = df_merge_word_telefonia_corte_excel.toPandas()
+                return pdf
 
             except Exception as e:
                 raise Exception(f"Error merging telefono averias data: {str(e)}")

@@ -4,8 +4,9 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.types import StringType
 from app.core.spark_manager import spark_manager
+import pandas as pd
 
-def validate_required_columns_from_excel(path_excel: str, required_columns: List[str], skipfooter: int = 0) -> DataFrame:
+def validate_required_columns_from_excel(path_excel: str, required_columns: List[str], skipfooter: int = 0) -> pd.DataFrame:
     """
     Reads an Excel file and validates that it contains the required columns, optionally
     skipping the last `skipfooter` rows. Uses PySpark for efficient distributed processing.
@@ -21,15 +22,14 @@ def validate_required_columns_from_excel(path_excel: str, required_columns: List
 
     Returns
     -------
-    pyspark.sql.DataFrame
-        DataFrame with only the required columns, without footer rows.
+    pd.DataFrame
+        DataFrame with only the required columns, without footer rows, as a Pandas DataFrame.
     
-    Raises
-    ------
-    ValueError
-        If the file cannot be read or columns are missing.
+    Notes
+    -----
+    All Spark operations are performed inside the context manager.
     """
-    with spark_manager.get_session():
+    with spark_manager.get_session_context():
         spark = spark_manager.get_session()
         try:
             # Read Excel file using Spark's Excel reader
@@ -79,4 +79,4 @@ def validate_required_columns_from_excel(path_excel: str, required_columns: List
                 F.coalesce(F.col(col_name), F.lit("No disponible"))
             )
 
-        return df_clean
+        return df_clean.toPandas()

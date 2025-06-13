@@ -1,5 +1,6 @@
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import functions as F
+import pandas as pd
 
 from app.core.spark_manager import spark_manager
 from app.modules.sga.minpub.report_validator.service.objetivos.validators.objetivo_1.unmatched_messages import (
@@ -69,7 +70,7 @@ from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators 
 def run_objetivo_1(
     df_matched_corte_sga335_sharepoint_cuismp_sga380: DataFrame,
     df_unmatched_corte_sga335_sharepoint_cuismp_sga389: DataFrame
-) -> DataFrame:
+) -> pd.DataFrame:
     """
     Aggregates all sub-validations for Objective 1.
     Uses a common merge function and passes the merged data to each sub-validation.
@@ -81,7 +82,7 @@ def run_objetivo_1(
     Returns:
         DataFrame: A DataFrame with the failure details for Objective 1
     """
-    with spark_manager.get_session():
+    with spark_manager.get_session_context() as spark:
         df_failures_message_matched_merged_corte_excel_sga335 = build_message_merge_sga_335_corte_excel_unmatch(df_unmatched_corte_sga335_sharepoint_cuismp_sga389)
 
         df_validations_cuismp_distrito_fiscal_medidas = validation_cuismp_distrito_fiscal_medidas(df_matched_corte_sga335_sharepoint_cuismp_sga380)
@@ -117,30 +118,22 @@ def run_objetivo_1(
         df_validation_indisponibilidad = validation_indisponibilidad(df_matched_corte_sga335_sharepoint_cuismp_sga380)
         df_build_message_validation_indisponibilidad = build_failure_messages_indisponibilidad(df_validation_indisponibilidad)
 
-        df_failures = df_failures_message_matched_merged_corte_excel_sga335.unionAll(
-            df_failures_message_cuismp_distrito_fiscal_medidas
-        ).unionAll(
-            df_failures_message_fecha_inicio_fin
-        ).unionAll(
-            df_failures_message_fecha_inicio_fin_HHMM
-        ).unionAll(
-            df_failure_messages_tiempo_HHMM_paradas_cliente
-        ).unionAll(
-            df_failure_messages_df_tipo_caso_cid_masivo_codincidencia_padre_determinacion_causa
-        ).unionAll(
-            df_failure_messages_validation_averia_tipificacion_problema
-        ).unionAll(
-            df_failure_message_validation_tipo_reporte_observacion
-        ).unionAll(
-            df_build_message_validation_medidas_correctivas
-        ).unionAll(
-            df_build_message_validation_responsable
-        ).unionAll(
-            df_build_message_validation_duracion_entero
-        ).unionAll(
+        # Concatenate all Pandas DataFrames
+        dfs = [
+            df_failures_message_matched_merged_corte_excel_sga335,
+            df_failures_message_cuismp_distrito_fiscal_medidas,
+            df_failures_message_fecha_inicio_fin,
+            df_failures_message_fecha_inicio_fin_HHMM,
+            df_failure_messages_tiempo_HHMM_paradas_cliente,
+            df_failure_messages_df_tipo_caso_cid_masivo_codincidencia_padre_determinacion_causa,
+            df_failure_messages_validation_averia_tipificacion_problema,
+            df_failure_message_validation_tipo_reporte_observacion,
+            df_build_message_validation_medidas_correctivas,
+            df_build_message_validation_responsable,
+            df_build_message_validation_duracion_entero,
             df_build_message_validation_indisponibilidad
-        )
-        
+        ]
+        df_failures = pd.concat(dfs, ignore_index=True)
         return df_failures
 
 

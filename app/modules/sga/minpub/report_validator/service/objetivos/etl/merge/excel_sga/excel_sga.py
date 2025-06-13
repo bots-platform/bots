@@ -3,6 +3,7 @@ from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.functions import col, when, lit, expr, array, struct, udf
 from pyspark.sql.types import StructType, StructField, StringType, TimestampType, DoubleType, ArrayType
 from datetime import datetime, timedelta
+import pandas as pd
 
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import (
     log_exceptions
@@ -27,7 +28,7 @@ def merge_sga_335_corte_excel_sharepoint_cuismp_sga380(
         df_cid_cuismp_sharepoint: DataFrame,
         df_sga_dinamico_380: DataFrame,
         match_type: str
-    ) -> DataFrame:
+    ) -> pd.DataFrame:
     """
     Common merge function for Objective 1 using PySpark.
 
@@ -123,7 +124,8 @@ def merge_sga_335_corte_excel_sharepoint_cuismp_sga380(
 
             matched_rows = df_final.filter(col('_merge') == match_type)
 
-            return matched_rows
+            pdf = matched_rows.toPandas()
+            return pdf
 
         except Exception as e:
             raise Exception(f"Error merging SGA data: {str(e)}")

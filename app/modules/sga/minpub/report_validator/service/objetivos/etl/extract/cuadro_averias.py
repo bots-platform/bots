@@ -4,6 +4,7 @@ from typing import List, Dict
 from pyspark.sql import DataFrame
 from pyspark.sql.types import StructType, StructField, StringType
 from docx import Document
+import pandas as pd
 
 from app.core.spark_manager import spark_manager
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import log_exceptions
@@ -53,9 +54,9 @@ def process_table(table, headers: List[str], responsable: str, spark) -> DataFra
     return spark.createDataFrame(records, schema=create_schema(headers))
 
 @log_exceptions
-def extract_averias_table(path_docx: str) -> DataFrame:
+def extract_averias_table(path_docx: str) -> pd.DataFrame:
     """
-    Load the specified tables from a .docx and return them as a PySpark DataFrame.
+    Load the specified tables from a .docx and return them as a Pandas DataFrame.
     index = 4 (CLARO)
     index = 5 (CLIENTE)
     index = 6 (TERCEROS)
@@ -70,8 +71,7 @@ def extract_averias_table(path_docx: str) -> DataFrame:
     table_index_list = [4, 5, 6]
     doc = Document(path_docx)
     
-    with spark_manager.get_session():
-        spark = spark_manager.get_session()
+    with spark_manager.get_session_context() as spark:
         try:
             all_dfs: List[DataFrame] = []
             
@@ -97,6 +97,8 @@ def extract_averias_table(path_docx: str) -> DataFrame:
             # Cache the result for better performance if it will be used multiple times
             result.cache()
             
-            return result
+            df = process_table(table, headers, responsable, spark)
+            pdf = df.toPandas()
+            return pdf
         except Exception as e:
             raise Exception(f"Error processing Word document: {str(e)}")

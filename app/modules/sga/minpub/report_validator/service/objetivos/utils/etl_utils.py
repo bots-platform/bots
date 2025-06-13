@@ -3,6 +3,8 @@ import unicodedata
 from pyspark.sql import functions as F
 from pyspark.sql.types import StringType, IntegerType, DoubleType
 from pyspark.sql.functions import col, lit, when, regexp_extract, length, split
+from app.core.spark_manager import spark_manager
+import pandas as pd
 
 _FIN_DAYS_HOUR_PAT = re.compile(
     r'^(?:(?P<days>\d+)\s+day[s]?,\s*)?'  
@@ -84,37 +86,30 @@ def get_dataframe_summary(df):
       - Null Count
       - Null Percentage
       - Unique Values count
+
+    Returns:
+        pd.DataFrame: The summary as a Pandas DataFrame.
+    Notes:
+        All Spark operations are performed inside the context manager.
     """
-    # Get schema information
-    schema = df.schema
-    
-    # Calculate counts
-    total_rows = df.count()
-    null_counts = {field.name: df.filter(F.col(field.name).isNull()).count() 
-                  for field in schema}
-    
-    # Calculate unique values
-    unique_counts = {field.name: df.select(field.name).distinct().count() 
-                    for field in schema}
-    
-    # Create summary data
-    summary_data = []
-    for field in schema:
-        null_count = null_counts[field.name]
-        null_percentage = (null_count / total_rows * 100) if total_rows > 0 else 0
-        
-        summary_data.append({
-            'Column': field.name,
-            'Data Type': str(field.dataType),
-            'Non Null Count': total_rows - null_count,
-            'Null Count': null_count,
-            'Null Percentage': round(null_percentage, 2),
-            'Unique Values': unique_counts[field.name]
-        })
-    
-    # Convert to DataFrame
-    from pyspark.sql import SparkSession
-    spark = SparkSession.builder.getOrCreate()
-    summary_df = spark.createDataFrame(summary_data)
-    
-    return summary_df
+    with spark_manager.get_session_context():
+        schema = df.schema
+        total_rows = df.count()
+        null_counts = {field.name: df.filter(F.col(field.name).isNull()).count() 
+                      for field in schema}
+        unique_counts = {field.name: df.select(field.name).distinct().count() 
+                        for field in schema}
+        summary_data = []
+        for field in schema:
+            null_count = null_counts[field.name]
+            null_percentage = (null_count / total_rows * 100) if total_rows > 0 else 0
+            summary_data.append({
+                'Column': field.name,
+                'Data Type': str(field.dataType),
+                'Non Null Count': total_rows - null_count,
+                'Null Count': null_count,
+                'Null Percentage': round(null_percentage, 2),
+                'Unique Values': unique_counts[field.name]
+            })
+        # Convert to Pandas DataFrame
+        return pd.DataFrame(summary_data)

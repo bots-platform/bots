@@ -3,6 +3,7 @@ from pyspark.sql import functions as F
 from pyspark.sql.types import StringType
 from typing import List, Dict
 from datetime import datetime
+import pandas as pd
 
 import re
 
@@ -12,7 +13,7 @@ from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators 
 )
 
 @log_exceptions
-def validation_indisponibilidad(df_merged: DataFrame) -> DataFrame:
+def validation_indisponibilidad(df_merged: DataFrame) -> pd.DataFrame:
     """
     Validate anexos indisponibilidad.
     Checks if the INDISPONIBILIDAD column matches the expected format with:
@@ -31,7 +32,7 @@ def validation_indisponibilidad(df_merged: DataFrame) -> DataFrame:
 
     Returns
     -------
-    pyspark.sql.DataFrame
+    pandas.DataFrame
         DataFrame with these additional columns:
         - indisponibilidad_header (string): Extracted header
         - indisponibilidad_periodos (string): Extracted periods
@@ -42,7 +43,7 @@ def validation_indisponibilidad(df_merged: DataFrame) -> DataFrame:
         - Validation_OK (boolean): True if all validations pass
         - fail_count (integer): Number of failed validations
     """
-    with spark_manager.get_session():
+    with spark_manager.get_session_context() as spark:
         df = df_merged.cache()
 
         # Define regex patterns
@@ -143,10 +144,11 @@ def validation_indisponibilidad(df_merged: DataFrame) -> DataFrame:
             F.when(~F.col("indisponibilidad_total_match"), 1).otherwise(0)
         )
 
-        return df
+        pdf = df.toPandas()
+        return pdf
 
 @log_exceptions
-def build_failure_messages_indisponibilidad(df: DataFrame) -> DataFrame:
+def build_failure_messages_indisponibilidad(df: DataFrame) -> pd.DataFrame:
     """
     Builds a descriptive message for the 'INDISPONIBILIDAD' validation.
     Returns rows that fail any check (fail_count > 0) with columns:
@@ -155,7 +157,7 @@ def build_failure_messages_indisponibilidad(df: DataFrame) -> DataFrame:
     - 'TIPO REPORTE'
     - 'objetivo'
     """
-    with spark_manager.get_session():
+    with spark_manager.get_session_context() as spark:
         df = df.withColumn(
             "mensaje",
             F.when(
@@ -196,13 +198,14 @@ def build_failure_messages_indisponibilidad(df: DataFrame) -> DataFrame:
             "objetivo",
             F.lit("1.11")
         )
-
-        return df.filter(F.col("fail_count") > 0).select(
+        df_failures = df.filter(F.col("fail_count") > 0).select(
             "nro_incidencia",
             "mensaje",
             "TIPO REPORTE",
             "objetivo"
         )
+        pdf = df_failures.toPandas()
+        return pdf
 
 
 

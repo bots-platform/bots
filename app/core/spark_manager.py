@@ -1,8 +1,10 @@
 from pyspark.sql import SparkSession
 from typing import Optional, Generator, TYPE_CHECKING
 from contextlib import contextmanager
+from app.core.config import settings
 import logging
 import os
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +38,7 @@ class SparkManager:
                 .config("spark.sql.adaptive.enabled", "true")
                 .config("spark.sql.adaptive.coalescePartitions.enabled", "true")
                 .config("spark.sql.shuffle.partitions", "200")
+                .config("spark.jars.packages", "com.crealytics:spark-excel_2.12:3.4.3_0.20.4")
                 .getOrCreate())
         return self._spark
 
@@ -61,4 +64,11 @@ class SparkManager:
                 self._spark = None
 
 # Create a singleton instance
-spark_manager = SparkManager() 
+spark_manager = SparkManager()
+
+# Configure Java and Hadoop paths
+backend=settings.CELERY_RESULT_BACKEND,
+
+
+
+#df= pd.read_excel("file.xlsx") 

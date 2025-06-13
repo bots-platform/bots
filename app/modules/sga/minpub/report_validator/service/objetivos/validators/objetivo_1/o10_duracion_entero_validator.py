@@ -2,6 +2,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from typing import List, Dict
 from datetime import datetime
+import pandas as pd
 
 from app.core.spark_manager import spark_manager
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import (
@@ -9,7 +10,7 @@ from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators 
 )
 
 @log_exceptions
-def validation_duracion_entero(df_merged: DataFrame) -> DataFrame:
+def validation_duracion_entero(df_merged: DataFrame) -> pd.DataFrame:
     """
     Validates the 'DURACIÓN ENTERO' column in CORTE-EXCEL by checking:
     - If the value matches the extracted hour from TIEMPO (HH:MM)
@@ -25,7 +26,7 @@ def validation_duracion_entero(df_merged: DataFrame) -> DataFrame:
 
     Returns
     -------
-    pyspark.sql.DataFrame
+    pandas.DataFrame
         DataFrame with these additional columns:
         - duracion_entero_ok (boolean): True if Duracion entero matches extracted_hour
         - agrupacion_expected (string): Expected grouping based on duration
@@ -33,7 +34,7 @@ def validation_duracion_entero(df_merged: DataFrame) -> DataFrame:
         - Validation_OK (boolean): True if all validations pass
         - fail_count (integer): Number of failed validations
     """
-    with spark_manager.get_session():
+    with spark_manager.get_session_context() as spark:
         df = df_merged.cache()
         
         df = df.withColumn(
@@ -65,10 +66,11 @@ def validation_duracion_entero(df_merged: DataFrame) -> DataFrame:
             F.when(~F.col('Validation_OK'), 1).otherwise(0)
         )
 
-        return df
+        pdf = df.toPandas()
+        return pdf
 
 @log_exceptions
-def build_failure_messages_duracion_entero(df: DataFrame) -> DataFrame:
+def build_failure_messages_duracion_entero(df: DataFrame) -> pd.DataFrame:
     """
     Builds a descriptive message for the 'DURACIÓN ENTERO' validation.
     Returns rows that fail any check (fail_count > 0) with columns:
@@ -77,7 +79,7 @@ def build_failure_messages_duracion_entero(df: DataFrame) -> DataFrame:
     - 'TIPO REPORTE'
     - 'objetivo'
     """
-    with spark_manager.get_session():
+    with spark_manager.get_session_context() as spark:
         df = df.withColumn(
             'mensaje',
             F.when(
@@ -109,10 +111,11 @@ def build_failure_messages_duracion_entero(df: DataFrame) -> DataFrame:
             'objetivo',
             F.lit("1.10")
         )
-
-        return df.filter(F.col('fail_count') > 0).select(
+        df_failures = df.filter(F.col('fail_count') > 0).select(
             'nro_incidencia',
             'mensaje',
             'TIPO REPORTE',
             'objetivo'
         )
+        pdf = df_failures.toPandas()
+        return pdf

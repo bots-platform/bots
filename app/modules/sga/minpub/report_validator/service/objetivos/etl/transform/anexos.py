@@ -2,6 +2,7 @@ from typing import Optional
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.types import StructType, StructField, StringType
 from pyspark.sql.functions import col, when
+import pandas as pd
 
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.spark_manager import spark_manager
 
@@ -17,7 +18,7 @@ def create_empty_schema() -> StructType:
         StructField("indisponibilidad_total", StringType(), True)
     ])
 
-def preprocess_df_word_anexos_indisponibilidad(df: Optional[DataFrame] = None) -> DataFrame:
+def preprocess_df_word_anexos_indisponibilidad(df: Optional[DataFrame] = None) -> pd.DataFrame:
     """
     Preprocesses the DataFrame for anexos indisponibilidad using PySpark.
     
@@ -30,7 +31,8 @@ def preprocess_df_word_anexos_indisponibilidad(df: Optional[DataFrame] = None) -
     with spark_manager.get_session_context() as spark:
         try:
             if df is None:
-                return spark.createDataFrame([], schema=create_empty_schema())
+                empty_df = spark.createDataFrame([], schema=create_empty_schema())
+                return empty_df.toPandas()
             
             df = (df
                   .withColumnRenamed("ticket", "nro_incidencia")
@@ -38,10 +40,11 @@ def preprocess_df_word_anexos_indisponibilidad(df: Optional[DataFrame] = None) -
             
             df.cache()
             
-            return df
+            pdf = df.toPandas()
+            return pdf
             
         except Exception as e:
-            raise Exception(f"Error preprocessing anexos indisponibilidad DataFrame: {str(e)}")
+            raise Exception(f"Error preprocessing word anexos indisponibilidad DataFrame: {str(e)}")
         finally:
             if df is not None and df.is_cached:
                 df.unpersist()

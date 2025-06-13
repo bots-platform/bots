@@ -4,6 +4,7 @@ from pyspark.sql.types import StructType, StructField, StringType, TimestampType
 from app.core.spark_manager import spark_manager
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import log_exceptions
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.validations import validate_required_columns_from_excel
+import pandas as pd
 
 def create_schema() -> StructType:
     """
@@ -36,7 +37,7 @@ def create_schema() -> StructType:
     ])
 
 @log_exceptions
-def extract_corte_excel(path_corte_excel: str, skipfooter: int) -> DataFrame:
+def extract_corte_excel(path_corte_excel: str, skipfooter: int) -> pd.DataFrame:
     """
     Extracts data from Excel file using PySpark with optimized configurations.
     
@@ -57,8 +58,7 @@ def extract_corte_excel(path_corte_excel: str, skipfooter: int) -> DataFrame:
         'TIPO DE INCIDENCIA', 'TIEMPO INTERRUPCION', 'INDISPONIBILIDAD'
     ]
 
-    with spark_manager.get_session():
-        spark = spark_manager.get_session()
+    with spark_manager.get_session_context() as spark:
         try:
             # Read Excel file with optimized configurations
             df = (spark.read
@@ -77,6 +77,7 @@ def extract_corte_excel(path_corte_excel: str, skipfooter: int) -> DataFrame:
             # Cache the DataFrame for better performance if it will be used multiple times
             df.cache()
             
-            return df
+            pdf = df.toPandas()
+            return pdf
         except Exception as e:
             raise Exception(f"Error processing Excel file: {str(e)}") 

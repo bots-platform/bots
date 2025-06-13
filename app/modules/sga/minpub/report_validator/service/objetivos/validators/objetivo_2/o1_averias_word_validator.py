@@ -4,6 +4,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from typing import List, Dict
 from datetime import datetime
+import pandas as pd
 
 from app.core.spark_manager import spark_manager
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import (
@@ -11,10 +12,11 @@ from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators 
 )
 
 @log_exceptions
-def validate_averias_word(df_merged: DataFrame, componente_word: str) -> DataFrame:
+def validate_averias_word(df_merged: DataFrame, componente_word: str) -> 'pd.DataFrame':
     """
     Validate values columns coming from word and excel files
-    Return a DataFrame with new Boolean columns for validation
+    Return a Pandas DataFrame with new Boolean columns for validation
+    (All Spark operations are performed inside the context manager)
     
     Columnas en EXCEL	        Columnas en WORD DATOS
     TICKET	                    Número de ticket
@@ -30,7 +32,7 @@ def validate_averias_word(df_merged: DataFrame, componente_word: str) -> DataFra
     DETERMINACION DE LA CAUSA	Determinación de la causa
     RESPONSABILIDAD	            Responsable
     """
-    with spark_manager.get_session():
+    with spark_manager.get_session_context():
         df = df_merged.cache()
         
         df = df.withColumn('Componente', F.lit(componente_word))
@@ -97,19 +99,19 @@ def validate_averias_word(df_merged: DataFrame, componente_word: str) -> DataFra
             F.when(~F.col('Validation_OK'), 1).otherwise(0)
         )
 
-        return df
+        return df.toPandas()
 
 @log_exceptions
-def build_failure_messages_validate_averias_word(df: DataFrame) -> DataFrame:
+def build_failure_messages_validate_averias_word(df: DataFrame) -> 'pd.DataFrame':
     """
     Builds the 'mensaje' column using PySpark operations.
     Adds the 'objetivo' column (constant value of 2.1) and filters
     rows that fail at least one validation.
-    
-    Returns a DataFrame with:
+    Returns a Pandas DataFrame with:
       ['nro_incidencia', 'mensaje', 'TIPO REPORTE','objetivo']
+    (All Spark operations are performed inside the context manager)
     """
-    with spark_manager.get_session():
+    with spark_manager.get_session_context():
         # Build error message using PySpark's concat and when functions
         df = df.withColumn(
             'mensaje',
@@ -225,12 +227,13 @@ def build_failure_messages_validate_averias_word(df: DataFrame) -> DataFrame:
         )
 
         # Filter failures and select required columns
-        return df.filter(F.col('fail_count') > 0).select(
+        df_filtered = df.filter(F.col('fail_count') > 0).select(
             'nro_incidencia',
             'mensaje',
             'TIPO REPORTE',
             'objetivo'
         )
+        return df_filtered.toPandas()
 
 
 

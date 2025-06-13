@@ -14,6 +14,7 @@ from app.core.spark_manager import spark_manager
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import (
     log_exceptions
 )
+import pandas as pd
 
 def create_empty_schema() -> StructType:
     """
@@ -30,7 +31,7 @@ def create_empty_schema() -> StructType:
     ])
 
 @log_exceptions
-def validation_cuismp_distrito_fiscal_medidas(merged_df: Optional[DataFrame] = None) -> DataFrame:
+def validation_cuismp_distrito_fiscal_medidas(merged_df: Optional[DataFrame] = None) -> pd.DataFrame:
     """
     Valida coincidencias de CUISMP y Distrito Fiscal, y presencia de CUISMP en medidas.
 
@@ -54,10 +55,10 @@ def validation_cuismp_distrito_fiscal_medidas(merged_df: Optional[DataFrame] = N
         - Validation_OK
         - fail_count
     """
-    with spark_manager.get_session():
+    with spark_manager.get_session_context() as spark:
         if merged_df is None:
-            return spark_manager.get_session().createDataFrame([], schema=create_empty_schema())
-        
+            empty_df = spark.createDataFrame([], schema=create_empty_schema())
+            return empty_df.toPandas()
         df = merged_df.cache()
         
         df = df.withColumn(
@@ -93,10 +94,11 @@ def validation_cuismp_distrito_fiscal_medidas(merged_df: Optional[DataFrame] = N
             when(~col("CUISMP_in_medias_tomadas"), 1).otherwise(0)
         )
         
-        return df
+        pdf = df.toPandas()
+        return pdf
 
 @log_exceptions
-def build_failure_messages_cuismp_distrito_fiscal_medidas(df: DataFrame) -> DataFrame:
+def build_failure_messages_cuismp_distrito_fiscal_medidas(df: DataFrame) -> pd.DataFrame:
     """
     Genera mensajes de error y filtra filas fallidas de CUISMP y Distrito Fiscal.
 
@@ -119,9 +121,7 @@ def build_failure_messages_cuismp_distrito_fiscal_medidas(df: DataFrame) -> Data
         DataFrame filtrado con filas donde `fail_count > 0` y columnas:
         ['nro_incidencia', 'mensaje', 'TIPO REPORTE', 'objetivo'].
     """
-    with spark_manager.get_session():
-        # Cache for better performance in distributed environment
-        # Important when the DataFrame is used in multiple operations
+    with spark_manager.get_session_context() as spark:
         df = df.cache()
         
         df = df.withColumn(
@@ -163,7 +163,6 @@ def build_failure_messages_cuismp_distrito_fiscal_medidas(df: DataFrame) -> Data
         
         df = df.withColumn("objetivo", lit("1.1"))
         
-        # Filter failures and select required columns
         df_failures = df.filter(col("fail_count") > 0)
         df_failures = df_failures.select(
             "nro_incidencia",
@@ -172,6 +171,6 @@ def build_failure_messages_cuismp_distrito_fiscal_medidas(df: DataFrame) -> Data
             "objetivo"
         )
         
-        
-        return df_failures
+        pdf = df_failures.toPandas()
+        return pdf
 

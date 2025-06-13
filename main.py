@@ -28,27 +28,27 @@ from app.api import (
 
 lock = global_lock
 
-actividad_humana = {"mouse": False, "teclado": False}
+# actividad_humana = {"mouse": False, "teclado": False}
 
-def on_mouse_move(x, y):
-    actividad_humana["mouse"] = True
-    logger.info("Actividad de mouse detectada")
+# def on_mouse_move(x, y):
+#     actividad_humana["mouse"] = True
+#     logger.info("Actividad de mouse detectada")
 
-def on_key_press(key):
-    actividad_humana["teclado"] = True
-    logger.info("Actividad de teclado detectada")
+# def on_key_press(key):
+#     actividad_humana["teclado"] = True
+#     logger.info("Actividad de teclado detectada")
 
-# Iniciar los listeners de mouse y teclado
-mouse_listener = mouse.Listener(on_move=on_mouse_move)
-keyboard_listener = keyboard.Listener(on_press=on_key_press)
+# # Iniciar los listeners de mouse y teclado
+# mouse_listener = mouse.Listener(on_move=on_mouse_move)
+# keyboard_listener = keyboard.Listener(on_press=on_key_press)
 
-mouse_listener.start()
-keyboard_listener.start()
+# mouse_listener.start()
+# keyboard_listener.start()
 
-# Iniciar la tarea de Celery para mantener el sistema activo
-logger.info("Iniciando tarea keep_system_active_task...")
-result = keep_system_active_task.delay()
-logger.info(f"Tarea keep_system_active_task iniciada con ID: {result.id}")
+# # Iniciar la tarea de Celery para mantener el sistema activo
+# logger.info("Iniciando tarea keep_system_active_task...")
+# result = keep_system_active_task.delay()
+# logger.info(f"Tarea keep_system_active_task iniciada con ID: {result.id}")
 
 
 

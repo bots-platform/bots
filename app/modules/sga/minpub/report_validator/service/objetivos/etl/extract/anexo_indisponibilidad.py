@@ -3,6 +3,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql.types import StructType, StructField, StringType
 from docx import Document
 import re
+import pandas as pd
 
 from app.core.spark_manager import spark_manager
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import log_exceptions
@@ -40,21 +41,21 @@ def process_document_content(path_docx: str) -> List[str]:
     return paragraphs_list
 
 @log_exceptions
-def extract_indisponibilidad_anexos(path_docx: str) -> Optional[DataFrame]:
+def extract_indisponibilidad_anexos(path_docx: str) -> Optional[pd.DataFrame]:
     """
     Extracts data from a .docx file containing multiple ANEXO X – TICKET Y:
       - Introduction line ("Se tuvo indisponibilidad...")
       - Period lines ("DD/MM/YYYY hh:mm hasta el día DD/MM/YYYY hh:mm")
       - Total hours line ("(Total de horas sin acceso… HH:MM horas)")
     
-    Returns a PySpark DataFrame with columns:
+    Returns a Pandas DataFrame with columns:
       ['ticket', 'indisponibilidad_header', 'indisponibilidad_periodos', 'indisponibilidad_footer', 'indisponibilidad_total']
     
     Args:
         path_docx (str): Path to the Word document
         
     Returns:
-        Optional[DataFrame]: PySpark DataFrame containing the processed data or None if no records found
+        Optional[pd.DataFrame]: Pandas DataFrame containing the processed data or None if no records found
     """
     # Compile regex patterns
     anexo_pattern_ticket = re.compile(r"ANEXO\s+\d+\s+–\s+TICKET\s+(\d+)", re.IGNORECASE)
@@ -128,12 +129,10 @@ def extract_indisponibilidad_anexos(path_docx: str) -> Optional[DataFrame]:
         return None
 
     # Create SparkSession and convert records to DataFrame
-    spark = spark_manager.get_session()
     try:
-        # Convert records to DataFrame using the defined schema
-        df = spark.createDataFrame(records, schema=create_schema())
-        # Cache the DataFrame for better performance if it will be used multiple times
-        df.cache()
-        return df
+        with spark_manager.get_session_context() as spark:
+            df = spark.createDataFrame(records, schema=create_schema())
+            pdf = df.toPandas()
+            return pdf
     except Exception as e:
         raise Exception(f"Error processing Word document: {str(e)}") 

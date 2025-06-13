@@ -7,6 +7,7 @@ from pyspark.sql import DataFrame
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import ( 
     log_exceptions
 )
+from app.core.spark_manager import spark_manager
 
 @log_exceptions
 def _format_interval(dt_start, dt_end) -> str:
@@ -19,10 +20,13 @@ def _format_interval(dt_start, dt_end) -> str:
         
     Returns:
         Formatted string with the interval
+    Notes:
+        All Spark operations are performed inside the context manager.
     """
-    start_str = F.date_format(F.lit(dt_start), "dd/MM/yyyy HH:mm:ss")
-    end_str = F.date_format(F.lit(dt_end), "dd/MM/yyyy HH:mm:ss")
-    return f"{start_str} hasta el día {end_str}"
+    with spark_manager.get_session_context():
+        start_str = F.date_format(F.lit(dt_start), "dd/MM/yyyy HH:mm:ss")
+        end_str = F.date_format(F.lit(dt_end), "dd/MM/yyyy HH:mm:ss")
+        return f"{start_str} hasta el día {end_str}"
 
 @log_exceptions
 def make_paragraph_paradas_cliente(stops_df: DataFrame):
@@ -34,36 +38,39 @@ def make_paragraph_paradas_cliente(stops_df: DataFrame):
         
     Returns:
         Formatted string with the paragraph
+    Notes:
+        All Spark operations are performed inside the context manager.
     """
-    if stops_df.isEmpty():
-        return ""
+    with spark_manager.get_session_context():
+        if stops_df.isEmpty():
+            return ""
 
-    # Format intervals
-    formatted_intervals = stops_df.select(
-        F.concat(
-            F.date_format(F.col("start"), "dd/MM/yyyy HH:mm:ss"),
-            F.lit(" hasta el día "),
-            F.date_format(F.col("end"), "dd/MM/yyyy HH:mm:ss")
-        ).alias("interval")
-    )
-    
-    # Calculate total duration
-    duration_df = stops_df.select(
-        F.unix_timestamp(F.col("end")) - F.unix_timestamp(F.col("start"))
-    ).agg(F.sum("(unix_timestamp(end) - unix_timestamp(start))").alias("total_seconds"))
-    
-    total_seconds = duration_df.first()["total_seconds"]
-    hh, rem = divmod(int(total_seconds), 3600)
-    mm = rem // 60
-    total_str = f"{hh:02d}:{mm:02d}"
+        # Format intervals
+        formatted_intervals = stops_df.select(
+            F.concat(
+                F.date_format(F.col("start"), "dd/MM/yyyy HH:mm:ss"),
+                F.lit(" hasta el día "),
+                F.date_format(F.col("end"), "dd/MM/yyyy HH:mm:ss")
+            ).alias("interval")
+        )
+        
+        # Calculate total duration
+        duration_df = stops_df.select(
+            F.unix_timestamp(F.col("end")) - F.unix_timestamp(F.col("start"))
+        ).agg(F.sum("(unix_timestamp(end) - unix_timestamp(start))").alias("total_seconds"))
+        
+        total_seconds = duration_df.first()["total_seconds"]
+        hh, rem = divmod(int(total_seconds), 3600)
+        mm = rem // 60
+        total_str = f"{hh:02d}:{mm:02d}"
 
-    # Collect intervals
-    intervals = [row["interval"] for row in formatted_intervals.collect()]
-    
-    header = "Se tuvo indisponibilidad por parte del cliente para continuar los trabajos el/los día(s)".strip()
-    body = "\n".join(intervals)
-    footer = f"(Total de horas sin acceso a la sede: {total_str} horas)"
-    return f"{header}\n{body}\n{footer}"
+        # Collect intervals
+        intervals = [row["interval"] for row in formatted_intervals.collect()]
+        
+        header = "Se tuvo indisponibilidad por parte del cliente para continuar los trabajos el/los día(s)".strip()
+        body = "\n".join(intervals)
+        footer = f"(Total de horas sin acceso a la sede: {total_str} horas)"
+        return f"{header}\n{body}\n{footer}"
 
 @log_exceptions
 def make_paragraph_paradas_cliente_header(stops_df: DataFrame):
@@ -75,15 +82,18 @@ def make_paragraph_paradas_cliente_header(stops_df: DataFrame):
         
     Returns:
         Formatted string with the header
+    Notes:
+        All Spark operations are performed inside the context manager.
     """
-    if stops_df.isEmpty():
-        return ""
+    with spark_manager.get_session_context():
+        if stops_df.isEmpty():
+            return ""
 
-    header = (
-        "Se tuvo indisponibilidad por parte del cliente "
-        "para continuar los trabajos el/los día(s)"
-    )
-    return header
+        header = (
+            "Se tuvo indisponibilidad por parte del cliente "
+            "para continuar los trabajos el/los día(s)"
+        )
+        return header
 
 @log_exceptions
 def make_paragraph_paradas_cliente_periodos(stops_df: DataFrame):
@@ -95,20 +105,23 @@ def make_paragraph_paradas_cliente_periodos(stops_df: DataFrame):
         
     Returns:
         Formatted string with the periods
+    Notes:
+        All Spark operations are performed inside the context manager.
     """
-    if stops_df.isEmpty():
-        return ""
+    with spark_manager.get_session_context():
+        if stops_df.isEmpty():
+            return ""
 
-    formatted_intervals = stops_df.select(
-        F.concat(
-            F.date_format(F.col("start"), "dd/MM/yyyy HH:mm:ss"),
-            F.lit(" hasta el día "),
-            F.date_format(F.col("end"), "dd/MM/yyyy HH:mm:ss")
-        ).alias("interval")
-    )
-    
-    intervals = [row["interval"] for row in formatted_intervals.collect()]
-    return "\n".join(intervals)
+        formatted_intervals = stops_df.select(
+            F.concat(
+                F.date_format(F.col("start"), "dd/MM/yyyy HH:mm:ss"),
+                F.lit(" hasta el día "),
+                F.date_format(F.col("end"), "dd/MM/yyyy HH:mm:ss")
+            ).alias("interval")
+        )
+        
+        intervals = [row["interval"] for row in formatted_intervals.collect()]
+        return "\n".join(intervals)
 
 @log_exceptions
 def make_paragraph_paradas_cliente_footer(stops_df: DataFrame):
@@ -120,21 +133,24 @@ def make_paragraph_paradas_cliente_footer(stops_df: DataFrame):
         
     Returns:
         Formatted string with the footer
+    Notes:
+        All Spark operations are performed inside the context manager.
     """
-    if stops_df.isEmpty():
-        return ""
+    with spark_manager.get_session_context():
+        if stops_df.isEmpty():
+            return ""
 
-    duration_df = stops_df.select(
-        F.unix_timestamp(F.col("end")) - F.unix_timestamp(F.col("start"))
-    ).agg(F.sum("(unix_timestamp(end) - unix_timestamp(start))").alias("total_seconds"))
-    
-    total_seconds = duration_df.first()["total_seconds"]
-    hh, rem = divmod(int(total_seconds), 3600)
-    mm = rem // 60
-    total_str = f"{hh:02d}:{mm:02d}"
+        duration_df = stops_df.select(
+            F.unix_timestamp(F.col("end")) - F.unix_timestamp(F.col("start"))
+        ).agg(F.sum("(unix_timestamp(end) - unix_timestamp(start))").alias("total_seconds"))
+        
+        total_seconds = duration_df.first()["total_seconds"]
+        hh, rem = divmod(int(total_seconds), 3600)
+        mm = rem // 60
+        total_str = f"{hh:02d}:{mm:02d}"
 
-    footer = f"(Total de horas sin acceso a la sede: {total_str} horas)"
-    return footer
+        footer = f"(Total de horas sin acceso a la sede: {total_str} horas)"
+        return footer
 
 @log_exceptions
 def make_paragraph_paradas_cliente_total(stops_df: DataFrame):
@@ -146,15 +162,18 @@ def make_paragraph_paradas_cliente_total(stops_df: DataFrame):
         
     Returns:
         String with the total time in HH:MM format
+    Notes:
+        All Spark operations are performed inside the context manager.
     """
-    if stops_df.isEmpty():
-        return ""
+    with spark_manager.get_session_context():
+        if stops_df.isEmpty():
+            return ""
 
-    duration_df = stops_df.select(
-        F.unix_timestamp(F.col("end")) - F.unix_timestamp(F.col("start"))
-    ).agg(F.sum("(unix_timestamp(end) - unix_timestamp(start))").alias("total_seconds"))
-    
-    total_seconds = duration_df.first()["total_seconds"]
-    hh, rem = divmod(int(total_seconds), 3600)
-    mm = rem // 60
-    return f"{hh:02d}:{mm:02d}"
+        duration_df = stops_df.select(
+            F.unix_timestamp(F.col("end")) - F.unix_timestamp(F.col("start"))
+        ).agg(F.sum("(unix_timestamp(end) - unix_timestamp(start))").alias("total_seconds"))
+        
+        total_seconds = duration_df.first()["total_seconds"]
+        hh, rem = divmod(int(total_seconds), 3600)
+        mm = rem // 60
+        return f"{hh:02d}:{mm:02d}"

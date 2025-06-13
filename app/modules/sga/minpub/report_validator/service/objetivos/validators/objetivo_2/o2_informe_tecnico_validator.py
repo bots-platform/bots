@@ -1,8 +1,9 @@
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
-from pyspark.sql.types import BooleanType
+from pyspark.sql.types import BooleanType, StringType
 from typing import List, Dict
 from datetime import datetime
+import pandas as pd
 
 from app.core.spark_manager import spark_manager
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import (
@@ -11,10 +12,11 @@ from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators 
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.etl_utils import normalize_text
 
 @log_exceptions
-def validate_informe_tecnico_word(df_merged: DataFrame, componente_word: str) -> DataFrame:
+def validate_informe_tecnico_word(df_merged: DataFrame, componente_word: str) -> 'pd.DataFrame':
     """
     Validate values columns coming from word and excel files
-    Return a DataFrame with new Boolean columns for validation
+    Return a Pandas DataFrame with new Boolean columns for validation
+    (All Spark operations are performed inside the context manager)
     
     Columnas en EXCEL	                                        Columnas en WORD DATOS
     "FECHA Y HORA INICIO",                                      "Fecha y hora inicio":   
@@ -25,7 +27,7 @@ def validate_informe_tecnico_word(df_merged: DataFrame, componente_word: str) ->
     "DETERMINACIÓN DE LA CAUSA",                                "DETERMINACIÓN DE LA CAUSA":  
     "MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS",              "MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS": 
     """
-    with spark_manager.get_session():
+    with spark_manager.get_session_context():
         # Cache the DataFrame since it will be used multiple times
         df = df_merged.cache()
 
@@ -129,19 +131,20 @@ def validate_informe_tecnico_word(df_merged: DataFrame, componente_word: str) ->
             F.when(~F.col('medidas_correctivas_match'), 1).otherwise(0)
         )
 
-        return df
+        return df.toPandas()
 
 @log_exceptions
-def build_failure_messages_validate_informe_tecnico_word(df: DataFrame) -> DataFrame:
+def build_failure_messages_validate_informe_tecnico_word(df: DataFrame) -> 'pd.DataFrame':
     """
     Builds the 'mensaje' column using PySpark operations.
     Adds the 'objetivo' column (constant value of 2.2) and filters
     rows that fail at least one validation.
     
-    Returns a DataFrame with:
+    Returns a Pandas DataFrame with:
       ['nro_incidencia', 'mensaje', 'TIPO REPORTE', 'objetivo']
+    (All Spark operations are performed inside the context manager)
     """
-    with spark_manager.get_session():
+    with spark_manager.get_session_context():
         df = df.withColumn(
             'mensaje',
             F.when(
@@ -225,11 +228,12 @@ def build_failure_messages_validate_informe_tecnico_word(df: DataFrame) -> DataF
             F.lit("2.2")
         )
 
-        return df.filter(F.col('fail_count') > 0).select(
+        df_filtered = df.filter(F.col('fail_count') > 0).select(
             'nro_incidencia',
             'mensaje',
             'TIPO REPORTE',
             'objetivo'
         )
+        return df_filtered.toPandas()
 
 

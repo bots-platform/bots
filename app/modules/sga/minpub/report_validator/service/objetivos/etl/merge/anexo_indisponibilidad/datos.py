@@ -25,7 +25,7 @@ def merge_word_datos_anexos_disponibilidad_df_merged_sga(
     Returns:
         DataFrame: Merged DataFrame with common columns needed
     """
-    with spark_manager.get_session():
+    with spark_manager.get_session_context() as spark:
         # Perform left join using Spark SQL
         df_merge_word_datos_anexos_disponibilidad_df_merged_sga = (
             df_matched_corte_sga335_Sharepoint_cuismp_sga380

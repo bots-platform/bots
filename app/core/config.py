@@ -6,6 +6,8 @@ class Settings(BaseSettings):
     # Celery
     CELERY_BROKER_URL: str
     CELERY_RESULT_BACKEND: str
+    JAVA_HOME: str
+    HADOOP_HOME: str
 
     # Task queue settings
     TASK_QUEUE_NAME: str = "default"

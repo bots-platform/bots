@@ -16,6 +16,7 @@ from app.modules.sga.minpub.report_validator.service.objetivos.utils.etl_utils i
     extract_total_hours
 )
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.spark_manager import spark_manager
+import pandas as pd
 
 def create_empty_schema() -> StructType:
     """
@@ -35,7 +36,7 @@ def create_empty_schema() -> StructType:
         StructField("FIN-INICIO (HH:MM)", StringType(), True)
     ])
 
-def preprocess_corte_excel(df: Optional[DataFrame] = None) -> DataFrame:
+def preprocess_corte_excel(df: Optional[DataFrame] = None) -> pd.DataFrame:
     """
     Preprocesses the DataFrame for corte excel using PySpark.
     
@@ -48,7 +49,8 @@ def preprocess_corte_excel(df: Optional[DataFrame] = None) -> DataFrame:
     with spark_manager.get_session_context() as spark:
         try:
             if df is None:
-                return spark.createDataFrame([], schema=create_empty_schema())
+                empty_df = spark.createDataFrame([], schema=create_empty_schema())
+                return empty_df.toPandas()
             
             df = df.withColumnRenamed("TICKET", "nro_incidencia")
             
@@ -137,7 +139,8 @@ def preprocess_corte_excel(df: Optional[DataFrame] = None) -> DataFrame:
             
             df.cache()
             
-            return df
+            pdf = df.toPandas()
+            return pdf
             
         except Exception as e:
             raise Exception(f"Error preprocessing corte excel DataFrame: {str(e)}")
