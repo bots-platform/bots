@@ -33,13 +33,32 @@ class SparkManager:
         if self._spark is None:
             self._spark = (SparkSession.builder
                 .appName("AveriasProcessor")
-                .config("spark.sql.execution.arrow.pyspark.enabled", "true")
-                .config("spark.sql.execution.arrow.pyspark.fallback.enabled", "true")
+                # Basic configurations
                 .config("spark.sql.adaptive.enabled", "true")
                 .config("spark.sql.adaptive.coalescePartitions.enabled", "true")
                 .config("spark.sql.shuffle.partitions", "200")
                 .config("spark.jars.packages", "com.crealytics:spark-excel_2.12:3.4.3_0.20.4")
+                # Memory configurations
+                .config("spark.driver.memory", "4g")
+                .config("spark.executor.memory", "4g")
+                .config("spark.memory.offHeap.enabled", "true")
+                .config("spark.memory.offHeap.size", "2g")
+                # Session state configurations
+                .config("spark.sql.warehouse.dir", "spark-warehouse")
+                .config("spark.sql.session.timeZone", "UTC")
+                # Type conversion configurations
+                .config("spark.sql.legacy.typeCoercion.datetimeToString.enabled", "true")
+                .config("spark.sql.legacy.typeCoercion.stringToTimestamp.enabled", "true")
+                # Disable Arrow optimization
+                .config("spark.sql.execution.arrow.pyspark.enabled", "false")
+                .config("spark.sql.execution.arrow.pyspark.fallback.enabled", "false")
+                # Add Hive support
+                .enableHiveSupport()
                 .getOrCreate())
+            
+            # Set log level to WARN to reduce noise
+            self._spark.sparkContext.setLogLevel("WARN")
+            
         return self._spark
 
     def stop_session(self):
@@ -63,12 +82,25 @@ class SparkManager:
                 self._spark.stop()
                 self._spark = None
 
+    def convert_column_types(self, df, column_types):
+        """
+        Helper method to convert column types in a DataFrame.
+        
+        Args:
+            df: Spark DataFrame
+            column_types: Dictionary mapping column names to desired types
+                e.g., {"CID NUEVO": "long"}
+        """
+        for column, type_name in column_types.items():
+            if column in df.columns:
+                df = df.withColumn(column, df[column].cast(type_name))
+        return df
+
 # Create a singleton instance
 spark_manager = SparkManager()
 
 # Configure Java and Hadoop paths
-backend=settings.CELERY_RESULT_BACKEND,
-
-
+os.environ["JAVA_HOME"] = settings.JAVA_HOME
+os.environ["HADOOP_HOME"] = settings.HADOOP_HOME
 
 #df= pd.read_excel("file.xlsx") 
