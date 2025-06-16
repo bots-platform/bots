@@ -123,6 +123,19 @@ def all_objetivos(
             df_word_datos_informe_tec = extract_tecnico_reports_without_hours_last_dates(word_datos_file_path)
             df_word_telefonia_informe_tec = extract_tecnico_reports_without_hours_last_dates(word_telefonia_file_path)
 
+            # Convert CID NUEVO to long type in all DataFrames that have this column
+            if "CID NUEVO" in df_sga_dinamico_380.columns:
+                df_sga_dinamico_380 = df_sga_dinamico_380.withColumn("CID NUEVO", col("CID NUEVO").cast("long"))
+            
+            if "CID NUEVO" in df_cid_cuismp_sharepoint.columns:
+                df_cid_cuismp_sharepoint = df_cid_cuismp_sharepoint.withColumn("CID NUEVO", col("CID NUEVO").cast("long"))
+            
+            if "CID NUEVO" in df_corte_excel.columns:
+                df_corte_excel = df_corte_excel.withColumn("CID NUEVO", col("CID NUEVO").cast("long"))
+            
+            if "CID NUEVO" in df_sga_dinamico_335.columns:
+                df_sga_dinamico_335 = df_sga_dinamico_335.withColumn("CID NUEVO", col("CID NUEVO").cast("long"))
+
             raw_datos_anexos = extract_indisponibilidad_anexos(word_datos_file_path)
             raw_tel_anexos = extract_indisponibilidad_anexos(word_telefonia_file_path)
             
