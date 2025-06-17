@@ -4,7 +4,7 @@ from typing import List, Dict
 from datetime import datetime
 import re
 
-from app.modules.sga.minpub.report_validator.service.objetivos.utils.calculations import has_repetition
+from app.modules.sga.minpub.report_validator.service.objetivos.utils.calculations import has_multiple_A_traves_mayus
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.calculations import extract_date_range_body
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.calculations import extract_date_range_last
 
@@ -23,14 +23,14 @@ def validation_medidas_correctivas(merged_df: pd.DataFrame) -> pd.DataFrame:
     """
 
     df = merged_df.copy()
-    df = df[df['masivo'] == 'No']
+    #df = df[df['masivo'] == 'No']
 
     df['mc_first_ok'] = True
     df['mc_last_ok'] = True
     df['it_first_ok'] = True
     df['it_last_ok'] = True
+    df['no_repeticion_A_traves_ok'] = True
     # df['ortografia_ok'] = True
-    df['no_repeticion_ok'] = True
 
 
 
@@ -59,32 +59,33 @@ def validation_medidas_correctivas(merged_df: pd.DataFrame) -> pd.DataFrame:
     )
     
     df['mc_first_ok'] = (
-        df['first_dt_mc'] == df['FECHA_Y_HORA_INICIO_fmt']
+        (df['first_dt_mc'] == df['FECHA_Y_HORA_INICIO_fmt']) | (df['masivo'] == 'Si')
     )
 
     df['mc_last_ok'] = (
-        df['last_dt_mc'] == df['FECHA_Y_HORA_FIN_fmt']
+        (df['last_dt_mc'] == df['FECHA_Y_HORA_FIN_fmt']) | (df['masivo'] == 'Si')
     )
 
     df['it_first_ok'] = (
-        df['first_dt_it'] == df['start_dt_last_it']
+        (df['first_dt_it'] == df['start_dt_last_it']) | (df['masivo'] == 'Si')
     )
 
     df['it_last_ok'] = (
-        df['last_dt_it'] == df['end_dt_last_it']
+        (df['last_dt_it'] == df['end_dt_last_it']) | (df['masivo'] == 'Si')
     )
 
     # df['ortografia_ok'] = ~df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS'].apply(is_langtool_clean)
-    df['no_repeticion_ok'] = ~df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS'].apply(has_repetition)
 
+
+    df['no_repeticion_A_traves_ok'] = ~df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS'].apply(has_multiple_A_traves_mayus)
  
     df['Validation_OK'] = (
         df['mc_first_ok'] &
         df['mc_last_ok'] &
         df['it_first_ok'] &
         df['it_last_ok'] &
+        df['no_repeticion_A_traves_ok']
         # df['ortografia_ok'] &
-        df['no_repeticion_ok'] 
     )
 
     df['fail_count'] = ( 
@@ -92,8 +93,8 @@ def validation_medidas_correctivas(merged_df: pd.DataFrame) -> pd.DataFrame:
         (~df['mc_last_ok']).astype(int)+
         (~df['it_first_ok']).astype(int)+
         (~df['it_last_ok']).astype(int)+
+        (~df['no_repeticion_A_traves_ok']).astype(int)       
         # (~df['ortografia_ok']).astype(int)+ 
-        (~df['no_repeticion_ok']).astype(int)           
     )
 
     return df
@@ -113,39 +114,44 @@ def build_failure_messages_medidas_correctivas(df:pd.DataFrame) -> pd.DataFrame:
        df['Validation_OK'],
        "Validación exitosa: MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS",
        (
-                     np.where(~df['mc_first_ok'],
+                     np.where(
+                         (~df['mc_first_ok']),
                     " \n La primera fecha/hora  del parrafo (CUERPO) en columna MEDIDAS CORRECTIVAS - EXCEL: \n" + df['first_dt_mc'].astype(str) +
                       "\n no coincide con la columna FECHA Y HORA INICIO DE EXCEL - CORTE : \n" + df['FECHA_Y_HORA_INICIO_fmt'].astype(str),
                     "") +
 
-                      np.where(~df['mc_last_ok'],
+                      np.where(
+                          (~df['mc_last_ok']),
                     "\n  La última fecha/hora del parrafo (CUERPO) en columna MEDIDAS CORRECTIVAS - EXCEL: \n" + df['last_dt_mc'].astype(str) +
                       "\n no coincide con la columna FECHA Y HORA FIN DE EXCEL - CORTE : \n" +
                       df['FECHA_Y_HORA_FIN_fmt'].astype(str), 
                     "") + 
 
-                      np.where(~df['it_first_ok'],
+                      np.where(
+                          (~df['it_first_ok']),
                     "\n  La primera fecha/hora del parrafo (CUERPO) en it_medidas_tomadas SGA:  \n" + df['first_dt_it'].astype(str) +
                       "\n no coincide con la Fecha y hora inicio de la penultima fila it_medidas_tomadas SGA : \n" + df['start_dt_last_it'].astype(str),
                     "") +
 
-                     np.where(~df['it_last_ok'],
+                     np.where(
+                          (~df['it_last_ok']),
                     "\n  La última fecha/hora del parrafo (CUERPO) en it_medidas_tomadas SGA : \n" + df['last_dt_it'].astype(str) +
                       "\n no coincide con la Fecha y hora fin de la última fila SGA it_medidas_tomadas SGA: \n" +
                       df['end_dt_last_it'].astype(str), 
                     "") + 
 
+                    np.where(
+                        (~df['no_repeticion_A_traves_ok']),
+                    "\n La palabra 'A través' se repite " + df['num_A_traves'].astype(str) + " veces en el parrafo en MEDIDAS CORRECTIVAS:",
+                    "") 
                     # np.where(~df['ortografia_ok'],
                     # "  Errores ortográficos/gramaticales en el parrafo en MEDIDAS CORRECTIVAS",
                     # "")  +
 
-                    np.where(~df['no_repeticion_ok'],
-                    "\n Hay palabras repetidas inmediatamente/a través en el parrafo en MEDIDAS CORRECTIVAS:",
-                    "") 
        )
     )
     
     df['mensaje'] = mensajes
     df['objetivo'] = "1.8"
     df_failures = df[df['fail_count'] > 0]
-    return df_failures[['nro_incidencia', 'mensaje', 'TIPO REPORTE','objetivo']]
+    return df_failures[['nro_incidencia', 'mensaje', 'TIPO REPORTE','objetivo', 'no_repeticion_A_traves_ok']]
