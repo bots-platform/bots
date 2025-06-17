@@ -9,6 +9,7 @@ from app.modules.sga.minpub.report_validator.service.objetivos.utils.etl_utils i
     hhmm_to_minutes,
     extract_total_hours
 )
+from app.modules.sga.minpub.report_validator.service.objetivos.utils.calculations import count_A_traves_mayus
 
 def preprocess_corte_excel(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -34,6 +35,7 @@ def preprocess_corte_excel(df: pd.DataFrame) -> pd.DataFrame:
         for col in cols_to_str
     })
 
+    df['num_A_traves'] = df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS'].apply(count_A_traves_mayus)
 
     df[['FECHA Y HORA INICIO','FECHA Y HORA FIN']] = df[
         ['FECHA Y HORA INICIO','FECHA Y HORA FIN']
@@ -81,3 +83,28 @@ def preprocess_corte_excel(df: pd.DataFrame) -> pd.DataFrame:
     )
 
     return df
+
+def safe_nunique(series):
+    """
+    Devuelve nunique seguro: si la serie contiene listas, las convierte a string antes de calcular nunique.
+    """
+    if series.apply(lambda x: isinstance(x, list)).any():
+        return series.apply(str).nunique()
+    else:
+        return series.nunique()
+
+
+def get_dataframe_summary(df):
+    """
+    Devuelve un resumen del DataFrame, incluyendo tipo de dato, conteo de no nulos, nulos, porcentaje de nulos y valores únicos.
+    No falla si hay columnas con listas.
+    """
+    import pandas as pd
+    summary_df = pd.DataFrame({
+        'Data Type': df.dtypes,
+        'Non Null Count': df.count(),
+        'Null Count': df.isna().sum(),
+        'Null Percentage': (df.isna().sum() / len(df) * 100).round(2),
+        'Unique Values': [safe_nunique(df[col]) for col in df.columns],
+    })
+    return summary_df
