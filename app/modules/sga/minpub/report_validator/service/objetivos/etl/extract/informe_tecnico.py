@@ -37,7 +37,7 @@ def extract_tecnico_reports_without_hours_last_dates(path_docx: str) -> pd.DataF
     records: List[Dict] = []
 
     common_patterns = {
-        "CUISMP":                   re.compile(r"CUISMP\s*(?:\:|\s)\s*(\d+)", re.IGNORECASE),
+        "CUISMP":                   re.compile(r"CUISMP\.?\s*(?:\:|\s)?\s*(\d+)(?:\.|,|;|:|\s|$)",  re.IGNORECASE),
         "Tipo Caso":                re.compile(r"Tipo Caso\s*:\s*(.+)",    re.IGNORECASE),
         "Observación": re.compile(r"Observaci[oó]n\s*:\s*(.+)", re.IGNORECASE),
 
