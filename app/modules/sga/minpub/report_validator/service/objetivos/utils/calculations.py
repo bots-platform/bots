@@ -1,4 +1,3 @@
-
 from typing import List, Dict
 import pandas as pd
 import re
@@ -212,10 +211,28 @@ def has_repetition(text: str) -> bool:
     
     patterns = [
         r'(?i)\b(Inmediatamente, claro revisó)\b.*\b\1\b',
-        r'(?i)\b(A través de los Sistemas)\b.*\b\1\b',
+        r'\b(A través)\b.*\b\1\b',
     ]
     return any(re.search(p, text) for p in patterns )
    
+
+@log_exceptions
+def count_A_traves_mayus(text: str) -> int:
+    """
+    Devuelve el número de veces que aparece 'A través' (con A mayúscula) en el texto.
+    """
+    if not isinstance(text, str):
+        return 0
+    matches = re.findall(r'A\s+través', text)
+    return len(matches)
+
+@log_exceptions
+def has_multiple_A_traves_mayus(text: str) -> bool:
+    """
+    Devuelve True si 'A través' (con A mayúscula) aparece más de una vez en el texto.
+    """
+    return count_A_traves_mayus(text) > 1
+
 
 # EXTRACT RANGE DATOS FECHA INICIO Y FIN FROM INDISPONIBILIDAD EXCEL Y SGA 
 
@@ -311,6 +328,71 @@ def extract_date_range_body(text: str) -> Tuple[Optional[str], Optional[str]]:
             start_date = full_date
         elif pos >= midpoint:
             end_date = full_date
+
+    return (
+        start_date if start_date else "No disponible",
+        end_date if end_date else "No disponible"
+    )
+
+
+
+@log_exceptions
+def extract_date_range_body_v2(text: str) -> Tuple[Optional[str], Optional[str]]:
+    if not isinstance(text, str):
+        return (None, None)
+
+    lines = text.splitlines()
+    meta_pat = re.compile(r'(?i)^fecha y hora(?: de)? (?:inicio|fin)\s*:')
+
+    while lines and (not lines[-1].strip() or meta_pat.match(lines[-1].strip())):
+        lines.pop()
+    clean_body = "\n".join(lines)
+
+    # Separate patterns for date and time
+    fecha_pat = re.compile(r'(\d{2}/\d{2}/\d{4})', re.IGNORECASE)
+    hora_pat = re.compile(r'(\d{1,2}:\d{2})', re.IGNORECASE)
+
+    def _normalize(fecha: str, hora: str) -> str:
+        d, m, y = fecha.split('/')
+        h, mm = hora.split(':')
+        return f"{d.zfill(2)}/{m.zfill(2)}/{y} {h.zfill(2)}:{mm.zfill(2)}"
+
+    midpoint = len(clean_body) / 2
+    start_date = None
+    end_date = None
+
+    # Find all dates and times with their positions
+    fecha_matches = [(m.group(1), m.start()) for m in fecha_pat.finditer(clean_body)]
+    hora_matches = [(m.group(1), m.start()) for m in hora_pat.finditer(clean_body)]
+
+    if not fecha_matches or not hora_matches:
+        return ("No disponible", "No disponible")
+
+    # Sort all matches by their position in text
+    all_matches = sorted(fecha_matches + hora_matches, key=lambda x: x[1])
+    
+    # Process matches in order of appearance
+    current_fecha = None
+    current_hora = None
+    
+    for value, pos in all_matches:
+        if fecha_pat.match(value):
+            current_fecha = value
+        elif hora_pat.match(value):
+            current_hora = value
+            
+        # If we have both a date and time, create the full date
+        if current_fecha and current_hora:
+            full_date = _normalize(current_fecha, current_hora)
+            
+            if pos < midpoint and not start_date:
+                start_date = full_date
+            elif pos >= midpoint:
+                end_date = full_date
+                
+            # Reset current values after using them
+            current_fecha = None
+            current_hora = None
 
     return (
         start_date if start_date else "No disponible",
