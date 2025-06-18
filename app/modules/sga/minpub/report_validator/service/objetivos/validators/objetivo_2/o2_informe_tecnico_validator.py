@@ -120,8 +120,8 @@ def build_failure_messages_validate_informe_tecnico_word(df: pd.DataFrame) -> pd
 
 
             np.where(~df['medidas_correctivas_match'],
-                     "\n  No coincide MEDIDAS CORRECTIVAS de WORD informe técnico : \n" + df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS_word'].astype(str) +
-                     "\n es diferente a MEDIDAS CORRECTIVAS en EXCEL-CORTE: \n" + df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS_corte_excel'].astype(str), "") 
+                     "\n  No coincide MEDIDAS CORRECTIVAS de WORD informe técnico : \n" +
+                     "\n es diferente a MEDIDAS CORRECTIVAS en EXCEL-CORTE: \n" , "") 
 
         )
     )
