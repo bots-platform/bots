@@ -3,7 +3,7 @@ from app.core.celery_app import celery_app
 from app.modules.sga.service_tecnico_operaciones import SGAService
 from app.modules.sga.minpub.report_validator.service.objetivos.all_objetivos import all_objetivos
 import threading
-from app.shared.lock import global_lock
+from app.shared.lock import global_lock, actividad_humana
 from typing import Dict, Any
 import os
 import random
@@ -19,9 +19,6 @@ sga_global_lock = global_lock
 
 
 selenium_lock = threading.Lock()
-
-# Simulación de actividad humana
-actividad_humana = {"mouse": False, "teclado": False}
 
 def wait_for_sga_service(sga_service: SGAService, max_wait_time: int = 300) -> bool:
     """
@@ -200,4 +197,4 @@ def keep_system_active_task(self):
     # Programar la siguiente ejecución
     delay = random.randint(25, 40)
     logger.info(f"[keep_system_active] Programando siguiente ejecución en {delay} segundos...")
-    keep_system_active_task.apply_async(countdown=delay) 
+    keep_system_active_task.apply_async(countdown=delay)
