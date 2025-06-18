@@ -113,7 +113,7 @@ def build_failure_messages_validate_averias_word(df: pd.DataFrame) -> pd.DataFra
                     
             
             np.where(~df['averia_match'],
-                     "\n  No coincide Causa : \n" + df['Causa'].astype(str) +
+                     "\n  No coincide Causa de WORD CUADRO AVERIAS: \n" + df['Causa'].astype(str) +
                      "\n es diferente a AVERÍA de CORTE-EXCEL: \n" + df['AVERÍA'].astype(str), "") +
 
             np.where(~df['tiempo_hhmm_match'],
