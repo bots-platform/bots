@@ -10,7 +10,6 @@ from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators 
 def merge_word_telefonia_anexos_disponibilidad_df_merged_sga(
         df_matched_corte_sga335_Sharepoint_cuismp_sga380: pd.DataFrame,
         df_word_anexo_disponibilidad_telefonia: pd.DataFrame,
-        #match_type:str
     ) -> pd.DataFrame:
         """
         Common merge function for Objective 2.
@@ -26,13 +25,12 @@ def merge_word_telefonia_anexos_disponibilidad_df_merged_sga(
         df_word_anexo_disponibilidad_telefonia,
         on='nro_incidencia',
         how='left',
-        #indicator='merge_flag_telefonia',
         suffixes=('_word_telefonia_anexo_indisp', '_dfs_merged')
         )
      
-        # cols_a_reemplazar = ['indisponibilidad_header', 'indisponibilidad_periodos', 'indisponibilidad_total']
+        cols_a_reemplazar = ['indisponibilidad_header', 'indisponibilidad_periodos', 'indisponibilidad_total']
 
-        # df_merge_word_telefonia_df_merged_sga[cols_a_reemplazar] = df_merge_word_telefonia_df_merged_sga[cols_a_reemplazar].fillna('no encontrado')
+        df_merge_word_telefonia_df_merged_sga[cols_a_reemplazar] = df_merge_word_telefonia_df_merged_sga[cols_a_reemplazar].fillna('no encontrado')
 
 
         #matched_rows = df_merge_word_telefonia_df_merged_sga[df_merge_word_telefonia_df_merged_sga['merge_flag_telefonia'] == match_type]
