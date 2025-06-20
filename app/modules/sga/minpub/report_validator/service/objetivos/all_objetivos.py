@@ -1,4 +1,3 @@
-
 from datetime import datetime
 import os
 from typing import List, Dict
@@ -164,7 +163,20 @@ def all_objetivos(
         df_corte_excel,
         'both'
         )
-   
+    
+    df_corte_excel_reclamos_datos = df_corte_excel[(df_corte_excel['TIPO REPORTE'] == 'RECLAMO') & (df_corte_excel['COMPONENTE'] == 'COMPONENTE II')].copy()
+    df_corte_excel_reclamos_telefonia = df_corte_excel[(df_corte_excel['TIPO REPORTE'] == 'RECLAMO') & (df_corte_excel['COMPONENTE'] == 'COMPONENTE IV')].copy()
+
+
+    # AVERIAS - DATOS - EXCEL (UNMATCHED)
+    df_unmatched_word_datos_averias_corte_excel = merge_word_datos_averias_corte_excel(
+        df_word_datos_averias,
+        df_corte_excel_reclamos_datos,
+        'right_only',
+        how='right'
+        )
+    
+
     # AVERIAS - TELEFONIA - EXCEL
     df_matched_word_telefonia_averias_corte_excel = merge_word_telefonia_averias_corte_excel(
         df_word_telefonia_averias,
@@ -172,11 +184,28 @@ def all_objetivos(
         'both'
         )
     
+    # AVERIAS - TELEFONIA - EXCEL (UNMATCHED)
+    df_unmatched_word_telefonia_averias_corte_excel = merge_word_telefonia_averias_corte_excel(
+        df_word_telefonia_averias,
+        df_corte_excel_reclamos_telefonia,
+        'right_only',
+        how='right'
+        )
+
+
     #INFORME TECNICO - DATOS - EXCEL
     df_matched_word_datos_informe_tecnico_corte_excel = merge_word_datos_informe_corte_excel(
         df_word_datos_informe_tec,
         df_corte_excel,
         'both'
+        )
+    
+    #INFORME TECNICO - DATOS - EXCEL (UNMATCHED)
+    df_unmatched_word_datos_informe_tecnico_corte_excel = merge_word_datos_informe_corte_excel(
+        df_word_datos_informe_tec,
+        df_corte_excel_reclamos_datos,
+        'right_only',
+        how='right'
         )
     
     #INFORME TECNICO - TELEFONIA - EXCEL
@@ -186,8 +215,14 @@ def all_objetivos(
         'both'
         )
     
+    #INFORME TECNICO - TELEFONIA - EXCEL (UNMATCHED)
+    df_unmatched_word_telefonia_informe_tecnico_corte_excel = merge_word_telefonia_informe_corte_excel(
+        df_word_telefonia_informe_tec,
+        df_corte_excel_reclamos_telefonia,
+        'right_only',
+        how='right'
+        )
     
-
     df_componente_ii = df_matched_corte_sga335_Sharepoint_cuismp_sga380[
         df_matched_corte_sga335_Sharepoint_cuismp_sga380['COMPONENTE'] == 'COMPONENTE II'
     ]
@@ -217,6 +252,10 @@ def all_objetivos(
         )
 
     obj2_df = run_objetivo_2(
+        df_unmatched_word_datos_averias_corte_excel,
+        df_unmatched_word_telefonia_averias_corte_excel,
+        df_unmatched_word_datos_informe_tecnico_corte_excel,
+        df_unmatched_word_telefonia_informe_tecnico_corte_excel,
         df_matched_word_datos_averias_corte_excel,
         df_matched_word_telefonia_averias_corte_excel,
         df_matched_word_datos_informe_tecnico_corte_excel,
