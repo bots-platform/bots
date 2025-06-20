@@ -10,7 +10,8 @@ log_exceptions
 def merge_word_datos_informe_corte_excel(
         df_word_informe_tecnico_datos: pd.DataFrame,
         df_corte_excel: pd.DataFrame,
-        match_type:str
+        match_type:str,
+        how:str = 'left'
     ) -> pd.DataFrame:
         """
         Common merge function for Objective 2.
@@ -24,7 +25,7 @@ def merge_word_datos_informe_corte_excel(
         df_word_informe_tecnico_datos,
         df_corte_excel,
         on='nro_incidencia',
-        how='left',
+        how=how,
         indicator=True,
         suffixes=('_word_datos_informe' , '_corte_excel')
         )
