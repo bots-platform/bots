@@ -10,7 +10,8 @@ from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators 
 def merge_word_datos_averias_corte_excel(
         df_word_datos_averias: pd.DataFrame,
         df_corte_excel: pd.DataFrame,
-        match_type:str
+        match_type:str,
+        how: str = 'left'
     ) -> pd.DataFrame:
         """
         Common merge function for Objective 2.
@@ -24,12 +25,14 @@ def merge_word_datos_averias_corte_excel(
         df_word_datos_averias,
         df_corte_excel,
         on='nro_incidencia',
-        how='left',
+        how=how,
         indicator=True,
         suffixes=('_word_datos_averias', '_corte_excel')
         )
     
         matched_rows = df_merge_word_datos_corte_excel[df_merge_word_datos_corte_excel['_merge'] == match_type]
         return matched_rows
+
+  
 
     
