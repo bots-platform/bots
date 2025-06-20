@@ -10,7 +10,6 @@ from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators 
 def merge_word_datos_anexos_disponibilidad_df_merged_sga(
         df_matched_corte_sga335_Sharepoint_cuismp_sga380: pd.DataFrame,
         df_word_anexos_disponibilidad_datos: pd.DataFrame,
-        #match_type:str
     ) -> pd.DataFrame:
         """
         Common merge function for Objective 2.
@@ -25,13 +24,12 @@ def merge_word_datos_anexos_disponibilidad_df_merged_sga(
         df_word_anexos_disponibilidad_datos,
         on='nro_incidencia',
         how='left',
-        #indicator='merge_flag_datos',
         suffixes=('_word_datos_anexos_indisp' , '_dfs_merged')
         )
        
-        # cols_a_reemplazar = ['indisponibilidad_header', 'indisponibilidad_periodos', 'indisponibilidad_total']
+        cols_a_reemplazar = ['indisponibilidad_header', 'indisponibilidad_periodos', 'indisponibilidad_total']
 
-        # df_merge_word_datos_anexos_disponibilidad_df_merged_sga[cols_a_reemplazar] = df_merge_word_datos_anexos_disponibilidad_df_merged_sga[cols_a_reemplazar].fillna('no encontrado')
+        df_merge_word_datos_anexos_disponibilidad_df_merged_sga[cols_a_reemplazar] = df_merge_word_datos_anexos_disponibilidad_df_merged_sga[cols_a_reemplazar].fillna('no encontrado')
 
         #matched_rows = df_merge_word_datos_anexos_disponibilidad_df_merged_sga[df_merge_word_datos_anexos_disponibilidad_df_merged_sga['merge_flag_datos'] == match_type]
         return df_merge_word_datos_anexos_disponibilidad_df_merged_sga
