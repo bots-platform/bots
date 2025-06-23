@@ -4,7 +4,7 @@ from typing import List, Dict
 from datetime import datetime
 import re
 
-from app.modules.sga.minpub.report_validator.service.objetivos.utils.calculations import has_multiple_A_traves_mayus
+from app.modules.sga.minpub.report_validator.service.objetivos.utils.calculations import has_cliente_debido_error, has_multiple_A_traves_mayus
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.calculations import extract_date_range_body
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.calculations import extract_date_range_last
 
@@ -30,6 +30,7 @@ def validation_medidas_correctivas(merged_df: pd.DataFrame) -> pd.DataFrame:
     df['it_first_ok'] = True
     df['it_last_ok'] = True
     df['no_repeticion_A_traves_ok'] = True
+    df['cliente_debido_ok'] = True
     # df['ortografia_ok'] = True
 
 
@@ -78,13 +79,15 @@ def validation_medidas_correctivas(merged_df: pd.DataFrame) -> pd.DataFrame:
 
 
     df['no_repeticion_A_traves_ok'] = ~df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS'].apply(has_multiple_A_traves_mayus)
+    df['cliente_debido_ok'] = ~df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS'].apply(has_cliente_debido_error)
  
     df['Validation_OK'] = (
         df['mc_first_ok'] &
         df['mc_last_ok'] &
         df['it_first_ok'] &
         df['it_last_ok'] &
-        df['no_repeticion_A_traves_ok']
+        df['no_repeticion_A_traves_ok'] &
+        df['cliente_debido_ok']
         # df['ortografia_ok'] &
     )
 
@@ -93,7 +96,8 @@ def validation_medidas_correctivas(merged_df: pd.DataFrame) -> pd.DataFrame:
         (~df['mc_last_ok']).astype(int)+
         (~df['it_first_ok']).astype(int)+
         (~df['it_last_ok']).astype(int)+
-        (~df['no_repeticion_A_traves_ok']).astype(int)       
+        (~df['no_repeticion_A_traves_ok']).astype(int)+
+        (~df['cliente_debido_ok']).astype(int)
         # (~df['ortografia_ok']).astype(int)+ 
     )
 
@@ -143,7 +147,12 @@ def build_failure_messages_medidas_correctivas(df:pd.DataFrame) -> pd.DataFrame:
                     np.where(
                         (~df['no_repeticion_A_traves_ok']),
                     "\n La palabra 'A través' se repite " + df['num_A_traves'].astype(str) + " veces en el parrafo en MEDIDAS CORRECTIVAS:",
-                    "") 
+                    "") +
+                    np.where(
+                        ~df['cliente_debido_ok'],
+                        "\nSe encontró un error de redacción con 'cliente/debido' en la columna 'MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS'.",
+                        ""
+                    )
                     # np.where(~df['ortografia_ok'],
                     # "  Errores ortográficos/gramaticales en el parrafo en MEDIDAS CORRECTIVAS",
                     # "")  +
