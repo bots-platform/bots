@@ -233,6 +233,18 @@ def has_multiple_A_traves_mayus(text: str) -> bool:
     """
     return count_A_traves_mayus(text) > 1
 
+@log_exceptions
+def has_cliente_debido_error(text: str) -> bool:
+    """
+    Returns True if the text contains variations of "cliente/debido", which are considered writing errors.
+    The variations checked are: "cliente/ debido", "cliente / debido", "cliente /debido", "cliente/debido".
+    The check is case-insensitive.
+    """
+    if not isinstance(text, str):
+        return False
+    pattern = re.compile(r'cliente\s*/\s*debido', re.IGNORECASE)
+    return bool(pattern.search(text))
+
 
 # EXTRACT RANGE DATOS FECHA INICIO Y FIN FROM INDISPONIBILIDAD EXCEL Y SGA 
 
