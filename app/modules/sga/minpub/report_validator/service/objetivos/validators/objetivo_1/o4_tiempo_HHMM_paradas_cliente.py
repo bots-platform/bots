@@ -48,7 +48,7 @@ def validation_tiempo_HHMM_paradas_cliente(df_merged: pd.DataFrame) -> pd.DataFr
             mins = int(minutes % 60)
 
             time_str = f"{hours:02d}:{mins:02d}"
-            print(f"Converted {minutes} minutes to {time_str}")
+            #print(f"Converted {minutes} minutes to {time_str}")
             return time_str
         except Exception as e:
             print(f"Error converting {minutes} to HH:MM {e}")

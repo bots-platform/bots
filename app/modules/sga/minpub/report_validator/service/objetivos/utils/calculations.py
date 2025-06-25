@@ -94,7 +94,7 @@ def calculate_total_clock_stop_minutes_by_incidencia(
     nro_incidencia_stops = df_sga_paradas[df_sga_paradas['nro_incidencia'] == nro_incidencia].copy()
 
     if nro_incidencia_stops.empty:
-        logger.info(f"No clock stops found for incident {nro_incidencia}")
+        #logger.info(f"No clock stops found for incident {nro_incidencia}")
         return 0.0
     
     clock_stops = []
