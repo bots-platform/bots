@@ -56,7 +56,6 @@ def validate_averias_word( merged_df: pd.DataFrame, componente_word: str) -> pd.
     df['tiempo_hhmm_match'] = df['TIEMPO (HH:MM)_trimed'] == df['Tiempo real de afectación (HH:MM)']
     df['componente_match'] = df['COMPONENTE'] == df['Componente']
     df['df_match'] = df['DF'] == df['Distrito Fiscal']
-    print("columnas disponibles: ", df.columns.tolist())
     df['fin_inicio_hhmm_match'] = df['FIN-INICIO (HH:MM)_trimed'] == df['Tiempo Total (HH:MM)']
     #df['dt_causa_match'] = df['DETERMINACION DE LA CAUSA']	== df['Determinación de la causa']
     df['responsabilidad_match'] = df['RESPONSABILIDAD'] == df['responsable']
