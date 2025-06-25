@@ -96,19 +96,19 @@ def build_failure_messages_validate_informe_tecnico_word(df: pd.DataFrame) -> pd
 
             np.where(~df['Fecha_hora_inicio_match'],
                      "\n No coincide Fecha y hora inicio de WORD informe técnico : \n" + df['Fecha y hora inicio'].astype(str) +
-                     "\n es diferente a EXCEL-CORTE:  \n\n" + df['FECHA_Y_HORA_INICIO_fmt'].astype(str) , "") +
+                     "\n , es diferente a EXCEL-CORTE:  \n\n" + df['FECHA_Y_HORA_INICIO_fmt'].astype(str) , "") +
 
             np.where(~df['fecha_hora_fin_match'],
                      "\n  No coincide Fecha y hora fin de WORD en informe técnico : \n" + df['Fecha y hora fin'].astype(str) +
-                     "\n es diferente a EXCEL-CORTE:  \n" + df['FECHA_Y_HORA_FIN_fmt'].astype(str), "") +
+                     "\n , es diferente a EXCEL-CORTE:  \n" + df['FECHA_Y_HORA_FIN_fmt'].astype(str), "") +
 
             np.where(~df['CUISMP_match'],
                      "\n  No coincide CUISMP de WORD informe técnico : \n" + df['CUISMP_word'].astype(str) +
-                     "\n es diferente a CUISMP en EXCEL-CORTE: \n" + df['CUISMP_corte_excel'].astype(str), "") +
+                     "\n , es diferente a CUISMP en EXCEL-CORTE: \n" + df['CUISMP_corte_excel'].astype(str), "") +
 
             np.where(~df['tipo_caso_match'],
                      "\n\n  No coincide Avería reportada de WORD informe técnico : \n\n" + df['Tipo Caso'].astype(str) +
-                     "\n\n es diferente a TIPO CASO en EXCEL-CORTE: \n\n" + df['TIPO CASO'].astype(str), "") +
+                     "\n\n , es diferente a TIPO CASO en EXCEL-CORTE: \n\n" + df['TIPO CASO'].astype(str), "") +
                     
             np.where(~df['observacion_match'],
                      "\n  No coincide Observacion de WORD informe técnico : \n" + df['Observación'].astype(str) +
@@ -116,12 +116,12 @@ def build_failure_messages_validate_informe_tecnico_word(df: pd.DataFrame) -> pd
 
             np.where(~df['dt_causa_match'],
                      "\n  No coincide Determinación de la causa de WORD informe técnico : \n" + df['DETERMINACIÓN DE LA CAUSA_word'].astype(str) +
-                     "\n es diferente a DETERMINACION DE LA CAUSA en EXCEL-CORTE: \n" + df['DETERMINACIÓN DE LA CAUSA_corte_excel'].astype(str), "") +
+                     "\n , es diferente a DETERMINACION DE LA CAUSA en EXCEL-CORTE: \n" + df['DETERMINACIÓN DE LA CAUSA_corte_excel'].astype(str), "") +
 
 
             np.where(~df['medidas_correctivas_match'],
-                     "\n  No coincide MEDIDAS CORRECTIVAS de WORD informe técnico : \n" +
-                     "\n es diferente a MEDIDAS CORRECTIVAS en EXCEL-CORTE: \n" , "") 
+                     "\n  No coincide MEDIDAS CORRECTIVAS de WORD informe técnico : \n" + df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS_word'].astype(str) +
+                     "\n , es diferente a MEDIDAS CORRECTIVAS en EXCEL-CORTE: \n" + df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS_corte_excel'].astype(str), "") 
 
         )
     )
@@ -130,6 +130,8 @@ def build_failure_messages_validate_informe_tecnico_word(df: pd.DataFrame) -> pd
     
     df_failures = df[df['fail_count'] > 0]
     return df_failures[['nro_incidencia', 'mensaje', 'TIPO REPORTE','objetivo']]
+
+
 
 
 
