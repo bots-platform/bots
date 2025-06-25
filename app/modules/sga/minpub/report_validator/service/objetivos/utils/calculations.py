@@ -160,7 +160,7 @@ def calculate_total_clock_stop_by_incidencia(
     nro_incidencia_stops = df_sga_paradas[df_sga_paradas['nro_incidencia'] == nro_incidencia].copy()
 
     if nro_incidencia_stops.empty:
-        logger.info(f"No clock stops found for incident {nro_incidencia}")
+        #logger.info(f"No clock stops found for incident {nro_incidencia}")
         return 0.0
     
     clock_stops = []
@@ -311,7 +311,7 @@ def extract_date_range_body(text: str) -> Tuple[Optional[str], Optional[str]]:
         return (None, None)
 
     lines = text.splitlines()
-    meta_pat = re.compile(r'(?i)^fecha y hora(?: de)? (?:inicio|fin)\s*:')
+    meta_pat = re.compile(r'(?i)^fecha y hora(?: de)? (?:inicio|fin)\s*:?')
 
     while lines and (not lines[-1].strip() or meta_pat.match(lines[-1].strip())):
         lines.pop()
@@ -354,7 +354,7 @@ def extract_date_range_body_v2(text: str) -> Tuple[Optional[str], Optional[str]]
         return (None, None)
 
     lines = text.splitlines()
-    meta_pat = re.compile(r'(?i)^fecha y hora(?: de)? (?:inicio|fin)\s*:')
+    meta_pat = re.compile(r'(?i)^fecha y hora(?: de)? (?:inicio|fin)\s*:?')
 
     while lines and (not lines[-1].strip() or meta_pat.match(lines[-1].strip())):
         lines.pop()
@@ -410,7 +410,6 @@ def extract_date_range_body_v2(text: str) -> Tuple[Optional[str], Optional[str]]
         start_date if start_date else "No disponible",
         end_date if end_date else "No disponible"
     )
-
 
 
 # @log_exceptions
