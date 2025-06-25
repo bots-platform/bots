@@ -111,6 +111,5 @@ def save_info_obtained(df_sharepointATCORPGeneral_ncc_semaforo_SharepointMesaATC
     df_sharepointATCORPGeneral_ncc_semaforo_SharepointMesaATCORP.to_excel(df_sharepointATCORPGeneral_ncc_semaforo_SharepointMesaATCORP_ruta, index=False, engine='openpyxl')
     logger.info(f"Reporte Combinado guardado en: {df_sharepointATCORPGeneral_ncc_semaforo_SharepointMesaATCORP_ruta}")
 
-
     return df_sharepointATCORPGeneral_ncc_semaforo_SharepointMesaATCORP_ruta
 
