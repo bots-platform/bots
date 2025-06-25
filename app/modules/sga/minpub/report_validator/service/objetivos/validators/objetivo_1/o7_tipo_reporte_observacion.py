@@ -42,9 +42,11 @@ def validation_tipo_reporte_observacion(merged_df:pd.DataFrame)-> pd.DataFrame:
         ('RECLAMO', 'COMPONENTE II') : "Se generó ticket para la revisión del servicio de datos de la sede {}",
         ('RECLAMO', 'COMPONENTE III') : "Se generó ticket para la revisión del servicio de datos de la sede {}",
         ('RECLAMO', 'COMPONENTE IV') : "Se generó ticket para la revisión del servicio de telefonía de la sede {}",
+        ('RECLAMO', 'COMPONENTE V') : "Se generó ticket para la revisión del servicio de datos de la sede {}",
         ('PROACTIVO', 'COMPONENTE II') : "Se generó ticket para la revisión del servicio de datos de la sede {}",
         ('PROACTIVO', 'COMPONENTE III') : "Se generó ticket para la revisión del servicio de datos de la sede {}",
-        ('PROACTIVO', 'COMPONENTE IV') : "Se generó ticket para la revisión del servicio de telefonía de la sede {}"
+        ('PROACTIVO', 'COMPONENTE IV') : "Se generó ticket para la revisión del servicio de telefonía de la sede {}",
+        ('PROACTIVO', 'COMPONENTE V') : "Se generó ticket para la revisión del servicio de datos de la sede {}"
     }
 
     for (tipo_reporte, tipo_componente), pattern_tempalte in componente_patterns.items():
@@ -153,25 +155,25 @@ def build_failure_messages_reporte_observacion(df: pd.DataFrame) -> pd.DataFrame
         (
             np.where((df['TIPO REPORTE'] == 'RECLAMO') & (~df['reclamo_tipo_caso_valid']),
                      "\n\n EN SGA columna tipo_caso:  \n\n" + df['tipo_caso'].astype(str) + 
-                     " \n\n no está en lista permitida : (SIN SERVICIO , ENLACE LENTO, SIN SERVICIO-NO DA TONO , OTROS CALIDAD).",
+                     " \n\n , no está en lista permitida : (SIN SERVICIO , ENLACE LENTO, SIN SERVICIO-NO DA TONO , OTROS CALIDAD).",
                     "") +
 
             np.where((df['TIPO REPORTE'] == 'RECLAMO') & (~df['reclamo_no_monitoreo']),
-                     "\n\n EN SGA columna tipo_caso: \n\n " + df['tipo_caso'].astype(str) + "\n\n no debe terminar en 'MONITOREO'.",
+                     "\n\n EN SGA columna tipo_caso: \n\n " + df['tipo_caso'].astype(str) + "\n\n , no debe terminar en 'MONITOREO'.",
                     "") +
 
             np.where((df['TIPO REPORTE'] == 'RECLAMO') & (~df['reclamo_medidas_correctivas_valid']),
                      "\n No coincide  EXCEL-CORTE RECLAMO columna MEDIDAS CORRECTIVAS : \n" +
-                     "\n  no debe iniciar con 'A través de los Sistemas de Monitoreo de Claro, de manera proactiva se identificó'.",
+                     "\n  , no debe iniciar con 'A través de los Sistemas de Monitoreo de Claro, de manera proactiva se identificó'.",
                     "") +
 
             np.where((df['TIPO REPORTE'] == 'RECLAMO') & (~df['reclamo_observacion_valid']),
-                     "\n EN EXCEL-CORTE RECLAMO columna OBSERVACION: debe iniciar con \n" + df['observacion_pattern_componente_tipo_reporte'].astype(str) + 
-                     "\n pero se obtuvo: \n " + df['OBSERVACIÓN'].astype(str) ,
+                     "\n EN EXCEL-CORTE RECLAMO columna OBSERVACION: debe ser: \n" + df['observacion_pattern_componente_tipo_reporte'].astype(str) + 
+                     "\n , pero se obtuvo: \n " + df['OBSERVACIÓN'].astype(str) ,
                     "") +
 
             np.where((df['TIPO REPORTE'] == 'PROACTIVO') & (~df['proactivo_tipo_caso_valid']),
-                     "\n\n EN SGA columna tipo_caso: \n\n" + df['tipo_caso'].astype(str) + "\n\n debe terminar en 'MONITOREO'.",
+                     "\n\n EN SGA columna tipo_caso: \n\n" + df['tipo_caso'].astype(str) + "\n\n , debe terminar en 'MONITOREO'.",
                     "") +
 
             np.where((df['TIPO REPORTE'] == 'PROACTIVO') & (~df['proactivo_medidas_correctivas_valid']),
@@ -181,7 +183,7 @@ def build_failure_messages_reporte_observacion(df: pd.DataFrame) -> pd.DataFrame
 
             np.where((df['TIPO REPORTE'] == 'PROACTIVO') & (~df['proactivo_observacion_valid']),
                     "\n EN EXCEL-CORTE PROACTIVO columna OBSERVACION  debe ser: \n"  + df['observacion_pattern_componente_tipo_reporte'].astype(str) +
-                      "\n  pero se obtuvo \n"  +  df['OBSERVACIÓN'].astype(str),
+                      "\n  , pero se obtuvo \n"  +  df['OBSERVACIÓN'].astype(str),
                     "") 
         )
     )
