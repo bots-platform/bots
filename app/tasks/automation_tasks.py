@@ -3,7 +3,8 @@ from app.core.celery_app import celery_app
 from app.modules.sga.service_tecnico_operaciones import SGAService
 from app.modules.sga.minpub.report_validator.service.objetivos.all_objetivos import all_objetivos
 import threading
-from app.shared.lock import global_lock, actividad_humana
+from app.shared.lock import global_lock
+from app.shared.activity_monitor import get_activity_status, reset_activity_status
 from typing import Dict, Any
 import os
 import random
@@ -172,6 +173,9 @@ def keep_system_active_task(self):
     logger.info("Ejecutando keep_system_active_task...")
     patrones = ["click_1", "click_2"]
     
+    # Obtener estado de actividad desde archivo temporal
+    actividad_humana = get_activity_status()
+    
     if actividad_humana["mouse"] or actividad_humana["teclado"]:
         logger.info("[keep_system_active] Usuario está activo, no simulo nada.")
     else:
@@ -191,8 +195,8 @@ def keep_system_active_task(self):
         else:
             logger.info("[keep_system_active] Dispositivo ocupado por API.")
 
-    actividad_humana["mouse"] = False
-    actividad_humana["teclado"] = False
+    # Resetear estado de actividad
+    reset_activity_status()
     
     # Programar la siguiente ejecución
     delay = random.randint(25, 40)
