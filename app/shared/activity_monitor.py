@@ -1,8 +1,14 @@
 import logging
 from pynput import mouse, keyboard
-from app.shared.lock import actividad_humana
+import json
+import os
+import tempfile
+import time
 
 logger = logging.getLogger(__name__)
+
+# Archivo temporal para compartir estado entre procesos
+ACTIVITY_FILE = os.path.join(tempfile.gettempdir(), 'actividad_humana.json')
 
 class ActivityMonitor:
     def __init__(self):
@@ -10,12 +16,25 @@ class ActivityMonitor:
         self.keyboard_listener = None
         self.is_running = False
     
+    def _save_activity(self, mouse_active, teclado_active):
+        """Guarda el estado de actividad en un archivo temporal"""
+        try:
+            activity_data = {
+                "mouse": mouse_active,
+                "teclado": teclado_active,
+                "timestamp": time.time()
+            }
+            with open(ACTIVITY_FILE, 'w') as f:
+                json.dump(activity_data, f)
+        except Exception as e:
+            logger.error(f"Error guardando actividad: {e}")
+    
     def on_mouse_move(self, x, y):
-        actividad_humana["mouse"] = True
+        self._save_activity(True, False)
         logger.info("Actividad de mouse detectada")
     
     def on_key_press(self, key):
-        actividad_humana["teclado"] = True
+        self._save_activity(False, True)
         logger.info("Actividad de teclado detectada")
     
     def start(self):
@@ -45,6 +64,39 @@ class ActivityMonitor:
         
         self.is_running = False
         logger.info("ActivityMonitor detenido")
+
+def get_activity_status():
+    """Obtiene el estado de actividad desde el archivo temporal"""
+    try:
+        if os.path.exists(ACTIVITY_FILE):
+            # Verificar si el archivo es muy antiguo (más de 60 segundos)
+            file_time = os.path.getmtime(ACTIVITY_FILE)
+            if time.time() - file_time > 60:
+                # Archivo muy antiguo, resetear
+                return {"mouse": False, "teclado": False}
+            
+            with open(ACTIVITY_FILE, 'r') as f:
+                activity_data = json.load(f)
+                return {"mouse": activity_data.get("mouse", False), 
+                       "teclado": activity_data.get("teclado", False)}
+        else:
+            return {"mouse": False, "teclado": False}
+    except Exception as e:
+        logger.error(f"Error obteniendo estado de actividad: {e}")
+        return {"mouse": False, "teclado": False}
+
+def reset_activity_status():
+    """Resetea el estado de actividad en el archivo temporal"""
+    try:
+        activity_data = {
+            "mouse": False,
+            "teclado": False,
+            "timestamp": time.time()
+        }
+        with open(ACTIVITY_FILE, 'w') as f:
+            json.dump(activity_data, f)
+    except Exception as e:
+        logger.error(f"Error reseteando estado de actividad: {e}")
 
 # Instancia global
 activity_monitor = ActivityMonitor() 
