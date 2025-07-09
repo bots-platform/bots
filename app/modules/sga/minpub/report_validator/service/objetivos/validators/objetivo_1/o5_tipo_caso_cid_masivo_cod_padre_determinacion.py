@@ -9,7 +9,7 @@ from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators 
 )
 
 import re
-pattern = re.compile(r'(?:COMPONENTE|Componente|COMONENTE)\s*(?:IV|II|III|I|V)(?:\s*-|\s*)\s*', re.IGNORECASE)
+pattern = re.compile(r'(?:COMPONENTE|Componente|COMONENTE)\s*(?:IV|II|III|I|V)(?:\s*-|\s*\.-|\s*)\s*', re.IGNORECASE)
 
 @log_exceptions
 def remove_componente_prefix(text: str) -> str:
