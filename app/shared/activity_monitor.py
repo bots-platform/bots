@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 # Archivo temporal para compartir estado entre procesos
 ACTIVITY_FILE = os.path.join(tempfile.gettempdir(), 'actividad_humana.json')
+logger.info(f"Archivo de actividad temporal ubicado en: {ACTIVITY_FILE}")
 
 class ActivityMonitor:
     def __init__(self):
