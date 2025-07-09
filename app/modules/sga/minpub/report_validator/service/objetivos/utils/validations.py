@@ -57,6 +57,7 @@ def validate_required_columns_from_excel(path_excel, required_columns, skipfoote
             col
             .str.replace('\r', ' ', regex=False)   
             .str.replace('_x000D_', '', regex=False)
+            .str.replace('\n', '', regex=False)
             .str.strip()
         ))
     )
