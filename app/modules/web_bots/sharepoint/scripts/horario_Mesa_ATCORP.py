@@ -2,7 +2,7 @@ import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
 
 from utils.logger_config import get_sharepoint_HorarioMesaATCORP
-import win32com.client
+#import win32com.client
 import os
 from datetime import datetime
 import pandas as pd
