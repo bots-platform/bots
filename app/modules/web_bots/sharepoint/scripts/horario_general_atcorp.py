@@ -2,7 +2,7 @@ from datetime import datetime
 from app.modules.web_bots.browser.setup_chrome import setup_chrome_driver
 # from app.modules.web_bots.sharepoint.scripts.sharepoint_scraper import scrape_sharepoint_page
 from utils.logger_config import get_sharepoint_HorarioGeneralATCORP_logger
-import win32com.client
+#import win32com.client
 import pandas as pd
 import unicodedata
 
@@ -14,13 +14,13 @@ from fastapi import HTTPException
 def guardar_excel_como():
    
     logger.info("Tratando de conectar con Excel Aplication")
-    excel = win32com.client.Dispatch("Excel.Application")
-    excel.Visible = True
+    #excel = win32com.client.Dispatch("Excel.Application")
+    #excel.Visible = True
 
     nombre_archivo = "Horario General ATcorp_2025.xlsx"
 
-    for wb in excel.Workbooks:
-        print(wb.Name)
+    #for wb in excel.Workbooks:
+    #    print(wb.Name)
 
 
     workbook = None

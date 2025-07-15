@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from time import sleep
-from pywinauto import Application, Desktop
+#from pywinauto import Application, Desktop
 import os
 import logging
 from datetime import datetime, date

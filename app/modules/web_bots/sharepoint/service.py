@@ -1,6 +1,6 @@
 from datetime import datetime
 from fastapi import HTTPException
-import win32com.client
+#import win32com.client
 from app.modules.web_bots.browser.setup_chrome import setup_chrome_driver
 from config import SHAREPOINT_USER, SHAREPOINT_PASSWORD
 import time
@@ -15,10 +15,10 @@ class SharepointService:
     def guardar_excel_como(self):
        
         logger.info("Tratando de conectar con Excel Aplication")
-        excel = win32com.client.Dispatch("Excel.Application")
-        excel.Visible = True 
+        #excel = win32com.client.Dispatch("Excel.Application")
+        #excel.Visible = True 
 
-        workbook = excel.ActiveWorkbook
+        #workbook = excel.ActiveWorkbook
 
         carpeta_destino = os.path.abspath("media/sharepoint")
 
@@ -32,7 +32,7 @@ class SharepointService:
 
         try:
             logger.info("Tratando de guardar conectar con Excel Aplication")
-            workbook.SaveAs(ruta_guardado)
+            #workbook.SaveAs(ruta_guardado)
             print(f"Archivo guardado en: {ruta_guardado}")
             
             #workbook.Close(SaveChanges=False)
