@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  # Backend Services (from bots_rpa/docker-compose.yml)
+  postgres:
+    extends:
+      file: ./docker-compose.yml
+      service: postgres
+
+  redis:
+    extends:
+      file: ./docker-compose.yml
+      service: redis
+
+  backend:
+    extends:
+      file: ./docker-compose.yml
+      service: backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery_worker:
+    extends:
+      file: ./docker-compose.yml
+      service: celery_worker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery_beat:
+    extends:
+      file: ./docker-compose.yml
+      service: celery_beat
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Frontend Services (from React-Bots/docker-compose.yml)
+  frontend:
+    extends:
+      file: ../React-Bots/docker-compose.yml
+      service: frontend
+    depends_on:
+      - backend
+    networks:
+      - rpa_network
+      - frontend_network
+
+  nginx:
+    extends:
+      file: ../React-Bots/docker-compose.yml
+      service: nginx
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - rpa_network
+      - frontend_network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  rpa_network:
+    driver: bridge
+  frontend_network:
+    driver: bridge 
