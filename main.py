@@ -1,11 +1,11 @@
 import threading
 from app.shared.lock import global_lock
-from app.shared.activity_monitor import activity_monitor
+#from app.shared.activity_monitor import activity_monitor
 import time
 import random
-from pywinauto.keyboard import send_keys
-from pywinauto.mouse import click
-from app.tasks.automation_tasks import keep_system_active_task
+#from pywinauto.keyboard import send_keys
+#from pywinauto.mouse import click
+#from app.tasks.automation_tasks import keep_system_active_task
 import logging
 
 # Configurar logging
@@ -26,11 +26,11 @@ from app.api import (
 
 lock = global_lock
 
-activity_monitor.start()
+#activity_monitor.start()
 
-logger.info("Iniciando tarea keep_system_active_task...")
-result = keep_system_active_task.delay()
-logger.info(f"Tarea keep_system_active_task iniciada con ID: {result.id}")
+#logger.info("Iniciando tarea keep_system_active_task...")
+#result = keep_system_active_task.delay()
+#logger.info(f"Tarea keep_system_active_task iniciada con ID: {result.id}")
 
 
 app = FastAPI(
@@ -67,6 +67,15 @@ app.include_router(permissions_router)
 async def root():
     return {"message": "Welcome to RPA Bots API"}
 
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for Docker and load balancers"""
+    return {
+        "status": "healthy",
+        "service": "RPA Bots API",
+        "version": "1.0.0",
+        "timestamp": time.time()
+    }
 
 if __name__ == "__main__":
     import uvicorn
