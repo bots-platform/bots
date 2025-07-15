@@ -1,4 +1,4 @@
-from pywinauto import Application, Desktop
+#from pywinauto import Application, Desktop
 import logging
 from time import sleep
 from app.modules.sga.scripts.sga_navigation import navegar_sistema_cmr, seleccionar_opcion_sga
