@@ -8,7 +8,7 @@ from app.shared.activity_monitor import get_activity_status, reset_activity_stat
 from typing import Dict, Any
 import os
 import random
-from pywinauto.mouse import click
+#from pywinauto.mouse import click
 import logging
 from celery import shared_task
 from celery.utils.log import get_task_logger
