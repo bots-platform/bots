@@ -1,4 +1,4 @@
-import win32com.client
+#import win32com.client
 import re
 import pandas as pd
 from datetime import datetime
@@ -6,8 +6,8 @@ import os
 
 
 def scrape_from_outlook():  
-    outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
-    inbox = outlook.Folders("Soporte Ministerio Publico").Folders("Bandeja de entrada")
+    #outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
+    #inbox = outlook.Folders("Soporte Ministerio Publico").Folders("Bandeja de entrada")
 
     ticket_pattern = re.compile(r'\bticket\b', re.IGNORECASE)
     #sent_date_pattern = re.compile(r'(?:Enviado el:|Sent:)\s*(.+?)\s(\d{1,2}:\d{2}\s*(?:AM|PM|am|pm)?)', re.IGNORECASE)
