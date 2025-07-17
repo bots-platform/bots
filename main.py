@@ -16,6 +16,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from fastapi.middleware.cors import CORSMiddleware
+from app.core.init_db import init_database
 
 from app.api import (
     sga_router, oplogin_router, newCallCenter_router, semaforo_router,
@@ -23,6 +24,8 @@ from app.api import (
     sharepoint_horario_mesa_router, minpub_router, pronatel_router,
     auth_router, users_router, permissions_router
 )
+from app.api.auth_db import router as auth_db_router
+from app.api.users_db import router as users_db_router
 
 lock = global_lock
 
@@ -33,11 +36,17 @@ lock = global_lock
 #logger.info(f"Tarea keep_system_active_task iniciada con ID: {result.id}")
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Inicializar base de datos al arrancar
+    init_database()
+    yield
+
 app = FastAPI(
     title="RPA Bots API",
     description="API for RPA Bots Management System",
     version="1.0.0",
-
+    lifespan=lifespan
 )
 
 app.add_middleware(
@@ -59,9 +68,13 @@ app.include_router(sharepoint_horario_mesa_router)
 app.include_router(minpub_router)
 app.include_router(pronatel_router)
 
-app.include_router(auth_router)
-app.include_router(users_router)
-app.include_router(permissions_router)
+# app.include_router(auth_router)
+# app.include_router(users_router)
+# app.include_router(permissions_router)
+
+# Nuevas APIs con base de datos (comentar las anteriores cuando esté listo)
+app.include_router(auth_db_router)
+app.include_router(users_db_router)
 
 @app.get("/")
 async def root():
