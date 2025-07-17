@@ -71,6 +71,19 @@ Para ejecutar el proyecto desde la línea de comandos:
 python main.py
 
 ```
+## Tunel, en el puerto 6379 esta corriendo el servicio de redis.
+
+```
+ssh -f -N -L 16379:localhost:6379 user@10.200.90.94
+
+```
+
+## Ejecucion Celery
+
+```
+celery -A app.core.celery_app worker --pool=solo --loglevel=info -Q ui --concurrency=1 --prefetch-multiplier=1
+
+```
 
 
 
