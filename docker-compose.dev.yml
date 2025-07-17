@@ -1,85 +1,81 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database (Development)
+  # PostgreSQL Database
   postgres:
+    image: postgres:15-alpine
+    container_name: rpa_postgres_dev
     environment:
-      POSTGRES_PASSWORD: dev_password
-    ports:
-      - "5432:5432"
+      POSTGRES_DB: rpa_bots
+      POSTGRES_USER: rpa_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admin}
     volumes:
       - postgres_dev_data:/var/lib/postgresql/data
       - ./docker/postgres/init:/docker-entrypoint-initdb.d
-
-  # Redis Cache/Queue (Development)
-  redis:
     ports:
-      - "6379:6379"
+      - "5432:5432"
+    networks:
+      - rpa_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rpa_user -d rpa_bots"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # Redis Cache/Queue
+  redis:
+    image: redis:7-alpine
+    container_name: rpa_redis_dev
+    command: redis-server --appendonly yes
     volumes:
       - redis_dev_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - rpa_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
 
   # Backend API (Development)
   backend:
     build:
       context: .
       dockerfile: docker/backend/Dockerfile
+    container_name: rpa_backend_dev
     environment:
       - ENVIRONMENT=development
-      - DATABASE_URL=postgresql://rpa_user:dev_password@postgres:5432/rpa_bots
+      - DATABASE_URL=postgresql://rpa_user:${POSTGRES_PASSWORD:-admin}@postgres:5432/rpa_bots
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/1
       - CELERY_RESULT_BACKEND=redis://redis:6379/1
       - SECRET_KEY=dev-secret-key-change-in-production
     volumes:
-      - .:/app
+      - .:/app  # Mapeo completo para desarrollo
       - ./media:/app/media
       - ./logs:/app/logs
     ports:
       - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - rpa_network
     command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
-
-  # Celery Worker (Development)
-  celery_worker:
-    build:
-      context: .
-      dockerfile: docker/backend/Dockerfile
-    environment:
-      - ENVIRONMENT=development
-      - DATABASE_URL=postgresql://rpa_user:dev_password@postgres:5432/rpa_bots
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/1
-      - CELERY_RESULT_BACKEND=redis://redis:6379/1
-      - SECRET_KEY=dev-secret-key-change-in-production
-    volumes:
-      - .:/app
-      - ./media:/app/media
-      - ./logs:/app/logs
-    command: ["celery", "-A", "app.core.celery_app", "worker", "--loglevel=info", "--reload"]
-
-  # Frontend (Development)
-  frontend:
-    build:
-      context: ./React-Bots
-      dockerfile: ../docker/frontend/Dockerfile.dev
-    environment:
-      - NODE_ENV=development
-      - VITE_API_URL=http://localhost:8000
-    volumes:
-      - ./React-Bots:/app
-      - /app/node_modules
-    ports:
-      - "3000:3000"
-    command: ["npm", "run", "dev"]
-
-  # Nginx (Development - Optional)
-  nginx:
-    ports:
-      - "80:80"
-    volumes:
-      - ./docker/nginx/nginx.dev.conf:/etc/nginx/nginx.conf
+    restart: unless-stopped
 
 volumes:
   postgres_dev_data:
     driver: local
   redis_dev_data:
-    driver: local 
+    driver: local
+
+networks:
+  rpa_network:
+    driver: bridge 
