@@ -315,6 +315,7 @@ def generando_reporte_sga(main_window, fecha_inicio, fecha_fin, indice_reporte_d
             pattern_non_alnum = re.compile(r"[^a-zA-Z0-9 ]")
             final_df["remedyobs"] = final_df["remedyobs"].str.replace(pattern_non_alnum, '', regex=True)
             final_df["it_medidas_tomadas"] = final_df["it_medidas_tomadas"].str.replace(pattern_non_alnum, '', regex=True)
+            final_df["it_determinacion_de_la_causa"] = final_df["it_determinacion_de_la_causa"].str.replace(pattern_non_alnum, '', regex=True)
         
         logger.info("Seleccionando la columna codigo de incidencias, partiendo en lotes de  990 tickets (limit sga consulta detalle) and generate final reporte procesada y consolidada correctamente.")
         
