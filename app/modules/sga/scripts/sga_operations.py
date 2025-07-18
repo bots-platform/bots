@@ -233,6 +233,7 @@ def seleccion_multiple_listado(numero_tickets):
         send_keys('{ENTER}')
         send_keys('{TAB}')
         send_keys('{ENTER}')
+        sleep(5)
         for x in range(numero_tickets+1):
             send_keys('{TAB}')
         send_keys('{TAB}')
