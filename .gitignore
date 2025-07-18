@@ -11,4 +11,31 @@ app.db
 permissions.json
 users.json
 
+# Archivos de configuración sensibles
+.env.prod
+.env.production
+.env.local
+
+# Archivos de desarrollo
+new-chrome-profile/
+*.log
+*.tmp
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Sistema
+Thumbs.db
+
+# Archivos de backup
+*.sql
+*.bak
+*.backup
+
+# Archivos temporales
+*.temp
+
 
