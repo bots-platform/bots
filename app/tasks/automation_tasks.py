@@ -185,10 +185,10 @@ def keep_system_active_task(self):
                 accion = random.choice(patrones)
                 if accion == "click_1":
                     logger.info("[keep_system_active] Realizando clic en (35,10)")
-                    click(button='left', coords=(135, 10))
+                    click(button='left', coords=(135, 30))
                 elif accion == "click_2":
                     logger.info("[keep_system_active] Realizando clic en (115,5)")
-                    click(button='left', coords=(115, 5))
+                    click(button='left', coords=(115, 25))
             finally:
                 logger.info("[keep_system_active] Liberando lock...")
                 sga_global_lock.release()
