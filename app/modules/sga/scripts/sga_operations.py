@@ -313,7 +313,7 @@ def generando_reporte_sga(main_window, fecha_inicio, fecha_fin, indice_reporte_d
         final_df = pd.concat(list_of_dfs, ignore_index=True)
 
         if indice_reporte_detalle == 4: # General
-            pattern_special_chars = re.compile(r'[^\w\sáéíóúÁÉÍÓÚñÑüÜ\-]')
+            pattern_special_chars = re.compile(r'[^\w\sáéíóúÁÉÍÓÚñÑüÜ\-\/\.:,\(\)\[\]\{\}\?\!\"\'\;]')
             final_df["remedyobs"] = final_df["remedyobs"].str.replace(pattern_special_chars, '', regex=True)
             final_df["it_medidas_tomadas"] = final_df["it_medidas_tomadas"].str.replace(pattern_special_chars, '', regex=True)
             final_df["it_determinacion_de_la_causa"] = final_df["it_determinacion_de_la_causa"].str.replace(pattern_special_chars, '', regex=True)
