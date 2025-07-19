@@ -40,7 +40,7 @@ def seed_initial_data():
         # Crear usuario admin si no existe
         admin_user = db.query(User).filter(User.username == "admin").first()
         if not admin_user:
-            admin_password = os.getenv("ADMIN_PASSWORD", "admin123")
+            admin_password = os.getenv("ADMIN_PASSWORD", "losmelones")
             hashed_password = auth.get_password_hash(admin_password)
             
             admin_user = User(

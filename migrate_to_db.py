@@ -13,6 +13,7 @@ sys.path.append(str(Path(__file__).parent))
 from app.models.migrations import run_migration
 from app.models.database import engine
 from app.models import Base
+from sqlalchemy import text
 
 def main():
     """Función principal de migración"""
@@ -23,7 +24,7 @@ def main():
         # Verificar conexión a la base de datos
         print("📡 Verificando conexión a la base de datos...")
         with engine.connect() as conn:
-            result = conn.execute("SELECT 1")
+            result = conn.execute(text("SELECT 1"))
             print("✅ Conexión a PostgreSQL exitosa")
         
         # Ejecutar migración
@@ -33,13 +34,13 @@ def main():
         print("🎉 ¡Migración completada exitosamente!")
         print("\n📋 Resumen:")
         print("   ✅ Tablas creadas en PostgreSQL")
-        print("   ✅ Usuario admin creado (admin/admin123)")
+        print("   ✅ Usuario admin creado (admin/losmelones)")
         print("   ✅ Permisos iniciales configurados")
         print("   ✅ Datos migrados desde JSON (si existían)")
         
         print("\n🔐 Credenciales de acceso:")
         print("   Usuario: admin")
-        print("   Contraseña: admin123")
+        print("   Contraseña: losmelones")
         print("   ⚠️  IMPORTANTE: Cambia la contraseña después del primer login!")
         
         print("\n📝 Próximos pasos:")

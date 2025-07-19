@@ -1,0 +1,110 @@
+version: '3.8'
+
+services:
+  # Backend Services con puertos específicos para el usuario
+  postgres:
+    extends:
+      file: ./docker-compose.yml
+      service: postgres
+    ports:
+      - "15432:5432"  # Puerto PostgreSQL específico para el usuario
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    extends:
+      file: ./docker-compose.yml
+      service: redis
+    ports:
+      - "16379:6379"  # Puerto Redis específico para el usuario
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.simple
+    container_name: rpa_backend
+    environment:
+      - DATABASE_URL=postgresql://rpa_user:${POSTGRES_PASSWORD:-admin}@postgres:5432/rpa_bots
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-here}
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+    ports:
+      - "8000:8000"  # Puerto Backend estándar para acceso externo
+    user: "appuser:appuser"  # Usar el usuario del contenedor
+    command: ["uvicorn", "main_complete:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - rpa_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  celery_worker:
+    extends:
+      file: ./docker-compose.yml
+      service: celery_worker
+    user: "1001:1001"  # Usar el usuario actual
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery_beat:
+    extends:
+      file: ./docker-compose.yml
+      service: celery_beat
+    user: "1001:1001"  # Usar el usuario actual
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Frontend Services con puertos estándar
+  frontend:
+    extends:
+      file: ../React-Bots/docker-compose.yml
+      service: frontend
+    ports:
+      - "8080:80"  # Puerto Frontend estándar para acceso externo
+    depends_on:
+      - backend
+    networks:
+      - rpa_network
+      - frontend_network
+
+  nginx:
+    extends:
+      file: ../React-Bots/docker-compose.yml
+      service: nginx
+    ports:
+      - "80:80"      # Puerto HTTP estándar
+      - "443:443"    # Puerto HTTPS estándar
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - rpa_network
+      - frontend_network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  rpa_network:
+    driver: bridge
+  frontend_network:
+    driver: bridge 

@@ -103,3 +103,4 @@ passlib[bcrypt]==1.7.4
 bcrypt>=4.0.0
 pynput
 redis>=4.0.0
+gunicorn>=21.0.0
