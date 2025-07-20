@@ -6,7 +6,7 @@ import re
 
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.calculations import has_cliente_debido_error, has_multiple_A_traves_mayus
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.calculations import extract_date_range_body
-from app.modules.sga.minpub.report_validator.service.objetivos.utils.calculations import extract_date_range_last
+from app.modules.sga.minpub.report_validator.service.objetivos.utils.calculations import extract_date_range_last_normalized
 
 # import language_tool_python
 # _tool_es = language_tool_python.LanguageTool('es')
@@ -41,8 +41,21 @@ def validation_medidas_correctivas(merged_df: pd.DataFrame) -> pd.DataFrame:
     date_range_it_body = df['it_medidas_tomadas'].apply(extract_date_range_body)
     df[['first_dt_it', 'last_dt_it']] = pd.DataFrame(date_range_it_body.tolist(), index=df.index)
 
-    date_range_it_last = df['it_medidas_tomadas'].apply(extract_date_range_last)
-    df[['start_dt_last_it', 'end_dt_last_it']] = pd.DataFrame(date_range_it_last.tolist(), index=df.index)
+    df['it_medidas_tomadas'] = df['it_medidas_tomadas'].fillna('')
+    date_range_it_last = df['it_medidas_tomadas'].apply(extract_date_range_last_normalized)
+    
+    #Debug: ver qué valores se están extrayendo
+    #print("DEBUG: Valores extraídos por extract_date_range_last:")
+    #for i, result in enumerate(date_range_it_last):
+    #    print(f"Fila {i}: {result}")
+    
+    df[['start_dt_last_it','end_dt_last_it']] = pd.DataFrame(
+    date_range_it_last.tolist(), index=df.index
+)
+    
+    # Debug: ver qué valores se asignaron al DataFrame
+    print("DEBUG: Valores asignados al DataFrame:")
+    print(df[['nro_incidencia', 'start_dt_last_it', 'end_dt_last_it']])
 
     
     df['FECHA_Y_HORA_INICIO_fmt'] = (
