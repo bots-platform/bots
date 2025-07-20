@@ -13,6 +13,16 @@ import logging
 from celery import shared_task
 from celery.utils.log import get_task_logger
 
+# Decorador condicional para tareas de Celery
+def conditional_celery_task(*args, **kwargs):
+    if celery_app:
+        return celery_app.task(*args, **kwargs)
+    else:
+        # Decorador dummy que no hace nada
+        def dummy_decorator(func):
+            return func
+        return dummy_decorator
+
 logger = logging.getLogger(__name__)
 
 
@@ -33,7 +43,7 @@ def wait_for_sga_service(sga_service: SGAService, max_wait_time: int = 300) -> b
         time.sleep(5)
     return False
 
-@celery_app.task(queue="ui", bind=True, ack_late=False, task_reject_on_worker_lost=True, name="process_sga_report")
+@conditional_celery_task(queue="ui", bind=True, ack_late=False, task_reject_on_worker_lost=True, name="process_sga_report")
 def process_sga_report_task(self, 
                           fecha_inicio: str,
                           fecha_fin: str,
@@ -72,7 +82,7 @@ def process_sga_report_task(self,
     except Exception as e:
         return {"status": "failed", "error": str(e)}
 
-@celery_app.task(queue="ui", bind=True, ack_late=False, task_reject_on_worker_lost=True, name="process_minpub")
+@conditional_celery_task(queue="ui", bind=True, ack_late=False, task_reject_on_worker_lost=True, name="process_minpub")
 def process_minpub_task(self, 
                        fecha_inicio: str,
                        fecha_fin: str,
@@ -137,7 +147,7 @@ def process_minpub_task(self,
     except Exception as e:
         return {"status": "failed", "error": str(e)}
 
-@celery_app.task(bind=True, name="process_semaforo")
+@conditional_celery_task(bind=True, name="process_semaforo")
 def process_semaforo_task(self, params: Dict[str, Any]) -> Dict[str, Any]:
     try:
         with sga_global_lock:
@@ -146,7 +156,7 @@ def process_semaforo_task(self, params: Dict[str, Any]) -> Dict[str, Any]:
     except Exception as e:
         return {"status": "failed", "error": str(e)}
 
-@celery_app.task(bind=True, name="process_newcallcenter")
+@conditional_celery_task(bind=True, name="process_newcallcenter")
 def process_newcallcenter_task(self, params: Dict[str, Any]) -> Dict[str, Any]:
     try:
         with sga_global_lock:
@@ -155,7 +165,7 @@ def process_newcallcenter_task(self, params: Dict[str, Any]) -> Dict[str, Any]:
     except Exception as e:
         return {"status": "failed", "error": str(e)}
 
-@celery_app.task(bind=True, name="process_oplogin")
+@conditional_celery_task(bind=True, name="process_oplogin")
 def process_oplogin_task(self, params: Dict[str, Any]) -> Dict[str, Any]:
     try:
         with sga_global_lock:
@@ -164,7 +174,7 @@ def process_oplogin_task(self, params: Dict[str, Any]) -> Dict[str, Any]:
     except Exception as e:
         return {"status": "failed", "error": str(e)}
 
-@celery_app.task(queue="ui", bind=True, name="keep_system_active")
+@conditional_celery_task(queue="ui", bind=True, name="keep_system_active")
 def keep_system_active_task(self):
     """
     Tarea que mantiene el sistema activo simulando actividad del mouse.
