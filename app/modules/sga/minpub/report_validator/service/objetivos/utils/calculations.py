@@ -280,6 +280,7 @@ def extract_date_range_last(text: str) -> Tuple[Optional[str], Optional[str]]:
         return (None, None)
 
     start_line, end_line = date_lines[-2], date_lines[-1]
+    print(f"DEBUG Original: Líneas seleccionadas - Inicio: '{start_line}' | Fin: '{end_line}'")
 
     def _normalize(fecha: str, hora: str) -> str:
         d, m, y = fecha.split('/')
@@ -300,8 +301,66 @@ def extract_date_range_last(text: str) -> Tuple[Optional[str], Optional[str]]:
 
     inicio = parse(start_line)
     fin    = parse(end_line)
-    
+    print(inicio, fin)
     return (inicio, fin) if inicio and fin else (None, None)
+
+
+
+# patrón que acepta "DD/MM/YYYY" + opcional "a las" + "HH:MM"
+_fecha_hora_pat = re.compile(
+    r'(\d{2}/\d{2}/\d{4})\s*(?:a las\s*)?(\d{1,2}:\d{2})',
+    flags=re.IGNORECASE
+)
+
+@log_exceptions
+def extract_date_range_last_simple(text: str) -> Tuple[Optional[str], Optional[str]]:
+    """
+    Devuelve (fecha_hora_inicio, fecha_hora_fin) tomando
+    las dos últimas ocurrencias 'DD/MM/YYYY hh:mm' del texto.
+    Si no hay al menos dos, retorna (None, None).
+    """
+    if not isinstance(text, str) or not text.strip():
+        return (None, None)
+
+    # busca todas las parejas (fecha, hora) en el texto
+    matches = _fecha_hora_pat.findall(text)
+    if len(matches) < 2:
+        return (None, None)
+
+    # agarra las dos últimas
+    start_fecha, start_hora = matches[-2]
+    end_fecha,   end_hora   = matches[-1]
+
+    # devuelve crudo, tal cual aparecen
+    return (f"{start_fecha} {start_hora}", f"{end_fecha} {end_hora}")
+
+
+@log_exceptions
+def extract_date_range_last_normalized(text: str) -> Tuple[Optional[str], Optional[str]]:
+    """
+    Devuelve (fecha_hora_inicio, fecha_hora_fin) tomando
+    las dos últimas ocurrencias 'DD/MM/YYYY hh:mm' del texto,
+    y las normaliza al formato 'DD/MM/YYYY HH:MM' con ceros a la izquierda.
+    Si no hay al menos dos, retorna (None, None).
+    """
+    if not isinstance(text, str) or not text.strip():
+        return (None, None)
+
+    # busca todas las parejas (fecha, hora) en el texto
+    matches = _fecha_hora_pat.findall(text)
+    if len(matches) < 2:
+        return (None, None)
+
+    def normalize(fecha: str, hora: str) -> str:
+        d, m, y = fecha.split('/')
+        h, mi = hora.split(':')
+        return f"{d.zfill(2)}/{m.zfill(2)}/{y} {h.zfill(2)}:{mi.zfill(2)}"
+
+    # agarra las dos últimas
+    f1, t1 = matches[-2]
+    f2, t2 = matches[-1]
+
+    return (normalize(f1, t1), normalize(f2, t2))
 
 
 
