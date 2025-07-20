@@ -8,6 +8,24 @@ from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators 
     log_exceptions
 )
 
+def extract_tecnico_reports_optional(path_docx: str) -> pd.DataFrame:
+    """
+    Versión opcional de extract_tecnico_reports_without_hours_last_dates.
+    Si no encuentra informes técnicos, retorna un DataFrame vacío en lugar de lanzar error.
+    """
+    try:
+        return extract_tecnico_reports_without_hours_last_dates(path_docx)
+    except ValueError as e:
+        if "No se encontró 'REPORTE TÉCNICO Nº" in str(e):
+            # Retorna DataFrame vacío con las columnas esperadas
+            return pd.DataFrame(columns=[
+                'nro_incidencia', 'CUISMP', 'Tipo Caso', 'Observación',
+                'DETERMINACIÓN DE LA CAUSA', 'MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS',
+                'Fecha y hora inicio', 'Fecha y hora fin'
+            ])
+        else:
+            # Re-lanza otros errores
+            raise
 
 @log_exceptions
 def extract_tecnico_reports_without_hours_last_dates(path_docx: str) -> pd.DataFrame:
@@ -29,7 +47,7 @@ def extract_tecnico_reports_without_hours_last_dates(path_docx: str) -> pd.DataF
         if m:
             headings.append({"index": idx, "nro_incidencia": m.group(1)})
     if not headings:
-        raise ValueError("No se encontró ‘REPORTE TÉCNICO Nº ...’ en el documento")
+        raise ValueError("No se encontró 'REPORTE TÉCNICO Nº ...' en el documento")
 
 
     headings.append({"index": len(paragraphs), "nro_incidencia": None})
