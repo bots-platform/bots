@@ -22,15 +22,15 @@ RUN pip install --no-cache-dir --upgrade pip \
 # Copy application code
 COPY . .
 
-# Create non-root user
-RUN groupadd -r appuser && useradd -r -g appuser appuser \
-    && chown -R appuser:appuser /app
+# Create user that matches the host user
+RUN groupadd -g 1001 cesar && useradd -u 1001 -g cesar -m cesar \
+    && chown -R cesar:cesar /app
 
-# Switch to non-root user
-USER appuser
+# Switch to user
+USER cesar
 
 # Expose port
 EXPOSE 8000
 
-# Default command
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"] 
+# Default command with Gunicorn
+CMD ["gunicorn", "main:app", "--bind", "0.0.0.0:8000", "--workers", "4", "--worker-class", "uvicorn.workers.UvicornWorker"] 
