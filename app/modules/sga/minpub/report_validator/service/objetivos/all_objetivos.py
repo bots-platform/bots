@@ -18,7 +18,7 @@ from app.modules.sga.minpub.report_validator.service.objetivos.etl.extract.cuadr
     extract_averias_table
 ) 
 from app.modules.sga.minpub.report_validator.service.objetivos.etl.extract.informe_tecnico import (
-    extract_tecnico_reports_without_hours_last_dates
+    extract_tecnico_reports_optional
 )
 from app.modules.sga.minpub.report_validator.service.objetivos.etl.extract.anexo_indisponibilidad import (
     extract_indisponibilidad_anexos
@@ -105,8 +105,8 @@ def all_objetivos(
     df_sga_dinamico_335 =  extract_sga_335(path_sga_dinamico_335)
     df_word_datos_averias =  extract_averias_table(word_datos_file_path)
     df_word_telefonia_averias = extract_averias_table(word_telefonia_file_path)
-    df_word_datos_informe_tec =  extract_tecnico_reports_without_hours_last_dates(word_datos_file_path)
-    df_word_telefonia_informe_tec = extract_tecnico_reports_without_hours_last_dates(word_telefonia_file_path)
+    df_word_datos_informe_tec =  extract_tecnico_reports_optional(word_datos_file_path)
+    df_word_telefonia_informe_tec = extract_tecnico_reports_optional(word_telefonia_file_path)
 
     raw_datos_anexos = extract_indisponibilidad_anexos(word_datos_file_path)
     raw_tel_anexos  = extract_indisponibilidad_anexos(word_telefonia_file_path)
