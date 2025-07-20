@@ -4,8 +4,8 @@ from typing import Optional
 
 class Settings(BaseSettings):
     # Celery
-    CELERY_BROKER_URL: str
-    CELERY_RESULT_BACKEND: str
+    CELERY_BROKER_URL: Optional[str] = None
+    CELERY_RESULT_BACKEND: Optional[str] = None
 
     # Task queue settings
     TASK_QUEUE_NAME: str = "default"
