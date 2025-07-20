@@ -10,13 +10,15 @@ services:
       - "15432:5432"  # Puerto PostgreSQL específico para el usuario
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
 
-  redis:
-    extends:
-      file: ./docker-compose.yml
-      service: redis
-    ports:
-      - "16379:6379"  # Puerto Redis específico para el usuario
+  # redis:
+  #   extends:
+  #     file: ./docker-compose.yml
+  #     service: redis
+  #   ports:
+  #     - "16379:6379"  # Puerto Redis específico para el usuario
+  #   restart: unless-stopped
 
   backend:
     build:
@@ -25,20 +27,25 @@ services:
     container_name: rpa_backend
     environment:
       - DATABASE_URL=postgresql://rpa_user:${POSTGRES_PASSWORD:-admin}@postgres:5432/rpa_bots
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/1
-      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+      # - REDIS_URL=redis://redis:6379/0
+      # - CELERY_BROKER_URL=redis://redis:6379/1
+      # - CELERY_RESULT_BACKEND=redis://redis:6379/1
       - SECRET_KEY=${SECRET_KEY:-your-secret-key-here}
       - ENVIRONMENT=${ENVIRONMENT:-development}
     ports:
       - "8000:8000"  # Puerto Backend estándar para acceso externo
-    user: "appuser:appuser"  # Usar el usuario del contenedor
-    command: ["uvicorn", "main_complete:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+      - "8888:8888"  # Puerto Jupyter Notebook para desarrollo
+      - "8889:8889"  # Puerto Jupyter Notebook alternativo
+      - "8890:8890"  # Puerto Jupyter Notebook actual
+    volumes:
+      - ./media:/app/media:Z  # Montar carpeta media del host al contenedor con SELinux label
+    user: "1001:1001"  # Usar el usuario que coincide con el sistema
+    command: ["gunicorn", "main:app", "--bind", "0.0.0.0:8000", "--workers", "4", "--worker-class", "uvicorn.workers.UvicornWorker"]
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
-        condition: service_healthy
+      # redis:
+      #   condition: service_healthy
     networks:
       - rpa_network
     healthcheck:
@@ -48,27 +55,29 @@ services:
       retries: 3
     restart: unless-stopped
 
-  celery_worker:
-    extends:
-      file: ./docker-compose.yml
-      service: celery_worker
-    user: "1001:1001"  # Usar el usuario actual
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+  # celery_worker:
+  #   extends:
+  #     file: ./docker-compose.yml
+  #     service: celery_worker
+  #   user: "1001:1001"  # Usar el usuario actual
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   restart: unless-stopped
 
-  celery_beat:
-    extends:
-      file: ./docker-compose.yml
-      service: celery_beat
-    user: "1001:1001"  # Usar el usuario actual
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+  # celery_beat:
+  #   extends:
+  #     file: ./docker-compose.yml
+  #     service: celery_beat
+  #   user: "1001:1001"  # Usar el usuario actual
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   restart: unless-stopped
 
   # Frontend Services con puertos estándar
   frontend:
@@ -82,26 +91,28 @@ services:
     networks:
       - rpa_network
       - frontend_network
+    restart: unless-stopped
 
-  nginx:
-    extends:
-      file: ../React-Bots/docker-compose.yml
-      service: nginx
-    ports:
-      - "80:80"      # Puerto HTTP estándar
-      - "443:443"    # Puerto HTTPS estándar
-    depends_on:
-      - frontend
-      - backend
-    networks:
-      - rpa_network
-      - frontend_network
+  # nginx:
+  #   extends:
+  #     file: ../React-Bots/docker-compose.yml
+  #     service: nginx
+  #   ports:
+  #     - "8081:80"      # Puerto HTTP cambiado para evitar privilegiado
+  #     - "8443:443"     # Puerto HTTPS cambiado para evitar privilegiado
+  #   depends_on:
+  #     - frontend
+  #     - backend
+  #   networks:
+  #     - rpa_network
+  #     - frontend_network
+  #   restart: unless-stopped
 
 volumes:
   postgres_data:
     driver: local
-  redis_data:
-    driver: local
+  # redis_data:
+  #   driver: local
 
 networks:
   rpa_network:
