@@ -4,21 +4,34 @@ import os
 def setup_logger(logger_name, log_file):
     """Configura y retorna un logger personalizado"""
     
-    # Crear el directorio si no existe
-    log_dir = os.path.dirname(log_file)
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
-    
     # Crear y configurar el logger
     logger = logging.getLogger(logger_name)
     logger.setLevel(logging.INFO)
     
     # Evitar duplicación de handlers
     if not logger.handlers:
-        file_handler = logging.FileHandler(log_file)
-        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
+        try:
+            # Intentar usar /tmp para logs si no se puede escribir en /app/logs
+            if log_file.startswith('logs/'):
+                # Cambiar a directorio temporal
+                log_file = f"/tmp/{logger_name}.log"
+            
+            # Crear el directorio si no existe
+            log_dir = os.path.dirname(log_file)
+            if not os.path.exists(log_dir):
+                os.makedirs(log_dir, exist_ok=True)
+            
+            file_handler = logging.FileHandler(log_file)
+            formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+            file_handler.setFormatter(formatter)
+            logger.addHandler(file_handler)
+        except (PermissionError, OSError) as e:
+            # Si no se puede crear el archivo de log, usar solo console handler
+            console_handler = logging.StreamHandler()
+            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            console_handler.setFormatter(formatter)
+            logger.addHandler(console_handler)
+            logger.warning(f"No se pudo crear archivo de log '{log_file}': {e}. Usando console logging.")
     
     return logger
 
