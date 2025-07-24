@@ -26,6 +26,12 @@ if celery_app:
         worker_max_tasks_per_child=200,  # Restart worker after 200 tasks
         worker_prefetch_multiplier=1,  # Process one task at a time
         task_reject_on_worker_lost=True,
+        
+        # Configuración para beat scheduler
+        # Usar scheduler en memoria para evitar problemas de permisos
+        beat_scheduler='celery.beat.Scheduler',
+        beat_sync_every=1,  # Sincronizar cada tarea
+        beat_max_loop_interval=5,  # Máximo intervalo de loop
 
         task_routes={
             "app.tasks.automation_tasks.process_minpub_task": {"queue": "ui"},
