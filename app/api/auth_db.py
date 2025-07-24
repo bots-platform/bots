@@ -3,11 +3,20 @@ from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta
 from typing import List, Dict, Any
 from jose import jwt, JWTError
+import redis
+import os
 
 from ..services.database_service import DatabaseService
 from .. import auth
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
+
+# Configuración de Redis para blacklist de tokens
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
+redis_client = redis.from_url(REDIS_URL, decode_responses=True)
+
+# Configuración de sesiones múltiples
+MAX_SESSIONS_PER_USER = int(os.getenv("MAX_SESSIONS_PER_USER", 5))
 
 def get_current_user(token: str = Depends(auth.oauth2_scheme), db_service: DatabaseService = Depends()) -> Dict:
     """Obtiene el usuario actual desde el token JWT"""
@@ -23,6 +32,10 @@ def get_current_user(token: str = Depends(auth.oauth2_scheme), db_service: Datab
         if username is None:
             raise credentials_exception
     except JWTError:
+        raise credentials_exception
+    
+    # Verificar si el token está en blacklist
+    if redis_client.exists(f"blacklist:{token}"):
         raise credentials_exception
     
     user = db_service.get_user_by_username(username)
@@ -57,11 +70,26 @@ async def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
+    # Control de sesiones múltiples
+    user_sessions_key = f"user_sessions:{user.username}"
+    current_sessions = redis_client.scard(user_sessions_key)
+    
+    if current_sessions >= MAX_SESSIONS_PER_USER:
+        # Invalidar la sesión más antigua
+        oldest_session = redis_client.spop(user_sessions_key)
+        if oldest_session:
+            redis_client.setex(f"blacklist:{oldest_session}", 
+                             auth.ACCESS_TOKEN_EXPIRE_MINUTES * 60, "1")
+    
     # Crear token de acceso
     access_token_expires = timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = auth.create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
+    
+    # Registrar nueva sesión
+    redis_client.sadd(user_sessions_key, access_token)
+    redis_client.expire(user_sessions_key, auth.ACCESS_TOKEN_EXPIRE_MINUTES * 60)
     
     return {
         "access_token": access_token, 
@@ -76,9 +104,47 @@ async def login(
     }
 
 @router.post("/logout")
-async def logout(current_user: Dict = Depends(get_current_user)):
-    """Endpoint de logout (el token se invalida en el frontend)"""
+async def logout(
+    current_user: Dict = Depends(get_current_user),
+    token: str = Depends(auth.oauth2_scheme)
+):
+    """Endpoint de logout que invalida el token actual"""
+    # Agregar token a blacklist
+    redis_client.setex(f"blacklist:{token}", 
+                      auth.ACCESS_TOKEN_EXPIRE_MINUTES * 60, "1")
+    
+    # Remover de sesiones activas
+    user_sessions_key = f"user_sessions:{current_user['username']}"
+    redis_client.srem(user_sessions_key, token)
+    
     return {"message": "Successfully logged out"}
+
+@router.post("/logout-all-sessions")
+async def logout_all_sessions(current_user: Dict = Depends(get_current_user)):
+    """Cierra todas las sesiones del usuario"""
+    user_sessions_key = f"user_sessions:{current_user['username']}"
+    all_tokens = redis_client.smembers(user_sessions_key)
+    
+    # Agregar todos los tokens a blacklist
+    for token in all_tokens:
+        redis_client.setex(f"blacklist:{token}", 
+                          auth.ACCESS_TOKEN_EXPIRE_MINUTES * 60, "1")
+    
+    # Limpiar todas las sesiones
+    redis_client.delete(user_sessions_key)
+    
+    return {"message": "All sessions logged out successfully"}
+
+@router.get("/active-sessions")
+async def get_active_sessions(current_user: Dict = Depends(get_current_user)):
+    """Obtiene el número de sesiones activas del usuario"""
+    user_sessions_key = f"user_sessions:{current_user['username']}"
+    session_count = redis_client.scard(user_sessions_key)
+    
+    return {
+        "active_sessions": session_count,
+        "max_sessions": MAX_SESSIONS_PER_USER
+    }
 
 @router.get("/me")
 async def read_users_me(current_user: Dict = Depends(get_current_user)):
