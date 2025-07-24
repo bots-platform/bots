@@ -12,13 +12,13 @@ services:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
 
-  # redis:
-  #   extends:
-  #     file: ./docker-compose.yml
-  #     service: redis
-  #   ports:
-  #     - "16379:6379"  # Puerto Redis específico para el usuario
-  #   restart: unless-stopped
+  redis:
+    extends:
+      file: ./docker-compose.yml
+      service: redis
+    ports:
+      - "16379:6379"  # Puerto Redis específico para el usuario
+    restart: unless-stopped
 
   backend:
     build:
@@ -27,11 +27,12 @@ services:
     container_name: rpa_backend
     environment:
       - DATABASE_URL=postgresql://rpa_user:${POSTGRES_PASSWORD:-admin}@postgres:5432/rpa_bots
-      # - REDIS_URL=redis://redis:6379/0
-      # - CELERY_BROKER_URL=redis://redis:6379/1
-      # - CELERY_RESULT_BACKEND=redis://redis:6379/1
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
       - SECRET_KEY=${SECRET_KEY:-your-secret-key-here}
       - ENVIRONMENT=${ENVIRONMENT:-development}
+      - MAX_SESSIONS_PER_USER=${MAX_SESSIONS_PER_USER:-5}
     ports:
       - "8000:8000"  # Puerto Backend estándar para acceso externo
       - "8888:8888"  # Puerto Jupyter Notebook para desarrollo
@@ -44,8 +45,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      # redis:
-      #   condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - rpa_network
     healthcheck:
@@ -55,29 +56,29 @@ services:
       retries: 3
     restart: unless-stopped
 
-  # celery_worker:
-  #   extends:
-  #     file: ./docker-compose.yml
-  #     service: celery_worker
-  #   user: "1001:1001"  # Usar el usuario actual
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
-  #   restart: unless-stopped
+  celery_worker:
+    extends:
+      file: ./docker-compose.yml
+      service: celery_worker
+    user: "1001:1001"  # Usar el usuario actual
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
 
-  # celery_beat:
-  #   extends:
-  #     file: ./docker-compose.yml
-  #     service: celery_beat
-  #   user: "1001:1001"  # Usar el usuario actual
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
-  #   restart: unless-stopped
+  celery_beat:
+    extends:
+      file: ./docker-compose.yml
+      service: celery_beat
+    user: "1001:1001"  # Usar el usuario actual
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
 
   # Frontend Services con puertos estándar
   frontend:
@@ -111,8 +112,8 @@ services:
 volumes:
   postgres_data:
     driver: local
-  # redis_data:
-  #   driver: local
+  redis_data:
+    driver: local
 
 networks:
   rpa_network:
