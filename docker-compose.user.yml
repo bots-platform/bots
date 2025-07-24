@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # Backend Services con puertos específicos para el usuario
+  # PostgreSQL Database
   postgres:
     extends:
       file: ./docker-compose.yml
@@ -11,15 +11,17 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
+    pod: "rpa_main_pod"  # Agrupar en el mismo pod
 
+  # Redis Cache/Queue para RPA
   redis:
     extends:
       file: ./docker-compose.yml
       service: redis
-    ports:
-      - "16379:6379"  # Puerto Redis específico para el usuario
     restart: unless-stopped
+    pod: "rpa_main_pod"  # Agrupar en el mismo pod
 
+  # Backend API
   backend:
     build:
       context: .
@@ -55,7 +57,9 @@ services:
       timeout: 10s
       retries: 3
     restart: unless-stopped
+    pod: "rpa_main_pod"  # Agrupar en el mismo pod
 
+  # Celery Worker
   celery_worker:
     extends:
       file: ./docker-compose.yml
@@ -67,7 +71,9 @@ services:
       redis:
         condition: service_healthy
     restart: unless-stopped
+    pod: "rpa_main_pod"  # Agrupar en el mismo pod
 
+  # Celery Beat (Scheduler)
   celery_beat:
     extends:
       file: ./docker-compose.yml
@@ -79,6 +85,7 @@ services:
       redis:
         condition: service_healthy
     restart: unless-stopped
+    pod: "rpa_main_pod"  # Agrupar en el mismo pod
 
   # Frontend Services con puertos estándar
   frontend:
@@ -93,6 +100,7 @@ services:
       - rpa_network
       - frontend_network
     restart: unless-stopped
+    pod: "rpa_main_pod"  # Agrupar en el mismo pod
 
   # nginx:
   #   extends:
