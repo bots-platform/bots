@@ -16,7 +16,15 @@ REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 redis_client = redis.from_url(REDIS_URL, decode_responses=True)
 
 # Configuración de sesiones múltiples
-MAX_SESSIONS_PER_USER = int(os.getenv("MAX_SESSIONS_PER_USER", 5))
+MAX_SESSIONS_PER_USER_RAW = os.getenv("MAX_SESSIONS_PER_USER", "5")
+# Manejar el caso donde la variable no se expande correctamente
+if MAX_SESSIONS_PER_USER_RAW.startswith("${") and ":-" in MAX_SESSIONS_PER_USER_RAW:
+    MAX_SESSIONS_PER_USER = 5  # Valor por defecto
+else:
+    try:
+        MAX_SESSIONS_PER_USER = int(MAX_SESSIONS_PER_USER_RAW)
+    except ValueError:
+        MAX_SESSIONS_PER_USER = 5  # Valor por defecto si no se puede convertir
 
 def get_current_user(token: str = Depends(auth.oauth2_scheme), db_service: DatabaseService = Depends()) -> Dict:
     """Obtiene el usuario actual desde el token JWT"""
