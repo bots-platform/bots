@@ -92,8 +92,6 @@ services:
     extends:
       file: ../React-Bots/docker-compose.yml
       service: frontend
-    ports:
-      - "8080:80"  # Puerto Frontend estándar para acceso externo
     depends_on:
       - backend
     networks:
@@ -107,15 +105,19 @@ services:
   #     file: ../React-Bots/docker-compose.yml
   #     service: nginx
   #   ports:
-  #     - "8081:80"      # Puerto HTTP cambiado para evitar privilegiado
-  #     - "8443:443"     # Puerto HTTPS cambiado para evitar privilegiado
+  #     - "8083:80"      # Puerto HTTP único para tu proxy
+  #     - "8443:443"     # Puerto HTTPS para proxy
+  #   volumes:
+  #     - ../React-Bots/docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+  #     - ../React-Bots/docker/nginx/conf.d:/etc/nginx/conf.d
+  #     - ../React-Bots/docker/nginx/ssl:/etc/nginx/ssl
   #   depends_on:
   #     - frontend
-  #     - backend
   #   networks:
   #     - rpa_network
   #     - frontend_network
   #   restart: unless-stopped
+  #   pod: "rpa_main_pod"  # Agrupar en el mismo pod
 
 volumes:
   postgres_data:
