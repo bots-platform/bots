@@ -12,9 +12,7 @@ from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators 
 
 
 @log_exceptions
-def validate_indisponibilidad(
-    merged_df: pd.DataFrame
-) -> pd.DataFrame:
+def validate_indisponibilidad(merged_df: pd.DataFrame) -> pd.DataFrame:
     """
     Validate anexos indisponibilidad.
     Return a DataFrame with new Boolean match columns.
@@ -110,6 +108,120 @@ def validate_indisponibilidad(
         (~df['indisponibilidad_header_match']).astype(int)
         + (~df['indisponibilidad_periodos_match']).astype(int)
         + (~df['indisponibilidad_total_match']).astype(int)
+    )
+
+    return df
+
+
+@log_exceptions
+def validate_indisponibilidad_v2(merged_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Validate anexos indisponibilidad - Version 2.
+    Mejor manejo de patrones separados para header, periodo y total.
+    Return a DataFrame with new Boolean match columns.
+    """
+    df = merged_df.copy()
+
+    # Patrones mejorados para capturar cada componente por separado
+    _header_pat_v2 = re.compile(
+        r"^Se tuvo indisponibilidad por parte del cliente para continuar los trabajos el/los día\(s\)",
+        re.IGNORECASE
+    )
+    
+    _periodo_pat_v2 = re.compile(
+        r"^(\d{1,2}/\d{1,2}/\d{4}\s+\d{1,2}:\d{2}:\d{2})\s+hasta el día\s+(\d{1,2}/\d{1,2}/\d{4}\s+\d{1,2}:\d{2}:\d{2})",
+        re.IGNORECASE
+    )
+    
+    _total_pat_v2 = re.compile(
+        r"\(Total de horas sin acceso a la sede:\s*(\d{1,2}:\d{2})\s*horas\)",
+        re.IGNORECASE
+    )
+
+    def pad_time_components(text: str) -> str:
+        """Añade ceros a los componentes de tiempo para estandarizar formato"""
+        # Pad para días
+        text = re.sub(r'\b(\d)(?=/\d{1,2}/\d{4})', r'0\1', text)
+        # Pad para horas
+        text = re.sub(r'\b(\d)(?=:\d{2}(?::\d{2})?)', r'0\1', text)
+        return text
+
+    def extract_indisponibilidad_components(text: str) -> pd.Series:
+        """
+        Extrae componentes de indisponibilidad de manera más robusta.
+        Maneja casos donde el formato puede variar ligeramente.
+        """
+        lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+        
+        header = ""
+        periodos = []
+        total = ""
+        
+        for line in lines:
+            # Buscar header
+            if _header_pat_v2.search(line):
+                header = line
+                continue
+            
+            # Buscar periodos
+            periodo_match = _periodo_pat_v2.search(line)
+            if periodo_match:
+                # Estandarizar formato de fechas y horas
+                start_time = pad_time_components(periodo_match.group(1))
+                end_time = pad_time_components(periodo_match.group(2))
+                periodos.append(f"{start_time} hasta el día {end_time}")
+                continue
+            
+            # Buscar total
+            total_match = _total_pat_v2.search(line)
+            if total_match:
+                # Estandarizar formato de horas
+                hours = total_match.group(1)
+                hours_padded = re.sub(r'\b(\d)(?=:\d{2})', r'0\1', hours)
+                total = hours_padded
+                continue
+        
+        return pd.Series({
+            "indisponibilidad_header_v2": header,
+            "indisponibilidad_periodos_v2": "\n".join(periodos),
+            "indisponibilidad_total_v2": total,
+        })
+
+    # Aplicar extracción mejorada
+    df[['indisponibilidad_header_v2',
+        'indisponibilidad_periodos_v2', 
+        'indisponibilidad_total_v2']] = (
+        df['INDISPONIBILIDAD']
+          .apply(extract_indisponibilidad_components)
+    )
+
+    # Validaciones mejoradas
+    df['indisponibilidad_header_match_v2'] = (
+        df['indisponibilidad_header_v2'].astype(str).str.strip()
+        == df['clock_stops_paragraph_header'].astype(str).str.strip()
+    )
+    
+    df['indisponibilidad_periodos_match_v2'] = (
+        df['indisponibilidad_periodos_v2'].astype(str).str.strip()
+        == df['clock_stops_paragraph_periodos'].astype(str).str.strip()
+    )
+    
+    df['indisponibilidad_total_match_v2'] = (
+        df['indisponibilidad_total_v2'].astype(str).str.strip() 
+        == df['clock_stops_paragraph_footer'].astype(str).str.strip()
+    )
+
+    # Validación general
+    df['Validation_OK_v2'] = (
+        df['indisponibilidad_header_match_v2']
+        & df['indisponibilidad_periodos_match_v2']
+        & df['indisponibilidad_total_match_v2']
+    )
+    
+    df['fail_count_v2'] = (
+        (~df['indisponibilidad_header_match_v2']).astype(int)
+        + (~df['indisponibilidad_periodos_match_v2']).astype(int)
+        + (~df['indisponibilidad_total_match_v2']).astype(int)
     )
 
     return df
