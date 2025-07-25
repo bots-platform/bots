@@ -58,7 +58,7 @@ from app.modules.sga.minpub.report_validator.service.objetivos.validators.objeti
 )
 
 from app.modules.sga.minpub.report_validator.service.objetivos.validators.objetivo_1.o11_indisponibilidad_validator import (
-    validate_indisponibilidad,
+    validate_indisponibilidad_v2,
     build_failure_messages_indisponibilidad
 )
 
@@ -119,7 +119,7 @@ def run_objetivo_1(
     df_validation_duracion_entero = validate_duracion_entero(df_matched_corte_sga335_sharepoint_cuismp_sga380)
     df_build_message_validation_duracion_entero = build_failure_messages_duracion_entero(df_validation_duracion_entero)
 
-    df_validation_indisponibilidad = validate_indisponibilidad(df_matched_corte_sga335_sharepoint_cuismp_sga380)
+    df_validation_indisponibilidad = validate_indisponibilidad_v2(df_matched_corte_sga335_sharepoint_cuismp_sga380)
     df_build_message_validation_indisponibilidad = build_failure_messages_indisponibilidad(df_validation_indisponibilidad)
 
     
