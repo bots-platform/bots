@@ -92,6 +92,9 @@ services:
     extends:
       file: ../React-Bots/docker-compose.yml
       service: frontend
+    environment:
+      - VITE_API_URL=http://backend:8000
+      - NODE_ENV=${NODE_ENV:-production}
     depends_on:
       - backend
     networks:
