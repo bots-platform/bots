@@ -1,9 +1,18 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.models.database import engine, Base
+from app.models.simple_migration import run_simple_migration
 
-# Create database tables
+# Create database tables and run migrations
 Base.metadata.create_all(bind=engine)
+
+# Run migrations automatically on startup
+try:
+    run_simple_migration()
+    print("✅ Migrations completed successfully")
+except Exception as e:
+    print(f"⚠️ Migration warning: {e}")
+    # Continue running the app even if migration fails
 
 app = FastAPI(
     title="RPA Bots API",
