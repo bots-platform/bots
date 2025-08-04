@@ -73,6 +73,7 @@ def seed_initial_data():
             ("upload", "Acceso al validador Minpub"),
             ("sga_report", "Acceso a reportes SGA"),
             ("validator", "Acceso al validador Minpub V2"),
+            ("patches", "Acceso a parches Minpub"),
             ("user_management", "Gestión de usuarios"),
             ("permission_management", "Gestión de permisos"),
             ("system_logs", "Acceso a logs del sistema"),
@@ -81,8 +82,8 @@ def seed_initial_data():
         
         for name, description in permissions_data:
             conn.execute(text("""
-                INSERT INTO permissions (name, description) 
-                VALUES (:name, :description)
+                INSERT INTO permissions (name, description, is_active) 
+                VALUES (:name, :description, TRUE)
                 ON CONFLICT (name) DO NOTHING
             """), {"name": name, "description": description})
             print(f"✅ Permiso creado: {name}")
@@ -191,4 +192,4 @@ def run_simple_migration():
         raise
 
 if __name__ == "__main__":
-    run_simple_migration() 
+    run_simple_migration()
