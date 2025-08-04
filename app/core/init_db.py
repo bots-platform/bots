@@ -82,6 +82,7 @@ def init_database():
                     ("upload", "Acceso al validador Minpub"),
                     ("sga_report", "Acceso a reportes SGA"),
                     ("validator", "Acceso al validador Minpub V2"),
+                    ("patches", "Acceso a parches Minpub"),
                     ("user_management", "Gestión de usuarios"),
                     ("permission_management", "Gestión de permisos"),
                     ("system_logs", "Acceso a logs del sistema"),
