@@ -271,16 +271,35 @@ def all_objetivos(
     results.extend(obj2_df.to_dict(orient='records'))
     results.extend(obj3_df.to_dict(orient='records'))
 
-    df_all = pd.DataFrame(results)
+    if not results:
+        df_all = pd.DataFrame(columns=['nro_incidencia', 'mensaje', 'objetivo', 'TIPO REPORTE'])
+        df_grouped = df_all
+    else:
+        df_all = pd.DataFrame(results)
 
-    df_grouped = (
-        df_all
-        .groupby('nro_incidencia', as_index=False)
-        .agg({'mensaje': lambda msgs: ' | '.join(msgs),
-              'objetivo': lambda objs: ' | '.join(objs), 
-              'TIPO REPORTE': 'first', 
-              })
-    )
+        required_columns = ['nro_incidencia', 'mensaje', 'objetivo', 'TIPO REPORTE']
+        missing_columns = [col for col in required_columns if col not in df_all.columns]
+        
+        if missing_columns:
+            for col in missing_columns:
+                df_all[col] = ''
+        
+        if df_all.empty:
+            df_grouped = df_all
+        else:
+            df_all_filtered = df_all[df_all['nro_incidencia'].notna() & (df_all['nro_incidencia'] != '')]
+            
+            if df_all_filtered.empty:
+                df_grouped = pd.DataFrame(columns=required_columns)
+            else:
+                df_grouped = (
+                    df_all_filtered
+                    .groupby('nro_incidencia', as_index=False)
+                    .agg({'mensaje': lambda msgs: ' | '.join(msgs),
+                          'objetivo': lambda objs: ' | '.join(objs), 
+                          'TIPO REPORTE': 'first', 
+                          })
+                )
 
     output_dir = 'media/minpub/validator_report/extract/final/'
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
