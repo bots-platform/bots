@@ -140,6 +140,14 @@ def run_objetivo_1(
         ],
         ignore_index=True)
     
+    required_columns = ['nro_incidencia', 'mensaje', 'objetivo', 'TIPO REPORTE']
+    if df_failures.empty:
+        df_failures = pd.DataFrame(columns=required_columns)
+    else:
+        missing_columns = [col for col in required_columns if col not in df_failures.columns]
+        for col in missing_columns:
+            df_failures[col] = '' 
+    
     return df_failures
 
 
