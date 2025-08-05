@@ -1,8 +1,6 @@
 from fastapi import WebSocket, WebSocketDisconnect
 from typing import Dict
-import json
 from celery.result import AsyncResult
-from app.tasks.automation_tasks import process_minpub_task, process_sga_report_task
 import asyncio
 
 class ConnectionManager:
@@ -27,7 +25,6 @@ async def websocket_endpoint(websocket: WebSocket, task_id: str):
     await manager.connect(websocket, task_id)
     try:
         while True:
-            # Detectar tipo de tarea automáticamente
             task = AsyncResult(task_id)
             if task.state == 'PENDING':
                 await manager.send_progress(task_id, {
@@ -42,7 +39,6 @@ async def websocket_endpoint(websocket: WebSocket, task_id: str):
                     'progress': meta.get('progress', 0)
                 })
             elif task.state == 'SUCCESS':
-                # Si el resultado tiene 'result', es Minpub; si tiene 'file_path', es SGA
                 if isinstance(task.result, dict) and 'result' in task.result:
                     await manager.send_progress(task_id, {
                         'status': 'completed',

@@ -17,7 +17,6 @@ def o0_reclamo_no_en_cuadro_averias_validator(df: pd.DataFrame, componente_word:
     elif componente_word == "COMPONENTE IV":
         component_type = "telefonia"
 
-    # Define the error message
     df['mensaje'] = f"La incidencia de tipo RECLAMO no se encuentra en el cuadro de averías del Word de {component_type}."
     df['objetivo'] = '2.0.1'
     

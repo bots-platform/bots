@@ -4,16 +4,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Configuración de la base de datos
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://rpa_user:admin@localhost:5432/rpa_bots")
 
-# Crear engine de SQLAlchemy
 engine = create_engine(DATABASE_URL)
 
 def create_tables():
     """Crea las tablas usando SQL directo"""
     with engine.connect() as conn:
-        # Crear tabla de usuarios
         conn.execute(text("""
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
@@ -31,7 +28,6 @@ def create_tables():
             )
         """))
         
-        # Crear tabla de permisos
         conn.execute(text("""
             CREATE TABLE IF NOT EXISTS permissions (
                 id SERIAL PRIMARY KEY,
@@ -43,7 +39,6 @@ def create_tables():
             )
         """))
         
-        # Crear tabla de relación usuario-permiso
         conn.execute(text("""
             CREATE TABLE IF NOT EXISTS user_permissions (
                 id SERIAL PRIMARY KEY,
@@ -55,7 +50,6 @@ def create_tables():
             )
         """))
         
-        # Crear índices
         conn.execute(text("CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)"))
         conn.execute(text("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)"))
         conn.execute(text("CREATE INDEX IF NOT EXISTS idx_permissions_name ON permissions(name)"))
@@ -67,7 +61,6 @@ def create_tables():
 def seed_initial_data():
     """Crea datos iniciales usando SQL directo"""
     with engine.connect() as conn:
-        # Insertar permisos iniciales
         permissions_data = [
             ("admin", "Acceso total al sistema"),
             ("upload", "Acceso al validador Minpub"),
@@ -88,7 +81,6 @@ def seed_initial_data():
             """), {"name": name, "description": description})
             print(f"✅ Permiso creado: {name}")
         
-        # Crear usuario admin
         from app import auth
         admin_password = os.getenv("ADMIN_PASSWORD", "admin123")
         hashed_password = auth.get_password_hash(admin_password)
@@ -106,7 +98,6 @@ def seed_initial_data():
             "full_name": "Administrador del Sistema"
         })
         
-        # Asignar todos los permisos al admin
         conn.execute(text("""
             INSERT INTO user_permissions (user_id, permission_id)
             SELECT u.id, p.id
@@ -128,14 +119,12 @@ def migrate_from_json():
         users_data = json_storage.get_users()
         
         for user_data in users_data:
-            # Verificar si el usuario ya existe
             result = conn.execute(text("SELECT id FROM users WHERE username = :username"), 
                                 {"username": user_data["username"]})
             if result.fetchone():
                 print(f"⚠️  Usuario ya existe: {user_data['username']}")
                 continue
             
-            # Crear usuario
             conn.execute(text("""
                 INSERT INTO users (username, email, hashed_password, is_active, is_admin, full_name)
                 VALUES (:username, :email, :hashed_password, :is_active, :is_admin, :full_name)
@@ -148,7 +137,6 @@ def migrate_from_json():
                 "full_name": user_data.get("full_name", user_data["username"])
             })
             
-            # Migrar permisos
             if "permissions" in user_data:
                 for perm_name in user_data["permissions"]:
                     conn.execute(text("""
@@ -168,18 +156,14 @@ def run_simple_migration():
     print("🚀 Iniciando migración simplificada...")
     
     try:
-        # Verificar conexión
         with engine.connect() as conn:
             result = conn.execute(text("SELECT 1"))
             print("✅ Conexión a PostgreSQL exitosa")
         
-        # Crear tablas
         create_tables()
         
-        # Crear datos iniciales
         seed_initial_data()
         
-        # Migrar datos existentes
         try:
             migrate_from_json()
         except Exception as e:

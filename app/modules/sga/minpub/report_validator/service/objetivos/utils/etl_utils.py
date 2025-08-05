@@ -70,9 +70,9 @@ def extract_total_hours(s: any) -> pd._typing.Scalar:
 def normalize_text(text):
     if pd.isna(text):
         return ''
-    text = unicodedata.normalize("NFKD", str(text))   # Normaliza tildes y caracteres raros
+    text = unicodedata.normalize("NFKD", str(text))   
     text = text.replace('\r', ' ').replace('\n', ' ').replace('\xa0', ' ')
-    text = ' '.join(text.split())  # Elimina espacios dobles y deja uno solo
+    text = ' '.join(text.split()) 
     return text.strip()
 
 

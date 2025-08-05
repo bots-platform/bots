@@ -7,7 +7,6 @@ from .auth_db import get_current_user
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 
-# Pydantic models para validación
 class UserCreate(BaseModel):
     username: str
     email: str
@@ -165,7 +164,6 @@ async def update_user(
     if not current_user["is_admin"] and current_user["id"] != user_id:
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    # Solo admin puede cambiar is_admin, is_active y permisos
     if not current_user["is_admin"]:
         user_data.is_admin = None
         user_data.is_active = None

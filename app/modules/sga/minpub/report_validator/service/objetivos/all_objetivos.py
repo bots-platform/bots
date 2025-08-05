@@ -13,7 +13,6 @@ from app.modules.sga.minpub.report_validator.service.objetivos.validators.objeti
 from app.modules.sga.minpub.report_validator.service.objetivos.validators.objetivo_2.run import run_objetivo_2
 from app.modules.sga.minpub.report_validator.service.objetivos.validators.objetivo_3.run import run_objetivo_3
 
-# EXTRACT IMPORTS
 from app.modules.sga.minpub.report_validator.service.objetivos.etl.extract.cuadro_averias import (
     extract_averias_table
 ) 
@@ -26,7 +25,6 @@ from app.modules.sga.minpub.report_validator.service.objetivos.etl.extract.anexo
 from app.modules.sga.minpub.report_validator.service.objetivos.etl.extract.sga_335 import extract_sga_335
 
 
-# TRANSFORM IMPORTS
 from app.modules.sga.minpub.report_validator.service.objetivos.etl.transform.averias import ( 
     preprocess_df_word_averias
 )
@@ -50,7 +48,6 @@ from app.modules.sga.minpub.report_validator.service.objetivos.etl.transform.cor
 )
 
 
-# MERGE IMPORTS
 from app.modules.sga.minpub.report_validator.service.objetivos.etl.merge.excel_sga.excel_sga import ( 
 merge_sga_335_corte_excel_sharepoint_cuismp_sga380
 )
@@ -97,7 +94,6 @@ def all_objetivos(
     """
     results = []
     
-    # EXTRACT INVOQUE
     df_sga_dinamico_380 = pd.read_excel(path_sga_dinamico_380)
     df_cid_cuismp_sharepoint = pd.read_excel(path_cid_cuismp_sharepoint)
 
@@ -123,7 +119,6 @@ def all_objetivos(
         else pd.DataFrame(columns=cols)
     )
 
-    # TRANSFORM INVOQUE
     df_word_datos_averias = preprocess_df_word_averias(df_word_datos_averias)
     df_word_telefonia_averias = preprocess_df_word_averias(df_word_telefonia_averias)
     
@@ -139,16 +134,13 @@ def all_objetivos(
     df_cid_cuismp_sharepoint = preprocess_df_cid_cuismp_sharepoint(df_cid_cuismp_sharepoint)
     
 
-    # MERGE INVOQUE
 
-    #  SGA 335 - 380 - SHAREPOINT - CORTE - BOTH
     df_matched_corte_sga335_Sharepoint_cuismp_sga380 = merge_sga_335_corte_excel_sharepoint_cuismp_sga380(
         df_corte_excel, df_sga_dinamico_335,
         df_cid_cuismp_sharepoint, df_sga_dinamico_380,
         'both'
         )
     
-    #  SGA 335 - 380 - SHAREPOINT - CORTE - LEFT ONLY
     df_unmatched_corte_sga335_Sharepoint_cuismp_sga380 = merge_sga_335_corte_excel_sharepoint_cuismp_sga380(
         df_corte_excel,
         df_sga_dinamico_335,
@@ -157,7 +149,6 @@ def all_objetivos(
         'left_only'
         )
     
-    # AVERIAS - DATOS - EXCEL
     df_matched_word_datos_averias_corte_excel = merge_word_datos_averias_corte_excel(
         df_word_datos_averias,
         df_corte_excel,
@@ -168,7 +159,6 @@ def all_objetivos(
     df_corte_excel_reclamos_telefonia = df_corte_excel[(df_corte_excel['TIPO REPORTE'] == 'RECLAMO') & (df_corte_excel['COMPONENTE'] == 'COMPONENTE IV')].copy()
 
 
-    # AVERIAS - DATOS - EXCEL (UNMATCHED)
     df_unmatched_word_datos_averias_corte_excel = merge_word_datos_averias_corte_excel(
         df_word_datos_averias,
         df_corte_excel_reclamos_datos,
@@ -177,14 +167,12 @@ def all_objetivos(
         )
     
 
-    # AVERIAS - TELEFONIA - EXCEL
     df_matched_word_telefonia_averias_corte_excel = merge_word_telefonia_averias_corte_excel(
         df_word_telefonia_averias,
         df_corte_excel,
         'both'
         )
     
-    # AVERIAS - TELEFONIA - EXCEL (UNMATCHED)
     df_unmatched_word_telefonia_averias_corte_excel = merge_word_telefonia_averias_corte_excel(
         df_word_telefonia_averias,
         df_corte_excel_reclamos_telefonia,
@@ -193,14 +181,12 @@ def all_objetivos(
         )
 
 
-    #INFORME TECNICO - DATOS - EXCEL
     df_matched_word_datos_informe_tecnico_corte_excel = merge_word_datos_informe_corte_excel(
         df_word_datos_informe_tec,
         df_corte_excel,
         'both'
         )
     
-    #INFORME TECNICO - DATOS - EXCEL (UNMATCHED)
     df_unmatched_word_datos_informe_tecnico_corte_excel = merge_word_datos_informe_corte_excel(
         df_word_datos_informe_tec,
         df_corte_excel_reclamos_datos,
@@ -208,14 +194,12 @@ def all_objetivos(
         how='right'
         )
     
-    #INFORME TECNICO - TELEFONIA - EXCEL
     df_matched_word_telefonia_informe_tecnico_corte_excel = merge_word_telefonia_informe_corte_excel(
         df_word_telefonia_informe_tec,
         df_corte_excel,
         'both'
         )
     
-    #INFORME TECNICO - TELEFONIA - EXCEL (UNMATCHED)
     df_unmatched_word_telefonia_informe_tecnico_corte_excel = merge_word_telefonia_informe_corte_excel(
         df_word_telefonia_informe_tec,
         df_corte_excel_reclamos_telefonia,
@@ -227,7 +211,6 @@ def all_objetivos(
         df_matched_corte_sga335_Sharepoint_cuismp_sga380['COMPONENTE'] == 'COMPONENTE II'
     ]
 
-    #ANEXOS INDISPONIBILIDAD - DATOS - EXCEL
     df_matched_word_datos_anexo_indisponibilidad_df_merged_sga = merge_word_datos_anexos_disponibilidad_df_merged_sga(
         df_componente_ii,
         df_word_datos_anexos_indis,
@@ -238,13 +221,11 @@ def all_objetivos(
         df_matched_corte_sga335_Sharepoint_cuismp_sga380['COMPONENTE'] == 'COMPONENTE IV'
     ]
     
-    #ANEXOS INDISPONIBILIDAD - TELEFONIA - EXCEL
     df_matched_word_telefonia_anexo_indisponibilidad_df_merged_sga = merge_word_telefonia_anexos_disponibilidad_df_merged_sga(
         df_componente_iv,
         df_word_telefonia_anexos_indis,
         )
 
-#  RUN OBJETIVOS 
 
     obj1_df = run_objetivo_1(
         df_matched_corte_sga335_Sharepoint_cuismp_sga380,

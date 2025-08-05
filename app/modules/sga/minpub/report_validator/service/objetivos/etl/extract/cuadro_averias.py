@@ -54,7 +54,6 @@ def extract_averias_table(path_docx: str) -> pd.DataFrame:
             all_dfs.append(df_part)
 
         if not all_dfs:
-            # Si no hay tablas válidas, crear DataFrame vacío
             return pd.DataFrame(columns=['responsable'])
         
         result = pd.concat(all_dfs, ignore_index=True)

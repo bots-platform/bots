@@ -8,9 +8,6 @@ from app.modules.sga.minpub.report_validator.service.objetivos.utils.calculation
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.calculations import extract_date_range_body
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.calculations import extract_date_range_last_normalized
 
-# import language_tool_python
-# _tool_es = language_tool_python.LanguageTool('es')
-
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import ( 
     log_exceptions
 )
@@ -23,7 +20,6 @@ def validation_medidas_correctivas(merged_df: pd.DataFrame) -> pd.DataFrame:
     """
 
     df = merged_df.copy()
-    #df = df[df['masivo'] == 'No']
 
     df['mc_first_ok'] = True
     df['mc_last_ok'] = True
@@ -31,7 +27,6 @@ def validation_medidas_correctivas(merged_df: pd.DataFrame) -> pd.DataFrame:
     df['it_last_ok'] = True
     df['no_repeticion_A_traves_ok'] = True
     df['cliente_debido_ok'] = True
-    # df['ortografia_ok'] = True
 
 
 
@@ -44,16 +39,12 @@ def validation_medidas_correctivas(merged_df: pd.DataFrame) -> pd.DataFrame:
     df['it_medidas_tomadas'] = df['it_medidas_tomadas'].fillna('')
     date_range_it_last = df['it_medidas_tomadas'].apply(extract_date_range_last_normalized)
     
-    #Debug: ver qué valores se están extrayendo
-    #print("DEBUG: Valores extraídos por extract_date_range_last:")
-    #for i, result in enumerate(date_range_it_last):
-    #    print(f"Fila {i}: {result}")
+
     
     df[['start_dt_last_it','end_dt_last_it']] = pd.DataFrame(
     date_range_it_last.tolist(), index=df.index
 )
     
-    # Debug: ver qué valores se asignaron al DataFrame
     print("DEBUG: Valores asignados al DataFrame:")
     print(df[['nro_incidencia', 'start_dt_last_it', 'end_dt_last_it']])
 
@@ -88,7 +79,6 @@ def validation_medidas_correctivas(merged_df: pd.DataFrame) -> pd.DataFrame:
         (df['last_dt_it'] == df['end_dt_last_it']) | (df['masivo'] == 'Si')
     )
 
-    # df['ortografia_ok'] = ~df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS'].apply(is_langtool_clean)
 
 
     df['no_repeticion_A_traves_ok'] = ~df['MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS'].apply(has_multiple_A_traves_mayus)
@@ -101,7 +91,6 @@ def validation_medidas_correctivas(merged_df: pd.DataFrame) -> pd.DataFrame:
         df['it_last_ok'] &
         df['no_repeticion_A_traves_ok'] &
         df['cliente_debido_ok']
-        # df['ortografia_ok'] &
     )
 
     df['fail_count'] = ( 
@@ -111,7 +100,6 @@ def validation_medidas_correctivas(merged_df: pd.DataFrame) -> pd.DataFrame:
         (~df['it_last_ok']).astype(int)+
         (~df['no_repeticion_A_traves_ok']).astype(int)+
         (~df['cliente_debido_ok']).astype(int)
-        # (~df['ortografia_ok']).astype(int)+ 
     )
 
     return df
@@ -166,9 +154,7 @@ def build_failure_messages_medidas_correctivas(df:pd.DataFrame) -> pd.DataFrame:
                         "\nSe encontró un error de redacción con 'cliente/debido' en la columna 'MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS'.",
                         ""
                     )
-                    # np.where(~df['ortografia_ok'],
-                    # "  Errores ortográficos/gramaticales en el parrafo en MEDIDAS CORRECTIVAS",
-                    # "")  +
+               
 
        )
     )

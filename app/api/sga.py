@@ -5,7 +5,7 @@ import os
 from fastapi.responses import FileResponse
 from ..modules.sga.service_tecnico_operaciones import SGAService
 from ..modules.sga.service_crm_clientes import send_alert
-from app.shared.lock import global_lock  # usa el lock global
+from app.shared.lock import global_lock
 
 from app.tasks.automation_tasks import process_sga_report_task
 from pathlib import Path

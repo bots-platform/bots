@@ -39,7 +39,6 @@ def extract_corte_excel(path_corte_excel, skipfooter):
         df = validate_required_columns_from_excel(path_corte_excel, required_columns, skipfooter)
         return df
     except Exception as e:
-        # Si hay error, crear un DataFrame vacío con las columnas requeridas
         print(f"Error al procesar archivo Excel: {e}")
         return pd.DataFrame(columns=required_columns)
 

@@ -68,9 +68,7 @@ def validation_tipo_reporte_observacion(merged_df:pd.DataFrame)-> pd.DataFrame:
     reclamo_mask = df['TIPO REPORTE'] == 'RECLAMO'
     if reclamo_mask.any():
         medidas = df.loc[reclamo_mask, 'MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS']
-        # .str.match aplica el regex al comienzo de la cadena
         match_mask = medidas.str.match(pattern)
-        # Valid es True cuando NO arranca con ese texto
         df.loc[reclamo_mask, 'reclamo_medidas_correctivas_valid'] = ~match_mask
 
 

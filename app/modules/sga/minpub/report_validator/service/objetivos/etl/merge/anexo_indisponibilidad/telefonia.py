@@ -33,7 +33,6 @@ def merge_word_telefonia_anexos_disponibilidad_df_merged_sga(
         df_merge_word_telefonia_df_merged_sga[cols_a_reemplazar] = df_merge_word_telefonia_df_merged_sga[cols_a_reemplazar].fillna('no encontrado')
 
 
-        #matched_rows = df_merge_word_telefonia_df_merged_sga[df_merge_word_telefonia_df_merged_sga['merge_flag_telefonia'] == match_type]
         return df_merge_word_telefonia_df_merged_sga
 
     

@@ -21,7 +21,6 @@ def seed_initial_data():
     db = SessionLocal()
     
     try:
-        # Crear permisos iniciales
         permissions_data = [
             {"name": "admin", "description": "Acceso total al sistema"},
             {"name": "upload", "description": "Acceso al validador Minpub"},
@@ -37,7 +36,6 @@ def seed_initial_data():
             permission = Permission.get_or_create(db, perm_data["name"], perm_data["description"])
             print(f"✅ Permiso creado: {permission.name}")
         
-        # Crear usuario admin si no existe
         admin_user = db.query(User).filter(User.username == "admin").first()
         if not admin_user:
             admin_password = os.getenv("ADMIN_PASSWORD", "losmelones")
@@ -55,7 +53,6 @@ def seed_initial_data():
             db.commit()
             db.refresh(admin_user)
             
-            # Asignar todos los permisos al admin
             for permission in db.query(Permission).all():
                 admin_user.add_permission(permission.name, db)
             
@@ -83,17 +80,14 @@ def migrate_from_json():
     db = SessionLocal()
     
     try:
-        # Migrar usuarios desde JSON
         users_data = json_storage.get_users()
         
         for user_data in users_data:
-            # Verificar si el usuario ya existe
             existing_user = db.query(User).filter(User.username == user_data["username"]).first()
             if existing_user:
                 print(f"⚠️  Usuario ya existe: {user_data['username']}")
                 continue
             
-            # Crear nuevo usuario
             new_user = User(
                 username=user_data["username"],
                 email=user_data.get("email", f"{user_data['username']}@rpa-bots.com"),
@@ -106,7 +100,6 @@ def migrate_from_json():
             db.commit()
             db.refresh(new_user)
             
-            # Migrar permisos del usuario
             if "permissions" in user_data:
                 for perm_name in user_data["permissions"]:
                     try:
@@ -129,13 +122,10 @@ def run_migration():
     """Ejecuta la migración completa"""
     print("🚀 Iniciando migración de base de datos...")
     
-    # Crear tablas
     create_tables()
     
-    # Crear datos iniciales
     seed_initial_data()
     
-    # Migrar datos existentes (opcional)
     try:
         migrate_from_json()
     except Exception as e:

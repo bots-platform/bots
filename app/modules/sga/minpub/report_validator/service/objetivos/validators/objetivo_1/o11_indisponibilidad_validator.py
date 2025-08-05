@@ -122,7 +122,6 @@ def validate_indisponibilidad_v2(merged_df: pd.DataFrame) -> pd.DataFrame:
     """
     df = merged_df.copy()
 
-    # Patrones mejorados para capturar cada componente por separado
     _header_pat_v2 = re.compile(
         r"^Se tuvo indisponibilidad por parte del cliente para continuar los trabajos el/los día\(s\)",
         re.IGNORECASE
@@ -140,9 +139,7 @@ def validate_indisponibilidad_v2(merged_df: pd.DataFrame) -> pd.DataFrame:
 
     def pad_time_components(text: str) -> str:
         """Añade ceros a los componentes de tiempo para estandarizar formato"""
-        # Pad para días
         text = re.sub(r'\b(\d)(?=/\d{1,2}/\d{4})', r'0\1', text)
-        # Pad para horas
         text = re.sub(r'\b(\d)(?=:\d{2}(?::\d{2})?)', r'0\1', text)
         return text
 
@@ -158,24 +155,19 @@ def validate_indisponibilidad_v2(merged_df: pd.DataFrame) -> pd.DataFrame:
         total = ""
         
         for line in lines:
-            # Buscar header
             if _header_pat_v2.search(line):
                 header = line
                 continue
             
-            # Buscar periodos
             periodo_match = _periodo_pat_v2.search(line)
             if periodo_match:
-                # Estandarizar formato de fechas y horas
                 start_time = pad_time_components(periodo_match.group(1))
                 end_time = pad_time_components(periodo_match.group(2))
                 periodos.append(f"{start_time} hasta el día {end_time}")
                 continue
             
-            # Buscar total
             total_match = _total_pat_v2.search(line)
             if total_match:
-                # Estandarizar formato de horas
                 hours = total_match.group(1)
                 hours_padded = re.sub(r'\b(\d)(?=:\d{2})', r'0\1', hours)
                 total = hours_padded
@@ -187,7 +179,6 @@ def validate_indisponibilidad_v2(merged_df: pd.DataFrame) -> pd.DataFrame:
             "indisponibilidad_total_v2": total,
         })
 
-    # Aplicar extracción mejorada
     df[['indisponibilidad_header_v2',
         'indisponibilidad_periodos_v2', 
         'indisponibilidad_total_v2']] = (
@@ -195,7 +186,6 @@ def validate_indisponibilidad_v2(merged_df: pd.DataFrame) -> pd.DataFrame:
           .apply(extract_indisponibilidad_components)
     )
 
-    # Validaciones mejoradas
     df['indisponibilidad_header_match_v2'] = (
         df['indisponibilidad_header_v2'].astype(str).str.strip()
         == df['clock_stops_paragraph_header'].astype(str).str.strip()
@@ -211,7 +201,6 @@ def validate_indisponibilidad_v2(merged_df: pd.DataFrame) -> pd.DataFrame:
         == df['clock_stops_paragraph_footer'].astype(str).str.strip()
     )
 
-    # Validación general
     df['Validation_OK_v2'] = (
         df['indisponibilidad_header_match_v2']
         & df['indisponibilidad_periodos_match_v2']

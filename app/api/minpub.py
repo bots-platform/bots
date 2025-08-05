@@ -2,7 +2,6 @@ from fastapi import APIRouter, UploadFile, File, Form, WebSocket
 from datetime import datetime
 from pathlib import Path
 import os
-import uuid
 from app.modules.sga.minpub.report_validator.service.objetivos.all_objetivos import all_objetivos
 from app.tasks.automation_tasks import process_minpub_task
 from app.api.websocket import websocket_endpoint

@@ -3,14 +3,11 @@ from pydantic_settings import BaseSettings
 from typing import Optional
 
 class Settings(BaseSettings):
-    # Celery
     CELERY_BROKER_URL: Optional[str] = None
     CELERY_RESULT_BACKEND: Optional[str] = None
 
-    # Task queue settings
     TASK_QUEUE_NAME: str = "default"
 
-    # Scraping & RPA
     URL_OPLOGIN:      str
     OPLOGIN_USER:     str
     OPLOGIN_PASSWORD: str
@@ -30,14 +27,12 @@ class Settings(BaseSettings):
     EXCEL_CONTENT_TYPE: str
     EXCEL_PATH: str
 
-    # … todos los demás …
 
-    # Paths y timeouts
     PYWINAUTO_TIMEOUT: int = 30
     SELENIUM_DRIVER_PATH: Optional[str] = None
 
     class Config:
         env_file = ".env"
-        extra = "ignore"       # descarta cualquier variable no listada arriba
+        extra = "ignore"      
 
 settings = Settings()

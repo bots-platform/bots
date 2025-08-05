@@ -48,10 +48,8 @@ def preprocess_corte_excel(df: pd.DataFrame) -> pd.DataFrame:
         df['TIEMPO (HH:MM)']
     )
 
-    # 4b) FIN-INICIO trim
     df['FIN-INICIO (HH:MM)_trimed'] = df['FIN-INICIO (HH:MM)'].apply(to_hhmm)
 
-    # 5) formats & durations in two chained assigns
     df = (
         df
         .assign(

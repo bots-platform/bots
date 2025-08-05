@@ -5,8 +5,6 @@ from datetime import datetime, timedelta
 from docx import Document
 from typing import Tuple, Optional
 
-# import language_tool_python
-# _tool_es = language_tool_python.LanguageTool('es')
 
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators import ( 
     log_exceptions
@@ -15,7 +13,6 @@ from utils.logger_config import get_sga_logger
 logger = get_sga_logger()
 
 
-#PARADAS DE RELOJ
 @log_exceptions
 def resolve_clock_stop_overlaps(clock_stops: List[Dict]) -> List[Dict]:
     """
@@ -94,7 +91,6 @@ def calculate_total_clock_stop_minutes_by_incidencia(
     nro_incidencia_stops = df_sga_paradas[df_sga_paradas['nro_incidencia'] == nro_incidencia].copy()
 
     if nro_incidencia_stops.empty:
-        #logger.info(f"No clock stops found for incident {nro_incidencia}")
         return 0.0
     
     clock_stops = []
@@ -160,7 +156,6 @@ def calculate_total_clock_stop_by_incidencia(
     nro_incidencia_stops = df_sga_paradas[df_sga_paradas['nro_incidencia'] == nro_incidencia].copy()
 
     if nro_incidencia_stops.empty:
-        #logger.info(f"No clock stops found for incident {nro_incidencia}")
         return 0.0
     
     clock_stops = []
@@ -246,9 +241,6 @@ def has_cliente_debido_error(text: str) -> bool:
     return bool(pattern.search(text))
 
 
-# EXTRACT RANGE DATOS FECHA INICIO Y FIN FROM INDISPONIBILIDAD EXCEL Y SGA 
-
-
 
 @log_exceptions
 def extract_date_range_last(text: str) -> Tuple[Optional[str], Optional[str]]:
@@ -268,7 +260,6 @@ def extract_date_range_last(text: str) -> Tuple[Optional[str], Optional[str]]:
     if len(lines) < 2:
         return (None, None)
 
-    # Captura DD/MM/YYYY seguido de HH:MM, separados por cualquier cosa
     fecha_hora_pat = re.compile(
     r'(\d{2}/\d{2}/\d{4})\D{0,10}(\d{1,2}:\d{2})',
     flags=re.IGNORECASE
@@ -293,7 +284,6 @@ def extract_date_range_last(text: str) -> Tuple[Optional[str], Optional[str]]:
 
     def parse(line: str) -> Optional[str]:
         m = fecha_hora_pat.search(line)
-        # return f"{m.group(1)} {m.group(2)}" if m else None
         fecha = m.group(1)
         hora = m.group(2)
         fecha_hora_normzalize = _normalize(fecha, hora)
@@ -306,7 +296,6 @@ def extract_date_range_last(text: str) -> Tuple[Optional[str], Optional[str]]:
 
 
 
-# patrón que acepta "DD/MM/YYYY" + opcional "a las" + "HH:MM"
 _fecha_hora_pat = re.compile(
     r'(\d{2}/\d{2}/\d{4})\s*(?:a las\s*)?(\d{1,2}:\d{2})',
     flags=re.IGNORECASE
@@ -322,16 +311,13 @@ def extract_date_range_last_simple(text: str) -> Tuple[Optional[str], Optional[s
     if not isinstance(text, str) or not text.strip():
         return (None, None)
 
-    # busca todas las parejas (fecha, hora) en el texto
     matches = _fecha_hora_pat.findall(text)
     if len(matches) < 2:
         return (None, None)
 
-    # agarra las dos últimas
     start_fecha, start_hora = matches[-2]
     end_fecha,   end_hora   = matches[-1]
 
-    # devuelve crudo, tal cual aparecen
     return (f"{start_fecha} {start_hora}", f"{end_fecha} {end_hora}")
 
 
@@ -346,7 +332,6 @@ def extract_date_range_last_normalized(text: str) -> Tuple[Optional[str], Option
     if not isinstance(text, str) or not text.strip():
         return (None, None)
 
-    # busca todas las parejas (fecha, hora) en el texto
     matches = _fecha_hora_pat.findall(text)
     if len(matches) < 2:
         return (None, None)
@@ -356,7 +341,6 @@ def extract_date_range_last_normalized(text: str) -> Tuple[Optional[str], Option
         h, mi = hora.split(':')
         return f"{d.zfill(2)}/{m.zfill(2)}/{y} {h.zfill(2)}:{mi.zfill(2)}"
 
-    # agarra las dos últimas
     f1, t1 = matches[-2]
     f2, t2 = matches[-1]
 
@@ -419,7 +403,6 @@ def extract_date_range_body_v2(text: str) -> Tuple[Optional[str], Optional[str]]
         lines.pop()
     clean_body = "\n".join(lines)
 
-    # Separate patterns for date and time
     fecha_pat = re.compile(r'(\d{2}/\d{2}/\d{4})', re.IGNORECASE)
     hora_pat = re.compile(r'(\d{1,2}:\d{2})', re.IGNORECASE)
 
@@ -432,17 +415,14 @@ def extract_date_range_body_v2(text: str) -> Tuple[Optional[str], Optional[str]]
     start_date = None
     end_date = None
 
-    # Find all dates and times with their positions
     fecha_matches = [(m.group(1), m.start()) for m in fecha_pat.finditer(clean_body)]
     hora_matches = [(m.group(1), m.start()) for m in hora_pat.finditer(clean_body)]
 
     if not fecha_matches or not hora_matches:
         return ("No disponible", "No disponible")
 
-    # Sort all matches by their position in text
     all_matches = sorted(fecha_matches + hora_matches, key=lambda x: x[1])
     
-    # Process matches in order of appearance
     current_fecha = None
     current_hora = None
     
@@ -452,7 +432,6 @@ def extract_date_range_body_v2(text: str) -> Tuple[Optional[str], Optional[str]]
         elif hora_pat.match(value):
             current_hora = value
             
-        # If we have both a date and time, create the full date
         if current_fecha and current_hora:
             full_date = _normalize(current_fecha, current_hora)
             
@@ -461,7 +440,6 @@ def extract_date_range_body_v2(text: str) -> Tuple[Optional[str], Optional[str]]
             elif pos >= midpoint:
                 end_date = full_date
                 
-            # Reset current values after using them
             current_fecha = None
             current_hora = None
 
@@ -471,15 +449,4 @@ def extract_date_range_body_v2(text: str) -> Tuple[Optional[str], Optional[str]]
     )
 
 
-# @log_exceptions
-# def is_langtool_clean(text:str) -> bool:
-
-#     """
-#     Return True if LanguageTool reports zero issues in the text.
-#     """
-#     if not isinstance(text, str) or not text.strip():
-#         return True
-    
-#     matches = _tool_es.check(text)
-#     return len(matches) == 0
 

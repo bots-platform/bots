@@ -73,7 +73,6 @@ def preprocess_corte_excel(df):
         try:
             h,m = str(hhmm_str).split(':')
             total_minutes = float(h) * 60 + float(m)
-            #print(f"Converted {hhmm_str} to {total_minutes} seconds")
             return total_minutes
         except Exception as e: 
             print(f"Error with {hhmm_str}: {e}")
