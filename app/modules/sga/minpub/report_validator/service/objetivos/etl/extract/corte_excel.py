@@ -4,6 +4,7 @@ from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators 
     log_exceptions
 )
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.validations import validate_required_columns_from_excel
+import pandas as pd
 
 @log_exceptions
 def extract_corte_excel(path_corte_excel, skipfooter):
@@ -32,11 +33,14 @@ def extract_corte_excel(path_corte_excel, skipfooter):
             'TIPO DE INCIDENCIA',
             'TIEMPO INTERRUPCION',
             'INDISPONIBILIDAD'
-
-
         ]
     
-    df = validate_required_columns_from_excel(path_corte_excel, required_columns, skipfooter)
-    return df
+    try:
+        df = validate_required_columns_from_excel(path_corte_excel, required_columns, skipfooter)
+        return df
+    except Exception as e:
+        # Si hay error, crear un DataFrame vacío con las columnas requeridas
+        print(f"Error al procesar archivo Excel: {e}")
+        return pd.DataFrame(columns=required_columns)
 
 
