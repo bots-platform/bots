@@ -4,6 +4,7 @@ from app.modules.sga.minpub.report_validator.service.objetivos.utils.decorators 
     log_exceptions
 )
 from app.modules.sga.minpub.report_validator.service.objetivos.utils.validations import validate_required_columns_from_excel
+import pandas as pd
 
 @log_exceptions
 def extract_sga_335(path_sga_dinamico_335):
@@ -26,10 +27,13 @@ def extract_sga_335(path_sga_dinamico_335):
             'fecha_comunicacion_cliente',  # Fecha hora solicitud  
             'masivo',
             'codincidencepadre'
-
         ]
     
-    df = validate_required_columns_from_excel(path_sga_dinamico_335, required_columns)
-    return df
+    try:
+        df = validate_required_columns_from_excel(path_sga_dinamico_335, required_columns)
+        return df
+    except Exception as e:
+        print(f"Error al procesar archivo SGA 335: {e}")
+        return pd.DataFrame(columns=required_columns)
 
 
