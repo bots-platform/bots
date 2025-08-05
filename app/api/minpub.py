@@ -117,7 +117,16 @@ async def process_v2(
         word_telefonia_file_path
     )
 
-    return {"status": "completed", "result": result}
+    has_observations = len(result) > 0
+    message = "✅ No se encontraron observaciones." if not has_observations else f"Se encontraron {len(result)} observaciones que requieren atención."
+
+    return {
+        "status": "completed", 
+        "result": result,
+        "has_observations": has_observations,
+        "message": message,
+        "count": len(result)
+    }
 
    
 
