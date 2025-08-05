@@ -17,14 +17,12 @@ def extract_tecnico_reports_optional(path_docx: str) -> pd.DataFrame:
         return extract_tecnico_reports_without_hours_last_dates(path_docx)
     except ValueError as e:
         if "No se encontró 'REPORTE TÉCNICO Nº" in str(e):
-            # Retorna DataFrame vacío con las columnas esperadas
             return pd.DataFrame(columns=[
                 'nro_incidencia', 'CUISMP', 'Tipo Caso', 'Observación',
                 'DETERMINACIÓN DE LA CAUSA', 'MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS',
                 'Fecha y hora inicio', 'Fecha y hora fin'
             ])
         else:
-            # Re-lanza otros errores
             raise
 
 @log_exceptions
@@ -65,13 +63,12 @@ def extract_tecnico_reports_without_hours_last_dates(path_docx: str) -> pd.DataF
 
 
     pattern = (
-        r'^(?:Fecha y Hora|Hora)(?:\s+de)?\s+'    # “Fecha y Hora” o “Hora”, con “ de” opcional
-        #r'(Inicio|Fin):\s*'                      # “Inicio:” o “Fin:”
+        r'^(?:Fecha y Hora|Hora)(?:\s+de)?\s+' 
         r'(Inicio|Fin)(?:\s*:)?\s*' 
-        r'(\d{1,2}/\d{1,2}/\d{4})'                # grupo(2) = fecha
-        r'\s*(?:a las\s*)?'                      # “a las” opcional
-        r'(\d{1,2}:\d{2})'                       # grupo(3) = hora
-        r'(?:\s+horas\.?)?'                      # “horas” opcional
+        r'(\d{1,2}/\d{1,2}/\d{4})'             
+        r'\s*(?:a las\s*)?'                      
+        r'(\d{1,2}:\d{2})'                      
+        r'(?:\s+horas\.?)?'                      
     )
     rx = re.compile(pattern, re.IGNORECASE)
 
@@ -88,7 +85,7 @@ def extract_tecnico_reports_without_hours_last_dates(path_docx: str) -> pd.DataF
             "Tipo Caso":      "",
             "Observación":    "",
             "DETERMINACIÓN DE LA CAUSA": "",
-            "MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS": "" ,  # texto completo si quieres
+            "MEDIDAS CORRECTIVAS Y/O PREVENTIVAS TOMADAS": "" ,
             "Fecha y hora inicio": "",
             "Fecha y hora fin":    "",
         }
