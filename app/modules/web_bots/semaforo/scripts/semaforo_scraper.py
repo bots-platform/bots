@@ -3,7 +3,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 
-# from app.modules.web_bots.browser.setup import setup_chrome_driver
 from  ...utils.input_utils  import random_delay
 import time
 from datetime import datetime, timedelta
@@ -21,7 +20,6 @@ logger = get_semaforo_logger()
 
 def handle_download_dialog(driver):
     try:
-        # Esperar y hacer clic en el botón Keep
         keep_button = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, "//button[text()='Keep']"))
         )
@@ -31,7 +29,6 @@ def handle_download_dialog(driver):
         return True
         
     except Exception as e:
-        # Si no funciona el clic, intentar con teclas
         try:
             ActionChains(driver)\
                 .key_down(Keys.ALT).send_keys('k').key_up(Keys.ALT)\
@@ -172,7 +169,6 @@ def click_descargar_excel(driver,fecha_desde, fecha_hasta):
 
         logger.info(f'Excel descargado exitosamente como {new_file_name}')
 
-        #df = pd.read_excel(new_file_path)
         return new_file_path
         
     except Exception as e:
@@ -187,40 +183,21 @@ def extract_and_save_table_semaforo(driver):
         current_page = 1
         
         while True:
-            # Esperar y obtener la tabla
             table = WebDriverWait(driver, 10).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, "table.table-bordered"))
             )
             time.sleep(2)
             
-            # Obtener datos de la página actual
             html_content = table.get_attribute('outerHTML')
             soup = BeautifulSoup(html_content, 'html.parser')
             
-            # Extraer filas - Agregamos más logging para debug
             tbody = soup.find('tbody')
-            rows_in_current_page = 0  # Contador para esta página
+            rows_in_current_page = 0 
             
             if tbody:
                 all_trs = tbody.find_all('tr')
                 logger.info(f'Encontradas {len(all_trs)} filas en página {current_page}')
                 
-                # for tr in all_trs:
-                #     cells = tr.find_all('td')
-                #     if len(cells) >= 8:
-                #         try:
-                #             row_data = [
-                #                 cells[3].text.strip() if cells[3].text.strip() else "-",  # ANALISTA
-                #                 cells[4].text.strip() if cells[4].text.strip() else "-",  # HORARIO
-                #                 cells[5].text.strip() if cells[5].text.strip() else "-",  # MODALIDAD
-                #                 cells[6].text.strip() if cells[6].text.strip() else "-",  # FECHA
-                #                 cells[7].text.strip() if cells[7].text.strip() else "-"   # HORA DE INGRESO
-                #             ]
-                #             all_rows.append(row_data)
-                #             rows_in_current_page += 1
-                #         except Exception as cell_error:
-                #             logger.warning(f'Error al procesar fila: {str(cell_error)}')
-                #             continue
                 rows = driver.find_elements(By.CSS_SELECTOR, "table.table-bordered tbody tr")
                 rows_in_current_page = 0
                 for row in rows:
@@ -244,10 +221,8 @@ def extract_and_save_table_semaforo(driver):
             logger.info(f'Procesada página {current_page} - Filas extraídas en esta página: {rows_in_current_page}')
             logger.info(f'Total de filas acumuladas hasta ahora: {len(all_rows)}')
             
-            # Intentar encontrar el siguiente número
             next_page = current_page + 1
             try:
-                # Primero verificar si el botón existe
                 next_button = driver.find_elements(By.XPATH, 
                     f"//ul[contains(@class, 'pagination')]//a[normalize-space(.)='{next_page}']"
                 )
@@ -256,22 +231,20 @@ def extract_and_save_table_semaforo(driver):
                     logger.info(f'No se encontró botón para página {next_page}. Finalizando extracción.')
                     break
                 
-                # Si encontramos el botón, hacer clic
                 next_button[0].click()
                 current_page += 1
-                time.sleep(2)  # Aumentamos el tiempo de espera
+                time.sleep(2)  
                 
             except Exception as e:
                 logger.info(f'No se pudo navegar a la siguiente página. Finalizando extracción: {str(e)}')
                 break
         
-        # Crear DataFrame
         headers = ['ANALISTA', 'HORARIO', 'MODALIDAD', 'FECHA', 'HORA DE INGRESO']
         df = pd.DataFrame(all_rows, columns=headers)
         
         logger.info(f'Total final de registros procesados: {len(df)}')
         
-        # Guardar a Excel
+       
         os.makedirs('media/semaforo', exist_ok=True)
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         filename = f'media/semaforo/reporte_semaforo_{timestamp}.xlsx'
@@ -291,7 +264,6 @@ def scrape_semaforo_page(driver, user, password, fecha_desde, fecha_hasta):
     navegar_reportes_asistencia(driver)
     set_fechas_filtro(driver, fecha_desde, fecha_hasta)
     click_filtrar(driver)
-    #extract_and_save_table_semaforo(driver)
     new_file_path = click_descargar_excel(driver, fecha_desde, fecha_hasta)
     return new_file_path
 

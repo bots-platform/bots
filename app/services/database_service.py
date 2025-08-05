@@ -13,7 +13,6 @@ class DatabaseService:
     def __init__(self, db: Session = Depends(get_db)):
         self.db = db
     
-    # Métodos para usuarios
     def get_users(self) -> List[User]:
         """Obtiene todos los usuarios activos"""
         return self.db.query(User).filter(User.is_active == True).all()
@@ -32,17 +31,14 @@ class DatabaseService:
     
     def create_user(self, user_data: Dict[str, Any]) -> User:
         """Crea un nuevo usuario"""
-        # Verificar si el usuario ya existe
         if self.get_user_by_username(user_data["username"]):
             raise HTTPException(status_code=400, detail="Username already registered")
         
         if self.get_user_by_email(user_data["email"]):
             raise HTTPException(status_code=400, detail="Email already registered")
         
-        # Hash del password
         hashed_password = auth.get_password_hash(user_data["password"])
         
-        # Crear usuario
         user = User(
             username=user_data["username"],
             email=user_data["email"],
@@ -58,13 +54,11 @@ class DatabaseService:
         self.db.commit()
         self.db.refresh(user)
         
-        # Asignar permisos si se proporcionan
         if "permissions" in user_data:
             for perm_name in user_data["permissions"]:
                 try:
                     user.add_permission(perm_name, self.db)
                 except ValueError:
-                    # Si el permiso no existe, lo ignoramos
                     pass
         
         return user
@@ -75,19 +69,15 @@ class DatabaseService:
         if not user:
             return None
         
-        # Actualizar campos básicos
         for field, value in user_data.items():
             if field == "password" and value:
                 user.hashed_password = auth.get_password_hash(value)
             elif field != "permissions" and hasattr(user, field):
                 setattr(user, field, value)
         
-        # Actualizar permisos si se proporcionan
         if "permissions" in user_data:
-            # Remover todos los permisos actuales
             self.db.query(UserPermission).filter(UserPermission.user_id == user_id).delete()
             
-            # Agregar nuevos permisos
             for perm_name in user_data["permissions"]:
                 try:
                     user.add_permission(perm_name, self.db)
@@ -116,7 +106,6 @@ class DatabaseService:
             user.last_login = func.now()
             self.db.commit()
     
-    # Métodos para permisos
     def get_permissions(self) -> List[Permission]:
         """Obtiene todos los permisos activos"""
         return self.db.query(Permission).filter(Permission.is_active == True).all()
@@ -168,7 +157,6 @@ class DatabaseService:
         self.db.commit()
         return True
     
-    # Métodos de autenticación
     def authenticate_user(self, username: str, password: str) -> Optional[User]:
         """Autentica un usuario"""
         user = self.get_user_by_username(username)
@@ -178,7 +166,6 @@ class DatabaseService:
         if not auth.verify_password(password, user.hashed_password):
             return None
         
-        # Actualizar último login
         self.update_last_login(user.id)
         
         return user

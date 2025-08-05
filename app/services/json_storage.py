@@ -37,7 +37,6 @@ class JSONStorage:
         except Exception as e:
             print(f"Error writing to {file_path}: {e}")
 
-    # Métodos para usuarios
     def get_users(self) -> List[Dict]:
         """Obtiene todos los usuarios."""
         data = self._read_json(self.users_file)
@@ -67,7 +66,6 @@ class JSONStorage:
                 return users[i]
         return None
 
-    # Métodos para permisos
     def get_permissions(self) -> List[Dict]:
         """Obtiene todos los permisos."""
         data = self._read_json(self.permissions_file)
@@ -78,5 +76,4 @@ class JSONStorage:
         permissions = self.get_permissions()
         return next((p for p in permissions if p["name"] == name), None)
 
-# Instancia global para usar en toda la aplicación
 json_storage = JSONStorage() 

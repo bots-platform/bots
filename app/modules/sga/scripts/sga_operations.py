@@ -4,7 +4,6 @@ from datetime import datetime
 import time
 import re
 from time import sleep
-#from pywinauto.keyboard import send_keys
 import pyperclip 
 from utils.logger_config import get_sga_logger
  

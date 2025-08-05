@@ -61,10 +61,10 @@ def generar_reporte_combinado(fecha_inicio, fecha_fin):
             if isinstance(nombre, str):
                 partes = nombre.split()
                 if len(partes) >= 3:
-                    apellidos = " ".join(partes[-2:])  # Últimos dos como apellidos
-                    nombres = " ".join(partes[:-2])  # Restante como nombres
+                    apellidos = " ".join(partes[-2:]) 
+                    nombres = " ".join(partes[:-2]) 
                     return f"{apellidos} {nombres}"
-                return nombre  # Devolver sin cambios si tiene menos de 3 partes
+                return nombre 
             return nombre
 
         try:

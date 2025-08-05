@@ -7,7 +7,6 @@ from fastapi.security import OAuth2PasswordBearer
 import os
 from dotenv import load_dotenv
 
-# Security configuration
 SECRET_KEY = os.getenv("SECRET_KEY", "testsecretkey")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
@@ -45,5 +44,4 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     except JWTError:
         raise credentials_exception
     
-    # This function is no longer used in the new implementation
     raise NotImplementedError("This function is no longer used in the new implementation")

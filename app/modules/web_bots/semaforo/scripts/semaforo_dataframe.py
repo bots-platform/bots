@@ -31,7 +31,6 @@ def get_info_from_semaforo_downloaded_to_dataframe(fecha_inicio, fecha_fin):
     semaforo_df.rename(columns={'ANALISTA': 'Usuario'}, inplace=True)
     print("Semaforo DataFrame:")
     print(semaforo_df[['Usuario', 'FECHA']].head())
-    #semaforo_df['Usuario_Semaforo'] = semaforo_df['Usuario'].str.strip().str.lower()
     semaforo_df['Fecha_Semaforo'] = pd.to_datetime(semaforo_df['FECHA'])
     semaforo_df['Usuario_Semaforo'] = semaforo_df['Usuario'].str.strip().apply(
     lambda x: ' '.join([x.split()[0], x.split()[2]]) if isinstance(x, str) and len(x.split()) == 4 else
@@ -40,15 +39,12 @@ def get_info_from_semaforo_downloaded_to_dataframe(fecha_inicio, fecha_fin):
 )
 
 
-    # Seleccionar todas las filas duplicadas (incluyendo la primera aparición)
     duplicados_df = semaforo_df[semaforo_df.duplicated(subset=['Usuario_Semaforo', 'Fecha_Semaforo'], keep=False)]
 
-    # Imprimir los duplicados en consola
     print("Duplicados encontrados:")
     print(duplicados_df)
     print(f"Total de duplicados: {len(duplicados_df)}")
 
-    # Guardar los duplicados en un archivo Excel
     duplicados_dir = 'media/semaforo/duplicados'
     os.makedirs(duplicados_dir, exist_ok=True) 
     duplicados_path = os.path.join(duplicados_dir, f'duplicados_semaforo_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx')
@@ -65,7 +61,7 @@ def get_info_from_semaforo_downloaded_to_dataframe(fecha_inicio, fecha_fin):
 def save_info_obtained(semaforo_df):
 
     output_dir = 'media/reportes_combinados'
-    os.makedirs(output_dir, exist_ok=True)  # Crear el directorio si no existe
+    os.makedirs(output_dir, exist_ok=True) 
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
 
     reporte_semaforo = os.path.join(output_dir, f'semaforo_df_{timestamp}.xlsx')

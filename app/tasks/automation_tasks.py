@@ -8,17 +8,14 @@ from app.shared.activity_monitor import get_activity_status, reset_activity_stat
 from typing import Dict, Any
 import os
 import random
-#from pywinauto.mouse import click
 import logging
 from celery import shared_task
 from celery.utils.log import get_task_logger
 
-# Decorador condicional para tareas de Celery
 def conditional_celery_task(*args, **kwargs):
     if celery_app:
         return celery_app.task(*args, **kwargs)
     else:
-        # Decorador dummy que no hace nada
         def dummy_decorator(func):
             return func
         return dummy_decorator
@@ -151,7 +148,6 @@ def process_minpub_task(self,
 def process_semaforo_task(self, params: Dict[str, Any]) -> Dict[str, Any]:
     try:
         with sga_global_lock:
-            # Your Semaforo Selenium automation code here
             pass
     except Exception as e:
         return {"status": "failed", "error": str(e)}
@@ -160,7 +156,6 @@ def process_semaforo_task(self, params: Dict[str, Any]) -> Dict[str, Any]:
 def process_newcallcenter_task(self, params: Dict[str, Any]) -> Dict[str, Any]:
     try:
         with sga_global_lock:
-            # Your NewCallCenter Selenium automation code here
             pass
     except Exception as e:
         return {"status": "failed", "error": str(e)}
@@ -169,7 +164,6 @@ def process_newcallcenter_task(self, params: Dict[str, Any]) -> Dict[str, Any]:
 def process_oplogin_task(self, params: Dict[str, Any]) -> Dict[str, Any]:
     try:
         with sga_global_lock:
-            # Your OPLogin Selenium automation code here
             pass
     except Exception as e:
         return {"status": "failed", "error": str(e)}
@@ -183,7 +177,6 @@ def keep_system_active_task(self):
     logger.info("Ejecutando keep_system_active_task...")
     patrones = ["click_1", "click_2"]
     
-    # Obtener estado de actividad desde archivo temporal
     actividad_humana = get_activity_status()
     
     if actividad_humana["mouse"] or actividad_humana["teclado"]:
@@ -205,10 +198,8 @@ def keep_system_active_task(self):
         else:
             logger.info("[keep_system_active] Dispositivo ocupado por API.")
 
-    # Resetear estado de actividad
     reset_activity_status()
     
-    # Programar la siguiente ejecución
     delay = random.randint(25, 40)
     logger.info(f"[keep_system_active] Programando siguiente ejecución en {delay} segundos...")
     keep_system_active_task.apply_async(countdown=delay)

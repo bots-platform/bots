@@ -3,16 +3,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.models.database import engine, Base
 from app.models.simple_migration import run_simple_migration
 
-# Create database tables and run migrations
 Base.metadata.create_all(bind=engine)
 
-# Run migrations automatically on startup
 try:
     run_simple_migration()
     print("✅ Migrations completed successfully")
 except Exception as e:
     print(f"⚠️ Migration warning: {e}")
-    # Continue running the app even if migration fails
 
 app = FastAPI(
     title="RPA Bots API",
@@ -20,7 +17,6 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Configure CORS - MUST be before routers
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -37,7 +33,6 @@ app.add_middleware(
     max_age=600
 )
 
-# Import routers using absolute imports
 from app.api.auth_db import router as auth_router
 from app.api.users_db import router as users_router
 from app.api.permissions import router as permissions_router

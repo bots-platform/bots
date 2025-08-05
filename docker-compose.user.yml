@@ -1,27 +1,24 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
   postgres:
     extends:
       file: ./docker-compose.yml
       service: postgres
     ports:
-      - "15432:5432"  # Puerto PostgreSQL específico para el usuario
+      - "15432:5432" 
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
-    pod: "rpa_main_pod"  # Agrupar en el mismo pod
+    pod: "rpa_main_pod" 
 
-  # Redis Cache/Queue para RPA
   redis:
     extends:
       file: ./docker-compose.yml
       service: redis
     restart: unless-stopped
-    pod: "rpa_main_pod"  # Agrupar en el mismo pod
+    pod: "rpa_main_pod"  
 
-  # Backend API
   backend:
     build:
       context: .
@@ -41,8 +38,8 @@ services:
       - "8889:8889"  # Puerto Jupyter Notebook alternativo
       - "8890:8890"  # Puerto Jupyter Notebook actual
     volumes:
-      - ./media:/app/media:Z  # Montar carpeta media del host al contenedor con SELinux label
-    user: "1001:1001"  # Usar el usuario que coincide con el sistema
+      - ./media:/app/media:Z 
+    user: "1001:1001" 
     command: ["gunicorn", "main:app", "--bind", "0.0.0.0:8000", "--workers", "4", "--worker-class", "uvicorn.workers.UvicornWorker"]
     depends_on:
       postgres:
@@ -57,37 +54,34 @@ services:
       timeout: 10s
       retries: 3
     restart: unless-stopped
-    pod: "rpa_main_pod"  # Agrupar en el mismo pod
+    pod: "rpa_main_pod"  
 
-  # Celery Worker
   celery_worker:
     extends:
       file: ./docker-compose.yml
       service: celery_worker
-    user: "1001:1001"  # Usar el usuario actual
+    user: "1001:1001" 
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     restart: unless-stopped
-    pod: "rpa_main_pod"  # Agrupar en el mismo pod
+    pod: "rpa_main_pod"  
 
-  # Celery Beat (Scheduler)
   celery_beat:
     extends:
       file: ./docker-compose.yml
       service: celery_beat
-    user: "1001:1001"  # Usar el usuario actual
+    user: "1001:1001" 
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     restart: unless-stopped
-    pod: "rpa_main_pod"  # Agrupar en el mismo pod
+    pod: "rpa_main_pod" 
 
-  # Frontend Services con puertos estándar
   frontend:
     extends:
       file: ../React-Bots/docker-compose.yml
@@ -101,7 +95,7 @@ services:
       - rpa_network
       - frontend_network
     restart: unless-stopped
-    pod: "rpa_main_pod"  # Agrupar en el mismo pod
+    pod: "rpa_main_pod" 
 
   # nginx:
   #   extends:

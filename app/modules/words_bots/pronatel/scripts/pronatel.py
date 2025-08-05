@@ -14,8 +14,6 @@ from datetime import datetime
     
 def apply_clean_format(reportes):
 
-    # Se utiliza una list comprehension para generar una nueva lista de reportes.
-    # Si en un reporte existe 'it_medidas_tomadas' y es una cadena, se actualiza esa clave.
     return [
             {**reporte,
               "it_medidas_tomadas": remove_last_lines(

@@ -6,7 +6,6 @@ import time
 
 logger = logging.getLogger(__name__)
 
-# Intentar importar pynput de forma segura
 try:
     from pynput import mouse, keyboard
     PYNPUT_AVAILABLE = True
@@ -14,7 +13,6 @@ except ImportError as e:
     logger.warning(f"pynput no disponible o no soportado en este entorno: {e}")
     PYNPUT_AVAILABLE = False
 
-# Archivo temporal para compartir estado entre procesos
 ACTIVITY_FILE = os.path.join(tempfile.gettempdir(), 'actividad_humana.json')
 logger.info(f"Archivo de actividad temporal ubicado en: {ACTIVITY_FILE}")
 
@@ -88,10 +86,8 @@ def get_activity_status():
     """Obtiene el estado de actividad desde el archivo temporal"""
     try:
         if os.path.exists(ACTIVITY_FILE):
-            # Verificar si el archivo es muy antiguo (más de 60 segundos)
             file_time = os.path.getmtime(ACTIVITY_FILE)
             if time.time() - file_time > 60:
-                # Archivo muy antiguo, resetear
                 return {"mouse": False, "teclado": False}
             
             with open(ACTIVITY_FILE, 'r') as f:
@@ -117,5 +113,4 @@ def reset_activity_status():
     except Exception as e:
         logger.error(f"Error reseteando estado de actividad: {e}")
 
-# Instancia global
 activity_monitor = ActivityMonitor() 

@@ -1,8 +1,6 @@
 from datetime import datetime
 from app.modules.web_bots.browser.setup_chrome import setup_chrome_driver
-# from app.modules.web_bots.sharepoint.scripts.sharepoint_scraper import scrape_sharepoint_page
 from utils.logger_config import get_sharepoint_HorarioGeneralATCORP_logger
-#import win32com.client
 import pandas as pd
 import unicodedata
 
@@ -14,13 +12,8 @@ from fastapi import HTTPException
 def guardar_excel_como():
    
     logger.info("Tratando de conectar con Excel Aplication")
-    #excel = win32com.client.Dispatch("Excel.Application")
-    #excel.Visible = True
 
     nombre_archivo = "Horario General ATcorp_2025.xlsx"
-
-    #for wb in excel.Workbooks:
-    #    print(wb.Name)
 
 
     workbook = None
@@ -30,7 +23,6 @@ def guardar_excel_como():
                 workbook = wb
                 break   
 
-    #workbook = excel.ActiveWorkbook
     if not workbook:
         logger.error(f"No se encontro un archivo Excel abierto con el nombre '{nombre_archivo}")
         print(f"No se encontro un archivo Excel con el nombre '{nombre_archivo}")
@@ -51,7 +43,6 @@ def guardar_excel_como():
         workbook.SaveAs(ruta_guardado)
         print(f"Archivo guardado en: {ruta_guardado}")
         
-        #workbook.Close(SaveChanges=False)
         return ruta_guardado
 
     except Exception as e:
@@ -59,8 +50,6 @@ def guardar_excel_como():
         print(f"Error al guardar el archivo: {e}")
         return None
     finally:
-        # Cerrar el workbook sin cerrar Excel
-        # workbook.Close(SaveChanges=False)  # Descomenta si deseas cerrar el archivo después de guardar
         pass
 
 def get_info_from_Exel_saved_to_dataframe():
@@ -70,7 +59,6 @@ def get_info_from_Exel_saved_to_dataframe():
         raise ValueError("Error: `sharepointHorarioGeneral_path` es None. No se pudo descargar el reporte de sharepoint.")
     
     excel_data = pd.ExcelFile(sharepointHorarioGeneral_path)
-    #hojas_seleccionadas = ['25-11 al 01-12', '02-12 al 08-12', '09-12 al 15-12', '16-12 al 22-12', '23-12 al 29-12', '30-12 al 05-01-25']
     hojas_seleccionadas = ['06-01 al 12-01']
     datos_extraidos = []
 
@@ -99,7 +87,6 @@ def get_info_from_Exel_saved_to_dataframe():
                                 'Turno_General': turno,
                             })
 
-    # Extraer la hora inicial de 'Turno_General'
     sharepoint_horario_General_ATCORP_df = pd.DataFrame(datos_extraidos)
 
     def extraer_hora_o_palabra(valor):
@@ -108,7 +95,6 @@ def get_info_from_Exel_saved_to_dataframe():
         return valor  
     sharepoint_horario_General_ATCORP_df['Hora_Inicial_General'] = sharepoint_horario_General_ATCORP_df['Turno_General'].apply(extraer_hora_o_palabra)
 
-    #sharepoint_horario_General_ATCORP_df['Hora_Inicial_General'] = sharepoint_horario_General_ATCORP_df['Turno_General'].str.extract(r'(\d{2}:\d{2})')
     sharepoint_horario_General_ATCORP_df['Fecha_General'] = pd.to_datetime(
     sharepoint_horario_General_ATCORP_df['Fecha_General'].str.extract(r'(\d{1,2}/\d{1,2}/\d{4})')[0],
     format='%d/%m/%Y',
@@ -118,7 +104,6 @@ def get_info_from_Exel_saved_to_dataframe():
 
     def quitar_tildes(texto):
         if isinstance(texto, str):
-            # Normaliza el texto y elimina caracteres combinados
             return ''.join(c for c in unicodedata.normalize('NFD', texto) if unicodedata.category(c) != 'Mn')
         return texto
     sharepoint_horario_General_ATCORP_df['Usuario_General'] = sharepoint_horario_General_ATCORP_df['Usuario_General'].apply(quitar_tildes)
@@ -129,7 +114,6 @@ def get_info_from_Exel_saved_to_dataframe():
         sharepoint_horario_General_ATCORP_df.duplicated(subset=['Usuario_General', 'Fecha_General'], keep=False)
     ]
     
-       # Imprimir los duplicados en consola
     print("Duplicados encontrados:")
     print(duplicados_df)
     print(f"Total de duplicados: {len(duplicados_df)}")

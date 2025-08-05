@@ -190,12 +190,7 @@ def fill_slacomp_column(df_reporte):
         )
         df_reporte["tipificacion_tipo"] = df_reporte["tipificacion_tipo"].fillna("")
 
-        # df_reporte["slacomp"] = np.where(
-        #     df_reporte["slacomp"].isna() & df_reporte["tipificacion_tipo"] == "",
-        #     "SinTip",
-        #     df_reporte["slacomp"]
-        # )
-
+    
         df_reporte["slacomp"] = df_reporte["slacomp"].fillna(0)
 
         logger.info("Successfully filled slacomp column")

@@ -2,7 +2,6 @@ import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
 
 from utils.logger_config import get_sharepoint_HorarioMesaATCORP
-#import win32com.client
 import os
 from datetime import datetime
 import pandas as pd
@@ -44,7 +43,6 @@ def save_from_Sync_Desktop_Excel():
            workbook.SaveAs(ruta_guardado)
            print(f"Archivo guardado en: {ruta_guardado}")
            
-           #workbook.Close(SaveChanges=False)
            return ruta_guardado
    
        except Exception as e:
@@ -52,8 +50,6 @@ def save_from_Sync_Desktop_Excel():
            print(f"Error al guardar el archivo: {e}")
            return None
        finally:
-           # Cerrar el workbook sin cerrar Excel
-           # workbook.Close(SaveChanges=False)  # Descomenta si deseas cerrar el archivo después de guardar
            pass
        
 def get_info_from_Excel_Saved():
@@ -64,7 +60,6 @@ def get_info_from_Excel_Saved():
 
 
     excel_data = pd.ExcelFile(sharepointHorarioGeneral_path)
-    #hojas_seleccionadas = ['25 nov - 01 dic', '02 dic - 08 dic ', '09 dic - 15 dic ', '16 dic - 22 dic  ', '23 dic - 29 dic  ','30 dic - 05  En'] 
     hojas_seleccionadas = ['06 Ene - 12 Ene'] 
     datos_extraidos = []
 
