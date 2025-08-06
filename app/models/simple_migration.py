@@ -45,10 +45,20 @@ def create_tables():
                 user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                 permission_id INTEGER NOT NULL REFERENCES permissions(id) ON DELETE CASCADE,
                 granted_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                granted_by INTEGER REFERENCES users(id),
-                UNIQUE(user_id, permission_id)
+                granted_by INTEGER REFERENCES users(id)
             )
         """))
+        
+        # Agregar restricción UNIQUE si no existe
+        try:
+            conn.execute(text("""
+                ALTER TABLE user_permissions 
+                ADD CONSTRAINT user_permissions_user_id_permission_id_key 
+                UNIQUE (user_id, permission_id)
+            """))
+        except Exception:
+            # La restricción ya existe, ignorar error
+            pass
         
         conn.execute(text("CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)"))
         conn.execute(text("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)"))
